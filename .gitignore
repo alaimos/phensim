@@ -1,15 +1,39 @@
-vendor/
-node_modules/
-
-# Laravel 4 specific
-bootstrap/compiled.php
-app/storage/
-
-# Laravel 5 & Lumen specific
-bootstrap/cache/
-.env.*.php
-.env.php
+puphpet/config-custom.yaml
+.vagrant/
+.idea/
+.phpstorm.meta.php
+_ide_helper.php
 .env
-
-# Rocketeer PHP task runner and deployment package. https://github.com/rocketeers/rocketeer
-.rocketeer/
+/www/html/index.html
+/www/html/beanstalk_console/
+/logs/php_error.log
+/www/simpathy/vendor/
+/www/simpathy/node_modules/
+/www/simpathy/bootstrap/cache/
+/www/simpathy/storage/
+/www/simpathy/resources/data/
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+www/simpathy/test.txt
