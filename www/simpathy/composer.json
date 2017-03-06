@@ -8,14 +8,15 @@
   "license":      "GPL-3.0",
   "type":         "project",
   "require":      {
-    "php":                             ">=5.6.4",
-    "barryvdh/laravel-ide-helper":     "^2.3",
-    "doctrine/dbal":                   "^2.5",
-    "guzzlehttp/guzzle":               "^6.2",
-    "laravel/framework":               "5.4.*",
-    "laravel/tinker":                  "~1.0",
-    "laravelcollective/html":          "^5.4",
-    "pda/pheanstalk":                  "^3.1",
+    "php": ">=5.6.4",
+    "barryvdh/laravel-ide-helper": "^2.3",
+    "doctrine/dbal": "^2.5",
+    "guzzlehttp/guzzle": "^6.2",
+    "laravel/framework": "5.4.*",
+    "laravel/tinker": "~1.0",
+    "laravelcollective/html": "^5.4",
+    "pda/pheanstalk": "^3.1",
+    "santigarcor/laratrust": "^3.2",
     "yajra/laravel-datatables-oracle": "^7.3"
   },
   "require-dev":  {

@@ -404,7 +404,7 @@ hhvm:
 mariadb:
     install: '1'
     settings:
-        version: '10.2'
+        version: '10.1'
         root_password: '123'
         override_options: {  }
     users:
