@@ -13,15 +13,15 @@ use Laratrust\Traits\LaratrustUserTrait;
  *                $notifications
  * @mixin \Eloquent
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Permission[] $permissions
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Role[] $roles
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Role[]       $roles
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereRoleIs($role = '')
- * @property int $id
- * @property string $name
- * @property string $email
- * @property string $password
- * @property string $remember_token
- * @property \Carbon\Carbon $created_at
- * @property \Carbon\Carbon $updated_at
+ * @property int                                                                    $id
+ * @property string                                                                 $name
+ * @property string                                                                 $email
+ * @property string                                                                 $password
+ * @property string                                                                 $remember_token
+ * @property \Carbon\Carbon                                                         $created_at
+ * @property \Carbon\Carbon                                                         $updated_at
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereCreatedAt($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereEmail($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereId($value)
@@ -29,6 +29,8 @@ use Laratrust\Traits\LaratrustUserTrait;
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User wherePassword($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereRememberToken($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereUpdatedAt($value)
+ * @property string                                                                 $affiliation
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereAffiliation($value)
  */
 class User extends Authenticatable
 {
