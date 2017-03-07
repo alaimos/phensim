@@ -10,7 +10,7 @@ _ide_helper.php
 /www/simpathy/vendor/
 /www/simpathy/node_modules/
 /www/simpathy/bootstrap/cache/
-/www/simpathy/storage/
+/www/simpathy/storage/app/
 /www/simpathy/resources/data/
 .DS_Store
 .AppleDouble
