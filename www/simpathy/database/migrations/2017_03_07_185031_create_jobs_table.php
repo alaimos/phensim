@@ -15,7 +15,7 @@ class CreateJobsTable extends Migration
     {
         Schema::create('jobs', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('user_id')->unsigned()->index()->nullable()->default(null);
+            $table->integer('user_id')->unsigned()->index();
             $table->string('job_key')->index();
             $table->string('job_type')->index();
             $table->enum('job_status', ['queued', 'processing', 'completed', 'failed']);

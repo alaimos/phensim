@@ -2,35 +2,38 @@
 
 namespace App\Models;
 
+use App\Exceptions\SecurityException;
 use App\SIMPATHY\Utils;
 use Illuminate\Database\Eloquent\Model;
+use Laratrust\Contracts\Ownable;
 
 /**
  * App\Models\Jobs
  *
- * @property int            $id
- * @property int            $user_id
- * @property string         $job_key
- * @property string         $job_type
- * @property string         $job_status
- * @property array          $job_parameters
- * @property array          $job_data
- * @property string         $job_log
- * @property \Carbon\Carbon $created_at
- * @property \Carbon\Carbon $updated_at
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Jobs whereCreatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Jobs whereId($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Jobs whereJobData($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Jobs whereJobKey($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Jobs whereJobLog($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Jobs whereJobParameters($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Jobs whereJobStatus($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Jobs whereJobType($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Jobs whereUpdatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Jobs whereUserId($value)
+ * @property int                   $id
+ * @property int                   $user_id
+ * @property string                $job_key
+ * @property string                $job_type
+ * @property string                $job_status
+ * @property array                 $job_parameters
+ * @property array                 $job_data
+ * @property string                $job_log
+ * @property \Carbon\Carbon        $created_at
+ * @property \Carbon\Carbon        $updated_at
+ * @property-read \App\Models\User $user
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Job whereCreatedAt($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Job whereId($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Job whereJobData($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Job whereJobKey($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Job whereJobLog($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Job whereJobParameters($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Job whereJobStatus($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Job whereJobType($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Job whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Job whereUserId($value)
  * @mixin \Eloquent
  */
-class Jobs extends Model
+class Job extends Model implements Ownable
 {
     const QUEUED     = 'queued';
     const PROCESSING = 'processing';
@@ -55,6 +58,16 @@ class Jobs extends Model
     protected $fillable = [
         'user_id', 'job_key', 'job_type', 'job_status', 'job_parameters', 'job_data', 'job_log',
     ];
+
+    /**
+     * User Model BelongsTo Relationship
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user()
+    {
+        return $this->belongsTo('\App\Models\User', 'user_id', 'id');
+    }
 
     /**
      * Compute a job key
@@ -258,6 +271,22 @@ class Jobs extends Model
     }
 
     /**
+     * Delete the model from the database.
+     *
+     * @return bool|null
+     *
+     * @throws \Exception
+     */
+    public function delete()
+    {
+        if (!$this->canBeDeleted()) {
+            throw new SecurityException('The current user is not allowed to update this job');
+        }
+        return parent::delete();
+    }
+
+
+    /**
      * Save the model to the database.
      *
      * @param  array $options
@@ -266,9 +295,64 @@ class Jobs extends Model
      */
     public function save(array $options = [])
     {
+        if (!$this->canBeUpdated()) {
+            throw new SecurityException('The current user is not allowed to update this job');
+        }
         if (!$this->job_key) {
             $this->getJobKey();
         }
         return parent::save($options);
+    }
+
+    /**
+     * Gets the owner key value inside the model or object
+     *
+     * @return mixed
+     */
+    public function ownerKey()
+    {
+        return $this->user_id;
+    }
+
+    /**
+     * Checks if an user can create a job
+     *
+     * @param null|\App\Models\User $user
+     *
+     * @return bool
+     */
+    public static function canBeCreated(User $user = null)
+    {
+        if ($user === null) $user = \Auth::user();
+        if ($user === null) return false;
+        return $user->hasRole('administrator') || $user->can('create-job');
+    }
+
+    /**
+     * Checks if an user can update this job
+     *
+     * @param \App\Models\User|null $user
+     *
+     * @return bool
+     */
+    public function canBeUpdated(User $user = null)
+    {
+        if ($user === null) $user = \Auth::user();
+        if ($user === null) return false;
+        return $user->hasRole('administrator') || $user->canAndOwns('update-job', $this);
+    }
+
+    /**
+     * Checks if an user can delete this job
+     *
+     * @param \App\Models\User|null $user
+     *
+     * @return bool
+     */
+    public function canBeDeleted(User $user = null)
+    {
+        if ($user === null) $user = \Auth::user();
+        if ($user === null) return false;
+        return $user->hasRole('administrator') || $user->canAndOwns('delete-job', $this);
     }
 }
