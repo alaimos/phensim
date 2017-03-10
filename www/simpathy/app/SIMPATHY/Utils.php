@@ -89,6 +89,24 @@ final class Utils
     }
 
     /**
+     * Return the name of a temporary file
+     *
+     * @param string $prefix
+     * @param string $extension
+     *
+     * @return string
+     */
+    public static function tempFilename($prefix = '', $extension = '')
+    {
+        $filename = $prefix . self::makeKey($prefix, microtime(true));
+        if (!empty($extension)) {
+            $filename .= '.' . ltrim($extension, '.');
+        }
+        return $filename;
+    }
+
+
+    /**
      * Return the path of a temporary file name in the temporary files directory
      *
      * @param string $prefix
@@ -98,11 +116,7 @@ final class Utils
      */
     public static function tempFile($prefix = '', $extension = '')
     {
-        $filename = self::tempDir() . DIRECTORY_SEPARATOR . $prefix . self::makeKey($prefix, microtime(true));
-        if (!empty($extension)) {
-            $filename .= '.' . ltrim($extension, '.');
-        }
-        return $filename;
+        return self::tempDir() . DIRECTORY_SEPARATOR . self::tempFilename($prefix, $extension);
     }
 
     /**
