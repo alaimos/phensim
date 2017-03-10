@@ -37,3 +37,4 @@ $RECYCLE.BIN/
 *.msp
 *.lnk
 www/simpathy/test.txt
+www/simpathy/storage/logs/*

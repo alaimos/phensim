@@ -21,7 +21,6 @@ use Laratrust\Traits\LaratrustUserTrait;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Job[]        $jobs
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Permission[] $permissions
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Role[]       $roles
- *
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\Illuminate\Notifications\DatabaseNotification[]
  *                $notifications
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereAffiliation($value)
@@ -34,6 +33,8 @@ use Laratrust\Traits\LaratrustUserTrait;
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereRoleIs($role = '')
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property string $secret
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereSecret($value)
  */
 class User extends Authenticatable implements Ownable
 {
@@ -65,7 +66,7 @@ class User extends Authenticatable implements Ownable
      */
     public function jobs()
     {
-        return $this->hasMany('\App\Models\Jobs', 'user_id', 'id');
+        return $this->hasMany('\App\Models\Job', 'user_id', 'id');
     }
 
 
