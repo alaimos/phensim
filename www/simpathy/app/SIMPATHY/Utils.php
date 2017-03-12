@@ -105,7 +105,6 @@ final class Utils
         return $filename;
     }
 
-
     /**
      * Return the path of a temporary file name in the temporary files directory
      *
@@ -206,5 +205,36 @@ final class Utils
         } else {
             return number_format($number, $decimals);
         }
+    }
+
+    /**
+     * Map command exception to message
+     *
+     * @param string           $command
+     * @param CommandException $e
+     * @param array            $errorCodeMap
+     * @return boolean
+     * @throws CommandException
+     */
+    public static function mapCommandException($command, CommandException $e, array $errorCodeMap = [])
+    {
+        $code = intval($e->getMessage());
+        if (isset($errorCodeMap[$code])) {
+            throw new CommandException($errorCodeMap[$code]);
+        } else {
+            throw new CommandException('Execution of command "' . $command . '" returned error code ' . $code . '.');
+        }
+    }
+
+    /**
+     * Count the number of lines in a text file
+     *
+     * @param string $file
+     *
+     * @return integer
+     */
+    public static function countLines($file)
+    {
+        return intval(exec('wc -l ' . escapeshellarg($file)));
     }
 }

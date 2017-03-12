@@ -2,6 +2,7 @@
 
 namespace App\SIMPATHY;
 
+use App\Exceptions\CommandException;
 use App\Models\Job;
 use App\SIMPATHY\Exception\LauncherException;
 
@@ -30,6 +31,7 @@ final class Launcher
     const SIMPATHY_ORGANISM                  = '-organism %s';
     const SIMPATHY_OUTPUT                    = '-o %s';
     const SIMPATHY_SEED                      = '-seed %d';
+    const SIMPATHY_VERBOSE                   = '-verbose';
     const SIMPATHY_SUPPORTED_EVIDENCES       = ['STRONG', 'WEAK', 'PREDICTION'];
     const OVEREXPRESSION                     = 'OVEREXPRESSION';
     const UNDEREXPRESSION                    = 'UNDEREXPRESSION';
@@ -59,6 +61,13 @@ final class Launcher
      * @var string
      */
     private $outputFilename;
+
+    /**
+     * A list of input files to delete before destruction of this object
+     *
+     * @var array
+     */
+    private $inputFiles = [];
 
 
     public function __construct($directory = null)
@@ -411,7 +420,7 @@ final class Launcher
      *
      * @param array $resultArray
      *
-     * @return string
+     * @return void
      */
     private function buildInputFile(array &$resultArray)
     {
@@ -428,7 +437,7 @@ final class Launcher
         }
         @fclose($fp);
         $this->buildParameter($inputFile, self::SIMPATHY_INPUT, $resultArray);
-        return $inputFile;
+        $this->inputFiles[] = $inputFile;
     }
 
     /**
@@ -496,18 +505,18 @@ final class Launcher
     }
 
     /**
-     * Run SIMPATHY
+     * Build the command to run simpathy using parameters provided by the user
      *
-     * @return bool
+     * @return string
      */
-    public function run()
+    private function buildCommandLine()
     {
         $algorithm = ($this->isMerged) ? self::MERGED_SIMPATHY : self::SIMPATHY;
         $parameters = [];
         if ($this->isMerged) {
             $this->buildListParameter(self::MERGED_SIMPATHY_EXCLUDE_VALUES, self::MERGED_SIMPATHY_EXCLUDE, $parameters);
         }
-        $inputFile = $this->buildInputFile($parameters);
+        $this->buildInputFile($parameters);
         $this->buildOutputFile($parameters);
         $this->buildListParameter($this->enrichers, self::SIMPATHY_ENRICHERS, $parameters);
         $this->buildEnricherParameters($parameters);
@@ -517,12 +526,76 @@ final class Launcher
         $this->buildParameter($this->organism, self::SIMPATHY_ORGANISM, $parameters);
         $this->buildListParameter($this->nonExpressedNodes, self::SIMPATHY_NON_EXPRESSED, $parameters);
         $this->buildParameter($this->seed, self::SIMPATHY_SEED, $parameters);
-        $command = sprintf(self::MITHRIL_EXEC, resource_path(self::MITHRIL_JAR), $algorithm, implode(' ', $parameters));
-        $result = Utils::runCommand($command, $commandOutput);
-        @unlink($inputFile);
+        $parameters[] = self::SIMPATHY_VERBOSE;
+        return sprintf(self::MITHRIL_EXEC, resource_path(self::MITHRIL_JAR), $algorithm, implode(' ', $parameters));
+    }
+
+    /**
+     * Run SIMPATHY.
+     *
+     * @return array|bool
+     * @throws CommandException
+     * @throws LauncherException
+     */
+    public function run()
+    {
+        $command = $this->buildCommandLine();
+        $commandOutput = null;
+        $result = null;
+        try {
+            $result = Utils::runCommand($command, $commandOutput);
+        } catch (CommandException $e) {
+            Utils::mapCommandException('simpathy', $e, [
+                101 => 'Invalid input file: file does not exist.',
+                102 => 'Invalid species: species not found.',
+                103 => (is_array($commandOutput)) ? array_pop($commandOutput) : 'Unknown error',
+            ]);
+        }
         if (!file_exists($this->outputFilename)) {
             throw new LauncherException('Unable to create output file');
         }
-        return $result;
+        return ($result) ? $commandOutput : false;
     }
+
+    /**
+     * Returns the command line used to run SIMPATHY
+     *
+     * @return string
+     */
+    public function getCommandLine()
+    {
+        return $this->buildCommandLine();
+    }
+
+
+    /**
+     * Delete all temporary input files for SIMPATHY
+     *
+     * @return bool
+     */
+    public function deleteInputFiles()
+    {
+        if (!empty($this->inputFiles) && is_array($this->inputFiles)) {
+            $success = true;
+            foreach ($this->inputFiles as $file) {
+                $success = $success && @unlink($file);
+            }
+            $this->inputFiles = null;
+            return $success;
+        }
+        return false;
+    }
+
+    /**
+     * Clears all temporary files created by this object
+     *
+     * @return void
+     * @link http://php.net/manual/en/language.oop5.decon.php
+     */
+    public function __destruct()
+    {
+        $this->deleteInputFiles();
+    }
+
+
 }
