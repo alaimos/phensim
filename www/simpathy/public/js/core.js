@@ -14641,6 +14641,13 @@ jQuery(function(){
         App.init();
     }
 });
+$(function () {
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': window.Laravel.csrfToken
+        }
+    });
+});
 /*!
  DataTables 1.10.12
  ©2008-2015 SpryMedia Ltd - datatables.net/license

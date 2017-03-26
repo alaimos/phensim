@@ -1,4 +1,3 @@
-
 window._ = require('lodash');
 
 /**
@@ -28,16 +27,17 @@ window.Vue = require('vue');
 window.axios = require('axios');
 
 window.axios.defaults.headers.common = {
-    'X-CSRF-TOKEN': window.Laravel.csrfToken,
+    'X-CSRF-TOKEN':     window.Laravel.csrfToken,
     'X-Requested-With': 'XMLHttpRequest'
 };
 
-$.ajaxSetup({
-    headers: {
-        'X-CSRF-TOKEN': window.Laravel.csrfToken
-    }
+$(function () {
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': window.Laravel.csrfToken
+        }
+    });
 });
-
 /**
  * Echo exposes an expressive API for subscribing to channels and listening
  * for events that are broadcast by Laravel. Echo and event broadcasting

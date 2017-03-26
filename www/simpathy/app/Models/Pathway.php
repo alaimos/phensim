@@ -16,17 +16,19 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Pathway whereAccession($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Pathway whereName($value)
  * @mixin \Eloquent
+ * @property int                                                              $organism_id
+ * @property-read \App\Models\Organism                                        $organism
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Pathway whereOrganismId($value)
  */
 class Pathway extends Model
 {
-
 
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = ['accession', 'name'];
+    protected $fillable = ['accession', 'name', 'organism_id'];
 
     /**
      * Indicates if the model should be timestamped.
@@ -53,5 +55,15 @@ class Pathway extends Model
     public function edges()
     {
         return $this->belongsToMany('App\Models\Edge', 'pathway_edges', 'pathway_id', 'edge_id');
+    }
+
+    /**
+     * Organism of this pathway
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function organism()
+    {
+        return $this->belongsTo('App\Models\Organism', 'organism_id', 'id');
     }
 }

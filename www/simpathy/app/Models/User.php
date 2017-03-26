@@ -11,17 +11,17 @@ use Laravel\Passport\HasApiTokens;
 /**
  * App\Models\User
  *
- * @property int                                                                    $id
- * @property string                                                                 $name
- * @property string                                                                 $email
- * @property string                                                                 $password
- * @property string                                                                 $affiliation
- * @property string                                                                 $remember_token
- * @property \Carbon\Carbon                                                         $created_at
- * @property \Carbon\Carbon                                                         $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Job[]        $jobs
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Permission[] $permissions
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Role[]       $roles
+ * @property int                                                                      $id
+ * @property string                                                                   $name
+ * @property string                                                                   $email
+ * @property string                                                                   $password
+ * @property string                                                                   $affiliation
+ * @property string                                                                   $remember_token
+ * @property \Carbon\Carbon                                                           $created_at
+ * @property \Carbon\Carbon                                                           $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Job[]          $jobs
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Permission[]   $permissions
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Role[]         $roles
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\Illuminate\Notifications\DatabaseNotification[]
  *                $notifications
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereAffiliation($value)
@@ -34,8 +34,10 @@ use Laravel\Passport\HasApiTokens;
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereRoleIs($role = '')
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereUpdatedAt($value)
  * @mixin \Eloquent
- * @property string $secret
+ * @property string                                                                   $secret
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereSecret($value)
+ * @property-read \Illuminate\Database\Eloquent\Collection|\Laravel\Passport\Client[] $clients
+ * @property-read \Illuminate\Database\Eloquent\Collection|\Laravel\Passport\Token[]  $tokens
  */
 class User extends Authenticatable implements Ownable
 {
@@ -69,9 +71,18 @@ class User extends Authenticatable implements Ownable
         return $this->hasMany('\App\Models\Job', 'user_id', 'id');
     }
 
+    /**
+     * Checks if the user is an administrator
+     *
+     * @return bool
+     */
+    public function isAdmin()
+    {
+        return $this->hasRole('administrator');
+    }
 
     /**
-     * Checks if an user can create a job
+     * Checks if an user can create a user
      *
      * @param null|\App\Models\User $user
      *
@@ -85,7 +96,7 @@ class User extends Authenticatable implements Ownable
     }
 
     /**
-     * Checks if an user can update this job
+     * Checks if an user can update this user
      *
      * @param \App\Models\User|null $user
      *
@@ -99,7 +110,7 @@ class User extends Authenticatable implements Ownable
     }
 
     /**
-     * Checks if an user can delete this job
+     * Checks if an user can delete this user
      *
      * @param \App\Models\User|null $user
      *

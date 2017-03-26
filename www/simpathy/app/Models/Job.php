@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Exceptions\SecurityException;
 use App\SIMPATHY\Utils;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Laratrust\Contracts\Ownable;
 
@@ -58,6 +59,47 @@ class Job extends Model implements Ownable
     protected $fillable = [
         'user_id', 'job_key', 'job_type', 'job_status', 'job_parameters', 'job_data', 'job_log',
     ];
+
+    /**
+     * Checks if an user can list jobs
+     *
+     * @param \App\Models\User|null $user
+     *
+     * @return bool
+     */
+    public static function canListJobs(User $user = null)
+    {
+        if ($user === null) $user = \Auth::user();
+        if ($user === null) return false;
+        return $user->hasRole('administrator') || $user->can('read-job');
+    }
+
+    /**
+     * List Jobs
+     *
+     * @param string|null $statusFilter
+     * @param string|null $jobType
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public static function listJobs(string $statusFilter = null, string $jobType = null): Builder
+    {
+        if (!self::canListJobs()) {
+            abort(403, 'User is not allowed to view jobs');
+        }
+        $isAdmin = \Auth::user() !== null && \Auth::user()->isAdmin();
+        $query = self::query();
+        if (!$isAdmin) {
+            $query->where('user_id', '=', \Auth::user()->id);
+        }
+        if ($statusFilter !== null) {
+            $query->where('job_status', '=', $statusFilter);
+        }
+        if ($jobType !== null) {
+            $query->where('job_type', '=', $jobType);
+        }
+        return $query;
+    }
 
     /**
      * User Model BelongsTo Relationship

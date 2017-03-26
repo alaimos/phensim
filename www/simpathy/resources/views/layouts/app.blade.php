@@ -54,18 +54,18 @@
                                 <i class="si si-home"></i>
                                 <span class="sidebar-mini-hide">Home</span></a>
                         </li>
-                        <li>
-                            <a href="{{ url('/history') }}"><i class="si si-clock"></i><span
-                                        class="sidebar-mini-hide">Results History</span></a>
-                        </li>
-                        <li>
-                            <a href="{{ url('/api') }}"><i class="si si-energy"></i><span
-                                        class="sidebar-mini-hide">API</span></a>
-                        </li>
-                        {{--<li>
-                            <a href="{{ url('/help') }}"><i class="si si-question"></i><span
-                                        class="sidebar-mini-hide">Help</span></a>
-                        </li>--}}
+                        @if(Auth::user() !== null && Auth::user()->hasPermission('read-profile'))
+                            <li>
+                                <a href="{{ url('/home') }}"><i class="si si-user"></i><span
+                                            class="sidebar-mini-hide">User Panel</span></a>
+                            </li>
+                        @endif
+                        @if(Auth::user() !== null && Auth::user()->hasPermission('read-keys'))
+                            <li>
+                                <a href="{{ url('/api') }}"><i class="si si-energy"></i><span
+                                            class="sidebar-mini-hide">API</span></a>
+                            </li>
+                        @endif
                         <li>
                             <a href="{{ url('/references') }}"><i class="si si-book-open"></i><span
                                         class="sidebar-mini-hide">References</span></a>
@@ -74,6 +74,21 @@
                             <a href="{{ url('/contacts') }}"><i class="si si-envelope-open"></i><span
                                         class="sidebar-mini-hide">Contacts</span></a>
                         </li>
+                        @if(Auth::user() !== null)
+                            <li>
+                                <a href="{{ url('/logout') }}"><i class="si si-logout"></i><span
+                                            class="sidebar-mini-hide">Log Out</span></a>
+                            </li>
+                        @else
+                            <li>
+                                <a href="{{ url('/login') }}"><i class="si si-login"></i><span
+                                            class="sidebar-mini-hide">Log In</span></a>
+                            </li>
+                            <li>
+                                <a href="{{ url('/register') }}"><i class="si si-plus"></i><span
+                                            class="sidebar-mini-hide">Sign Up</span></a>
+                            </li>
+                        @endif
                     </ul>
                 </div>
                 <!-- END Side Content -->

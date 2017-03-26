@@ -37,11 +37,14 @@ class ImportAll extends Command
     {
         $ret = $this->call('migrate:reset');
         if (!$ret) {
-            $ret = $this->call('migrate', ['--seed']);
+            $ret = $this->call('migrate');
             if (!$ret) {
-                $ret = $this->call('import:pathways');
+                $ret = $this->call('db:seed');
                 if (!$ret) {
-                    $ret = $this->call('index:pathways');
+                    $ret = $this->call('import:pathways');
+                    if (!$ret) {
+                        $ret = $this->call('index:pathways');
+                    }
                 }
             }
         }

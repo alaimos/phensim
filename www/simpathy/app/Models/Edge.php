@@ -20,6 +20,9 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Edge whereEndId($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Edge whereTypes($value)
  * @mixin \Eloquent
+ * @property int                                                                 $organism_id
+ * @property-read \App\Models\Organism                                           $organism
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Edge whereOrganismId($value)
  */
 class Edge extends Model
 {
@@ -29,7 +32,7 @@ class Edge extends Model
      *
      * @var array
      */
-    protected $fillable = ['start_id', 'end_id', 'types'];
+    protected $fillable = ['start_id', 'end_id', 'types', 'organism_id'];
 
     /**
      * The "type" of the auto-incrementing ID.
@@ -51,7 +54,7 @@ class Edge extends Model
      * @var array
      */
     protected $casts = [
-        'types' => 'array'
+        'types' => 'array',
     ];
 
     /**
@@ -82,6 +85,16 @@ class Edge extends Model
     }
 
     /**
+     * Organism of this edge
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function organism()
+    {
+        return $this->belongsTo('App\Models\Organism', 'organism_id', 'id');
+    }
+
+    /**
      * Pathways with this edge
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
@@ -96,12 +109,13 @@ class Edge extends Model
      *
      * @param string $start
      * @param string $end
+     * @param string $organism
+     *
      * @return string
      */
-    public static function computeId($start, $end)
+    public static function computeId(string $start, string $end, string $organism)
     {
-        return Utils::makeKey($start, $end);
-        //return md5($start . '->' . $end);
+        return Utils::makeKey($start, $end, $organism);
     }
 
     /**
@@ -111,7 +125,7 @@ class Edge extends Model
      */
     public function generateId()
     {
-        $this->id = self::computeId($this->start_id, $this->end_id);
+        $this->id = self::computeId($this->start_id, $this->end_id, $this->organism_id);
         return $this;
     }
 
@@ -119,6 +133,7 @@ class Edge extends Model
      * Save the model to the database.
      *
      * @param  array $options
+     *
      * @return bool
      */
     public function save(array $options = [])

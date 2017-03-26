@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Edge;
 use App\Models\Node;
+use App\Models\Organism;
 use App\Models\Pathway;
 use App\SIMPATHY\Utils;
 use Illuminate\Console\Command;
@@ -28,8 +29,8 @@ class ImportPathways extends Command
     protected $nodesFile;
     protected $edgesFile;
     protected $mapFile;
-
     protected $nodesMap = [];
+
 
     /**
      * Create a new command instance.
@@ -44,16 +45,58 @@ class ImportPathways extends Command
     }
 
     /**
+     * Export organisms from mithril 2
+     *
+     * @return array
+     */
+    protected function exportOrganisms(): array
+    {
+        $this->info("Exporting MITHrIL 2 organisms");
+        $m2 = resource_path('bin/MITHrIL2.jar');
+        $command = 'java -jar ' . escapeshellarg($m2) . ' exporg';
+        //$output = null;
+        //$return = null;
+        //exec($command, $output, $return);
+        $return = 0;
+        $output = [
+            "mmu\tMus musculus (mouse)",
+            "hsa\tHomo sapiens (human)",
+            "rno\tRattus norvegicus (rat)",
+        ];
+        if ($return == 0) {
+            $organisms = [];
+            foreach ($output as $line) {
+                if (!empty($line) && $line{0} != '#') {
+                    $data = explode("\t", $line);
+                    if (count($data) >= 2) {
+                        $organisms[$data[0]] = Organism::create([
+                            'accession' => $data[0],
+                            'name'      => $data[1],
+                        ]);
+                    }
+                }
+            }
+            $this->info("Done!");
+            return $organisms;
+        } else {
+            $this->error("An error occurred!");
+        }
+        return [];
+    }
+
+    /**
      * Export pathways from mithril 2
+     *
+     * @param string $organism
      *
      * @return bool
      */
-    protected function exportPathways()
+    protected function exportPathways(string $organism): bool
     {
-        $this->info("Exporting MITHrIL 2 pathways");
+        $this->info("Exporting MITHrIL 2 pathways for organism " . $organism);
         $m2 = resource_path('bin/MITHrIL2.jar');
-        $command = 'java -jar ' . escapeshellarg($m2) . ' exportgraph -verbose -organism hsa ' .
-                   '-enrichment-evidence-type STRONG -exclude-categories "Endocrine and metabolic diseases,' .
+        $command = 'java -jar ' . escapeshellarg($m2) . ' exportgraph -verbose -organism ' . escapeshellarg($organism) .
+                   ' -enrichment-evidence-type STRONG -exclude-categories "Endocrine and metabolic diseases,' .
                    'Neurodegenerative diseases,Human Diseases,Immune diseases,Infectious diseases,Cardiovascular ' .
                    'diseases" -no ' . escapeshellarg($this->nodesFile) . ' -eo ' . escapeshellarg($this->edgesFile) .
                    ' -mo ' . escapeshellarg($this->mapFile);
@@ -69,8 +112,11 @@ class ImportPathways extends Command
 
     /**
      * Import nodes and creates a map from accession number to internal Id
+     *
+     * @return bool
+     *
      */
-    protected function importNodes()
+    protected function importNodes(): bool
     {
         $this->info("Importing nodes");
         $count = Utils::countLines($this->nodesFile);
@@ -88,13 +134,16 @@ class ImportPathways extends Command
             }
             $fields = explode("\t", $line);
             if (count($fields) == 4) {
-                $node = Node::create([
-                    'accession' => $fields[0],
-                    'name'      => $fields[1],
-                    'type'      => strtolower($fields[2]),
-                    'aliases'   => (array)array_filter(array_map('trim', explode(',', $fields[3]))),
-                ]);
-                $this->nodesMap[(string)$node->accession] = $node->id;
+                $accession = $fields[0];
+                if (!isset($this->nodesMap[$accession])) {
+                    $node = Node::create([
+                        'accession' => $fields[0],
+                        'name'      => $fields[1],
+                        'type'      => strtolower($fields[2]),
+                        'aliases'   => (array)array_filter(array_map('trim', explode(',', $fields[3]))),
+                    ]);
+                    $this->nodesMap[(string)$node->accession] = $node->id;
+                }
             }
         }
         $bar->finish();
@@ -104,8 +153,12 @@ class ImportPathways extends Command
 
     /**
      * Import edges
+     *
+     * @param \App\Models\Organism $organism
+     *
+     * @return bool
      */
-    protected function importEdges()
+    protected function importEdges(Organism $organism): bool
     {
         /** @var Edge[] $tmpMap */
         $tmpMap = [];
@@ -125,12 +178,13 @@ class ImportPathways extends Command
             }
             $fields = explode("\t", $line);
             if (count($fields) == 4) {
-                $edgeId = Edge::computeId((string)$fields[0], (string)$fields[1]);
+                $edgeId = Edge::computeId((string)$fields[0], (string)$fields[1], $organism->id);
                 if (!isset($tmpMap[$edgeId])) {
                     $tmpMap[$edgeId] = $edge = Edge::create([
-                        'start_id' => $this->nodesMap[(string)$fields[0]],
-                        'end_id'   => $this->nodesMap[(string)$fields[1]],
-                        'types'    => [],
+                        'start_id'    => $this->nodesMap[(string)$fields[0]],
+                        'end_id'      => $this->nodesMap[(string)$fields[1]],
+                        'types'       => [],
+                        'organism_id' => $organism->id,
                     ]);
                 }
                 $types = $tmpMap[$edgeId]->types;
@@ -146,8 +200,12 @@ class ImportPathways extends Command
 
     /**
      * Import pathways
+     *
+     * @param \App\Models\Organism $organism
+     *
+     * @return bool
      */
-    protected function importPathways()
+    protected function importPathways(Organism $organism): bool
     {
         /** @var Pathway[] $tmpMap */
         $tmpMap = [];
@@ -170,13 +228,14 @@ class ImportPathways extends Command
                 $pId = (string)$fields[0];
                 if (!isset($tmpMap[$pId])) {
                     $tmpMap[$pId] = Pathway::create([
-                        'accession' => $fields[0],
-                        'name'      => str_replace(" - Enriched", "", $fields[1]),
+                        'accession'   => $fields[0],
+                        'name'        => str_replace(" - Enriched", "", $fields[1]),
+                        'organism_id' => $organism->id,
                     ]);
                 }
                 $startId = $this->nodesMap[(string)$fields[2]];
                 $endId = $this->nodesMap[(string)$fields[3]];
-                $edgeId = Edge::computeId($startId, $endId);
+                $edgeId = Edge::computeId($startId, $endId, $organism->id);
                 if ($tmpMap[$pId]->edges()->find($edgeId) == null) {
                     $tmpMap[$pId]->edges()->attach($edgeId);
                 }
@@ -200,20 +259,23 @@ class ImportPathways extends Command
      */
     public function handle()
     {
-        if ($this->exportPathways()) {
-            if ($this->importNodes()) {
-                if ($this->importEdges()) {
-                    if (!$this->importPathways()) {
-                        return 104;
+        $organisms = $this->exportOrganisms();
+        foreach ($organisms as $accession => $org) {
+            if ($this->exportPathways($accession)) {
+                if ($this->importNodes()) {
+                    if ($this->importEdges($org)) {
+                        if (!$this->importPathways($org)) {
+                            return 104;
+                        }
+                    } else {
+                        return 103;
                     }
                 } else {
-                    return 103;
+                    return 102;
                 }
             } else {
-                return 102;
+                return 101;
             }
-        } else {
-            return 101;
         }
         return 0;
     }

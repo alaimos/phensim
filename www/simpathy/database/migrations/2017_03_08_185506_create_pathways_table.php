@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
 
 class CreatePathwaysTable extends Migration
 {
@@ -14,8 +14,10 @@ class CreatePathwaysTable extends Migration
     {
         Schema::create('pathways', function (Blueprint $table) {
             $table->increments('id');
+            $table->integer('organism_id')->unsigned()->index();
             $table->string('accession')->unique();
             $table->string('name');
+            $table->foreign('organism_id')->references('id')->on('organisms')->onDelete('cascade')->onUpdate('cascade');
         });
     }
 

@@ -1,76 +1,96 @@
-@extends('layouts.app')
+@extends('layouts.app_simple')
 
 @section('content')
-<div class="container">
-    <div class="row">
-        <div class="col-md-8 col-md-offset-2">
-            <div class="panel panel-default">
-                <div class="panel-heading">Reset Password</div>
 
-                <div class="panel-body">
-                    @if (session('status'))
-                        <div class="alert alert-success">
-                            {{ session('status') }}
-                        </div>
-                    @endif
+    <!-- Reminder Content -->
+    <div class="content overflow-hidden">
+        <div class="row">
+            <div class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4">
+                <!-- Reminder Block -->
+                <div class="block block-themed animated fadeIn">
+                    <div class="block-header bg-primary">
+                        <h3 class="block-title">Password Reminder</h3>
+                    </div>
+                    <div class="block-content block-content-full block-content-narrow">
+                        <!-- Reminder Title -->
+                        <p>Reset your password.</p>
+                        <!-- END Reminder Title -->
 
-                    <form class="form-horizontal" role="form" method="POST" action="{{ route('password.request') }}">
-                        {{ csrf_field() }}
-
-                        <input type="hidden" name="token" value="{{ $token }}">
-
-                        <div class="form-group{{ $errors->has('email') ? ' has-error' : '' }}">
-                            <label for="email" class="col-md-4 control-label">E-Mail Address</label>
-
-                            <div class="col-md-6">
-                                <input id="email" type="email" class="form-control" name="email" value="{{ $email or old('email') }}" required autofocus>
-
-                                @if ($errors->has('email'))
-                                    <span class="help-block">
-                                        <strong>{{ $errors->first('email') }}</strong>
-                                    </span>
-                                @endif
+                        @if (session('status'))
+                            <div class="alert alert-success">
+                                {{ session('status') }}
                             </div>
-                        </div>
+                        @endif
 
-                        <div class="form-group{{ $errors->has('password') ? ' has-error' : '' }}">
-                            <label for="password" class="col-md-4 control-label">Password</label>
+                    <!-- Reminder Form -->
+                        <form class="form-horizontal push-30-t push-50" action="{{ route('password.request') }}"
+                              method="post">
+                            {{ csrf_field() }}
+                            <input type="hidden" name="token" value="{{ $token }}">
 
-                            <div class="col-md-6">
-                                <input id="password" type="password" class="form-control" name="password" required>
-
+                            <div class="form-group{{ $errors->has('email') ? ' has-error' : '' }}">
+                                <div class="col-xs-12">
+                                    <div class="form-material form-material-primary floating">
+                                        <input id="email" type="email" class="form-control" name="email"
+                                               value="{{ $email or old('email') }}" required autofocus>
+                                        <label for="email">E-Mail Address</label>
+                                    </div>
+                                    @if ($errors->has('email'))
+                                        <div id="email-error" class="help-block text-right animated fadeInDown">
+                                            {{ $errors->first('email') }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="form-group{{ $errors->has('password') ? ' has-error' : '' }}">
+                                <div class="col-xs-12">
+                                    <div class="form-material form-material-primary floating">
+                                        <input id="password" type="password" class="form-control" name="password"
+                                               required>
+                                        <label for="password">Password</label>
+                                    </div>
+                                </div>
                                 @if ($errors->has('password'))
-                                    <span class="help-block">
-                                        <strong>{{ $errors->first('password') }}</strong>
-                                    </span>
+                                    <div id="password-error" class="help-block text-right animated fadeInDown">
+                                        {{ $errors->first('password') }}
+                                    </div>
                                 @endif
                             </div>
-                        </div>
-
-                        <div class="form-group{{ $errors->has('password_confirmation') ? ' has-error' : '' }}">
-                            <label for="password-confirm" class="col-md-4 control-label">Confirm Password</label>
-                            <div class="col-md-6">
-                                <input id="password-confirm" type="password" class="form-control" name="password_confirmation" required>
-
+                            <div class="form-group{{ $errors->has('password_confirmation') ? ' has-error' : '' }}">
+                                <div class="col-xs-12">
+                                    <div class="form-material form-material-primary floating">
+                                        <input id="password-confirm" type="password" class="form-control"
+                                               name="password_confirmation" required>
+                                        <label for="password-confirm">Password</label>
+                                    </div>
+                                </div>
                                 @if ($errors->has('password_confirmation'))
-                                    <span class="help-block">
-                                        <strong>{{ $errors->first('password_confirmation') }}</strong>
-                                    </span>
+                                    <div id="password-confirm-error" class="help-block text-right animated fadeInDown">
+                                        {{ $errors->first('password_confirmation') }}
+                                    </div>
                                 @endif
                             </div>
-                        </div>
 
-                        <div class="form-group">
-                            <div class="col-md-6 col-md-offset-4">
-                                <button type="submit" class="btn btn-primary">
-                                    Reset Password
-                                </button>
+                            <div class="form-group">
+                                <div class="col-xs-12 col-sm-6 col-md-5">
+                                    <button class="btn btn-primary" type="submit">Reset password</button>
+                                </div>
                             </div>
-                        </div>
-                    </form>
+                        </form>
+                        <!-- END Reminder Form -->
+                    </div>
                 </div>
+                <!-- END Reminder Block -->
             </div>
         </div>
     </div>
-</div>
+    <!-- END Reminder Content -->
+
+    <!-- Reminder Footer -->
+    <div class="push-10-t text-center animated fadeInUp">
+        <small class="text-muted font-w600">
+            &copy; <span class="js-year-copy"></span> - Developed by: <span class="font-w600">S. Alaimo, Ph.D.</span>
+        </small>
+    </div>
+    <!-- END Reminder Footer -->
 @endsection

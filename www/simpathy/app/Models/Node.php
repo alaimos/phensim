@@ -7,20 +7,23 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * App\Models\Node
  *
- * @property int                                                                        $id
- * @property string                                                                     $accession
- * @property string                                                                     $name
- * @property string                                                                     $type
- * @property array                                                                      $aliases
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Edge[]           $ingoingEdges
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Edge[]           $outgoingEdges
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Pathway[]        $pathways
+ * @property int                                                                 $id
+ * @property string                                                              $accession
+ * @property string                                                              $name
+ * @property string                                                              $type
+ * @property array                                                               $aliases
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Edge[]    $ingoingEdges
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Edge[]    $outgoingEdges
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Pathway[] $pathways
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereId($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereAccession($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereName($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereType($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereAliases($value)
  * @mixin \Eloquent
+ * @property int                                                                 $organism_id
+ * @property-read \App\Models\Organism                                           $organism
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereOrganismId($value)
  */
 class Node extends Model
 {
@@ -39,7 +42,7 @@ class Node extends Model
      * @var array
      */
     protected $casts = [
-        'aliases' => 'array'
+        'aliases' => 'array',
     ];
 
     /**
