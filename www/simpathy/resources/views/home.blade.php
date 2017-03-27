@@ -197,13 +197,12 @@
             ajax: {
                 url: '{{ route('jobs-list') }}',
                 method: 'POST'
-            }/*,
+            },
             columns: [
                 {data: 'id', name: 'id'},
                 {data: 'job_type', name: 'job_type'},
                 {data: 'job_status', name: 'job_status'},
                 {data: 'created_at', name: 'created_at'},
-                {data: 'updated_at', name: 'updated_at'},
                 {data: 'action', name: 'action', orderable: false, searchable: false}
             ],
             order: [[3, 'desc']],
@@ -212,13 +211,12 @@
                 {targets: 1},
                 {targets: 2},
                 {targets: 3},
-                {targets: 4},
-                {targets: 5}
+                {targets: 4}
             ],
             language: {
-                processing: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>'
+                processing: '<i class="fa fa-spinner fa-spin fa-2x fa-fw"></i><span class="sr-only">Loading...</span>'
 
-            }*/
+            }
         });
         tbl.on('click', 'a.btn-view-job', function () {
             var t = $(this), id = t.data('id');

@@ -147,7 +147,7 @@ class ImportPathways extends Command
             }
         }
         $bar->finish();
-        $this->info("Done!");
+        $this->info("\nDone!");
         return true;
     }
 
@@ -194,7 +194,7 @@ class ImportPathways extends Command
             }
         }
         $bar->finish();
-        $this->info("Done!");
+        $this->info("\nDone!");
         return true;
     }
 
@@ -248,7 +248,7 @@ class ImportPathways extends Command
             }
         }
         $bar->finish();
-        $this->info("Done!");
+        $this->info("\nDone!");
         return true;
     }
 

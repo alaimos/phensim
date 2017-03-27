@@ -38,11 +38,11 @@ class HomeController extends Controller
     {
         /** @var \Yajra\Datatables\Engines\QueryBuilderEngine $table */
         $table = Datatables::of(Job::listJobs());
-        $table->editColumn('job_type', function (Job $jobData) {
-            return ucwords(str_replace(['-', '_'], ' ', $jobData->job_type));
-        })->editColumn('status', function (Job $jobData) {
+        $table->editColumn('job_type', function (Job $job) {
+            return ucwords(str_replace(['-', '_'], ' ', $job->job_type));
+        })->editColumn('job_status', function (Job $job) {
             $text = '';
-            switch ($jobData->job_status) {
+            switch ($job->job_status) {
                 case Job::QUEUED:
                     $text = '<i class="fa fa-pause" aria-hidden="true"></i> ';
                     break;
@@ -56,10 +56,10 @@ class HomeController extends Controller
                     $text = '<i class="fa fa-check-circle" aria-hidden="true"></i> ';
                     break;
             }
-            return $text . ucfirst($jobData->job_status);
-        })->addColumn('action', function (Job $jobData) {
+            return $text . ucfirst($job->job_status);
+        })->addColumn('action', function (Job $job) {
             return view('jobs.list_action_column', [
-                'jobData' => $jobData,
+                'job' => $job,
             ])->render();
         });
         return $table->make(true);

@@ -1358,10 +1358,3 @@ jQuery(function(){
         App.init();
     }
 });
-$(function () {
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': window.Laravel.csrfToken
-        }
-    });
-});

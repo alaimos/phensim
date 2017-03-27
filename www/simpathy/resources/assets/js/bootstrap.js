@@ -31,8 +31,8 @@ window.axios.defaults.headers.common = {
     'X-Requested-With': 'XMLHttpRequest'
 };
 
-$(function () {
-    $.ajaxSetup({
+window.$(function () {
+    window.$.ajaxSetup({
         headers: {
             'X-CSRF-TOKEN': window.Laravel.csrfToken
         }
