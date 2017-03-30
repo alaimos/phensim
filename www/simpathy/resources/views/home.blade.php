@@ -77,7 +77,7 @@
                             <ul class="list list-simple list-li-clearfix">
                                 <li>
                                     <a class="item item-rounded pull-left push-10-r bg-info"
-                                       href="{{ url('/') }}">
+                                       href="{{ route('submit-simple') }}">
                                         <i class="fa fa-smile-o text-white-op"></i>
                                     </a>
                                     <h5 class="push-5-t">Simple Simulation</h5>
@@ -85,7 +85,7 @@
                                 </li>
                                 <li>
                                     <a class="item item-rounded pull-left push-10-r bg-amethyst"
-                                       href="{{ url('/') }}">
+                                       href="{{ route('submit-enriched') }}">
                                         <i class="fa fa-smile-o text-white-op"></i>
                                     </a>
                                     <h5 class="push-5-t">Enriched Simulation</h5>
