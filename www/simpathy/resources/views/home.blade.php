@@ -223,8 +223,6 @@
             t.parent().append('&nbsp;&nbsp;<i class="fa fa-spinner fa-pulse fa-fw loading-job"></i>');
             viewLog(id);
         })
-
-
     });
 </script>
 @endpush

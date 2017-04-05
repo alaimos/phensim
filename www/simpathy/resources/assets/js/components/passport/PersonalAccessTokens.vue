@@ -64,7 +64,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <button type="button " class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 
                         <h4 class="modal-title">
                             Create Token
@@ -132,7 +132,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <button type="button " class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 
                         <h4 class="modal-title">
                             Personal Access Token
@@ -200,8 +200,8 @@
                 this.getTokens();
                 this.getScopes();
 
-                $('#modal-create-token').on('shown.bs.modal', () => {
-                    $('#create-token-name').focus();
+                window.$('#modal-create-token').on('shown.bs.modal', () => {
+                    window.$('#create-token-name').focus();
                 });
             },
 
@@ -229,7 +229,7 @@
              * Show the form for creating new tokens.
              */
             showCreateTokenForm() {
-                $('#modal-create-token').modal('show');
+                window.$('#modal-create-token').modal('show');
             },
 
             /**
@@ -281,11 +281,11 @@
              * Show the given access token to the user.
              */
             showAccessToken(accessToken) {
-                $('#modal-create-token').modal('hide');
+                window.$('#modal-create-token').modal('hide');
 
                 this.accessToken = accessToken;
 
-                $('#modal-access-token').modal('show');
+                window.$('#modal-access-token').modal('show');
             },
 
             /**

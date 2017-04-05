@@ -258,12 +258,12 @@
             prepareComponent() {
                 this.getClients();
 
-                $('#modal-create-client').on('shown.bs.modal', () => {
-                    $('#create-client-name').focus();
+                window.$('#modal-create-client').on('shown.bs.modal', () => {
+                    window.$('#create-client-name').focus();
                 });
 
-                $('#modal-edit-client').on('shown.bs.modal', () => {
-                    $('#edit-client-name').focus();
+                window.$('#modal-edit-client').on('shown.bs.modal', () => {
+                    window.$('#edit-client-name').focus();
                 });
             },
 
@@ -281,7 +281,7 @@
              * Show the form for creating new clients.
              */
             showCreateClientForm() {
-                $('#modal-create-client').modal('show');
+                window.$('#modal-create-client').modal('show');
             },
 
             /**
@@ -302,7 +302,7 @@
                 this.editForm.name = client.name;
                 this.editForm.redirect = client.redirect;
 
-                $('#modal-edit-client').modal('show');
+                window.$('#modal-edit-client').modal('show');
             },
 
             /**
@@ -329,7 +329,7 @@
                         form.redirect = '';
                         form.errors = [];
 
-                        $(modal).modal('hide');
+                        window.$(modal).modal('hide');
                     })
                     .catch(error => {
                         if (typeof error.response.data === 'object') {
