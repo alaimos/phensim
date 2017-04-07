@@ -19,6 +19,8 @@ Vue.component('passport-authorized-clients', require('./components/passport/Auth
 
 Vue.component('passport-personal-access-tokens', require('./components/passport/PersonalAccessTokens.vue'));
 
+Vue.component('jobs-table', require('./components/home/JobsTable.vue'));
+
 const app = new Vue({
     el: '#app'
 });

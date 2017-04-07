@@ -3,10 +3,7 @@
 namespace App\Http\Controllers\Simulation;
 
 use App\Http\Controllers\Controller;
-use App\Models\Job;
 use App\Models\Organism;
-use Datatables;
-use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 
 class SubmitController extends Controller
@@ -18,8 +15,8 @@ class SubmitController extends Controller
     public function submitSimple(): View
     {
         return view('simulation.submit_simple', [
-            'organisms' => Organism::all(),
-            
+            'organisms' => Organism::pluck('name', 'accession'),
+
         ]);
     }
 

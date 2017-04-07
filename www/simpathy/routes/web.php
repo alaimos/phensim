@@ -29,6 +29,7 @@ Route::group(['prefix'    => 'simulation', 'middleware' => ['auth', 'role:user|a
               'namespace' => 'Simulation'], function () {
     Route::group(['prefix' => 'submit', 'middleware' => ['permission:create-job']], function () {
         Route::get('simple', 'SubmitController@submitSimple')->name('submit-simple');
+        Route::post('simple', 'SubmitController@doSubmitSimple')->name('do-submit-simple');
         Route::get('enriched', 'SubmitController@submitEnriched')->name('submit-enriched');
     });
 });
