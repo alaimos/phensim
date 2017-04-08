@@ -21,6 +21,9 @@ Vue.component('passport-personal-access-tokens', require('./components/passport/
 
 Vue.component('jobs-table', require('./components/home/JobsTable.vue'));
 
+Vue.component('nodes-select', require('./components/submit/NodesSelector.vue'));
+
 const app = new Vue({
     el: '#app'
 });
+window.VueApp = app;

@@ -12,17 +12,17 @@ use Illuminate\Database\Eloquent\Model;
  * @property int                                                                 $start_id
  * @property int                                                                 $end_id
  * @property array                                                               $types
- * @property-read \App\Models\Node                                               $start
+ * @property int                                                                 $organism_id
  * @property-read \App\Models\Node                                               $end
+ * @property-read \App\Models\Organism                                           $organism
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Pathway[] $pathways
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Edge whereId($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Edge whereStartId($value)
+ * @property-read \App\Models\Node                                               $start
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Edge whereEndId($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Edge whereId($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Edge whereOrganismId($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Edge whereStartId($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Edge whereTypes($value)
  * @mixin \Eloquent
- * @property int                                                                 $organism_id
- * @property-read \App\Models\Organism                                           $organism
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Edge whereOrganismId($value)
  */
 class Edge extends Model
 {

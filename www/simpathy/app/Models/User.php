@@ -11,19 +11,21 @@ use Laravel\Passport\HasApiTokens;
 /**
  * App\Models\User
  *
- * @property int                                                                      $id
- * @property string                                                                   $name
- * @property string                                                                   $email
- * @property string                                                                   $password
- * @property string                                                                   $affiliation
- * @property string                                                                   $remember_token
- * @property \Carbon\Carbon                                                           $created_at
- * @property \Carbon\Carbon                                                           $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Job[]          $jobs
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Permission[]   $permissions
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Role[]         $roles
- * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\Illuminate\Notifications\DatabaseNotification[]
- *                $notifications
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property string $password
+ * @property string $affiliation
+ * @property string $secret
+ * @property string $remember_token
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\Laravel\Passport\Client[] $clients
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Job[] $jobs
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\Illuminate\Notifications\DatabaseNotification[] $notifications
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Permission[] $permissions
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Role[] $roles
+ * @property-read \Illuminate\Database\Eloquent\Collection|\Laravel\Passport\Token[] $tokens
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereAffiliation($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereCreatedAt($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereEmail($value)
@@ -32,12 +34,9 @@ use Laravel\Passport\HasApiTokens;
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User wherePassword($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereRememberToken($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereRoleIs($role = '')
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereSecret($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereUpdatedAt($value)
  * @mixin \Eloquent
- * @property string                                                                   $secret
- * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereSecret($value)
- * @property-read \Illuminate\Database\Eloquent\Collection|\Laravel\Passport\Client[] $clients
- * @property-read \Illuminate\Database\Eloquent\Collection|\Laravel\Passport\Token[]  $tokens
  */
 class User extends Authenticatable implements Ownable
 {

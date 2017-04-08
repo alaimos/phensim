@@ -61,7 +61,7 @@ class HomeController extends Controller
             return view('jobs.list_action_column', [
                 'job' => $job,
             ])->render();
-        });
+        })->rawColumns(['action', 'job_status']);
         return $table->make(true);
     }
 }

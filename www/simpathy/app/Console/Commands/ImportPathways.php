@@ -113,10 +113,11 @@ class ImportPathways extends Command
     /**
      * Import nodes and creates a map from accession number to internal Id
      *
-     * @return bool
+     * @param \App\Models\Organism $organism
      *
+     * @return bool
      */
-    protected function importNodes(): bool
+    protected function importNodes(Organism $organism): bool
     {
         $this->info("Importing nodes");
         $count = Utils::countLines($this->nodesFile);
@@ -137,10 +138,11 @@ class ImportPathways extends Command
                 $accession = $fields[0];
                 if (!isset($this->nodesMap[$accession])) {
                     $node = Node::create([
-                        'accession' => $fields[0],
-                        'name'      => $fields[1],
-                        'type'      => strtolower($fields[2]),
-                        'aliases'   => (array)array_filter(array_map('trim', explode(',', $fields[3]))),
+                        'accession'   => $fields[0],
+                        'name'        => $fields[1],
+                        'type'        => strtolower($fields[2]),
+                        'aliases'     => (array)array_filter(array_map('trim', explode(',', $fields[3]))),
+                        'organism_id' => $organism->id,
                     ]);
                     $this->nodesMap[(string)$node->accession] = $node->id;
                 }
@@ -261,8 +263,9 @@ class ImportPathways extends Command
     {
         $organisms = $this->exportOrganisms();
         foreach ($organisms as $accession => $org) {
+            $this->nodesMap = [];
             if ($this->exportPathways($accession)) {
-                if ($this->importNodes()) {
+                if ($this->importNodes($org)) {
                     if ($this->importEdges($org)) {
                         if (!$this->importPathways($org)) {
                             return 104;

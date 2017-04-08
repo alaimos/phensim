@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
 
 class CreateNodesTable extends Migration
 {
@@ -14,10 +14,13 @@ class CreateNodesTable extends Migration
     {
         Schema::create('nodes', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('accession')->unique();
+            $table->string('accession');
             $table->string('name');
             $table->string('type')->index();
+            $table->integer('organism_id')->unsigned()->index();
             $table->longText('aliases');
+            $table->foreign('organism_id')->references('id')->on('organisms')->onDelete('cascade')->onUpdate('cascade');
+            $table->unique(['accession', 'organism_id']);
             //$table->timestamps();
         });
     }

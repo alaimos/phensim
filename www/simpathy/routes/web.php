@@ -19,7 +19,7 @@ Auth::routes();
 
 Route::get('logout', 'Auth\LoginController@logout')->name('logout');
 
-Route::get('/home', 'HomeController@index');
+Route::get('/home', 'HomeController@index')->name('user-home');
 
 Route::any('/jobs/list', 'HomeController@jobsData')->name('jobs-list');
 
@@ -31,5 +31,7 @@ Route::group(['prefix'    => 'simulation', 'middleware' => ['auth', 'role:user|a
         Route::get('simple', 'SubmitController@submitSimple')->name('submit-simple');
         Route::post('simple', 'SubmitController@doSubmitSimple')->name('do-submit-simple');
         Route::get('enriched', 'SubmitController@submitEnriched')->name('submit-enriched');
+        Route::post('enriched', 'SubmitController@doSubmitEnriched')->name('do-submit-enriched');
+        Route::match(['get', 'post'], 'list/nodes', 'SubmitController@listNodes')->name('list-nodes');
     });
 });

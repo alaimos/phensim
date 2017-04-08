@@ -11,14 +11,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property string                                                              $accession
  * @property string                                                              $name
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Edge[]    $edges
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Node[]    $nodes
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Pathway[] $pathways
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Organism whereAccession($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Organism whereCreatedAt($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Organism whereId($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Organism whereName($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Organism whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Node[] $nodes
  */
 class Organism extends Model
 {
@@ -36,6 +34,16 @@ class Organism extends Model
      * @var bool
      */
     public $timestamps = false;
+
+    /**
+     * References all nodes belonging to this organism
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function nodes()
+    {
+        return $this->hasMany('App\Models\Node', 'organism_id', 'id');
+    }
 
     /**
      * References all edges belonging to this organism

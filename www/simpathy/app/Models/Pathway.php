@@ -8,17 +8,17 @@ use Illuminate\Database\Eloquent\Model;
  * App\Models\Pathway
  *
  * @property int                                                              $id
+ * @property int                                                              $organism_id
  * @property string                                                           $accession
  * @property string                                                           $name
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Node[] $nodes
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Edge[] $edges
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Pathway whereId($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Pathway whereAccession($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Pathway whereName($value)
- * @mixin \Eloquent
- * @property int                                                              $organism_id
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Node[] $nodes
  * @property-read \App\Models\Organism                                        $organism
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Pathway whereAccession($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Pathway whereId($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Pathway whereName($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Pathway whereOrganismId($value)
+ * @mixin \Eloquent
  */
 class Pathway extends Model
 {

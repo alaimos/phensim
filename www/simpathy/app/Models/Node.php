@@ -15,14 +15,14 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Edge[]    $ingoingEdges
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Edge[]    $outgoingEdges
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Pathway[] $pathways
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereId($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereAccession($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereAliases($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereId($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereName($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereType($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereAliases($value)
  * @mixin \Eloquent
- * @property int                                                                 $organism_id
- * @property-read \App\Models\Organism                                           $organism
+ * @property int $organism_id
+ * @property-read \App\Models\Organism $organism
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereOrganismId($value)
  */
 class Node extends Model
@@ -34,7 +34,7 @@ class Node extends Model
      *
      * @var array
      */
-    protected $fillable = ['accession', 'name', 'type', 'aliases'];
+    protected $fillable = ['accession', 'name', 'type', 'aliases', 'organism_id'];
 
     /**
      * The attributes that should be cast to native types.
@@ -51,6 +51,16 @@ class Node extends Model
      * @var bool
      */
     public $timestamps = false;
+
+    /**
+     * Organism of this edge
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function organism()
+    {
+        return $this->belongsTo('App\Models\Organism', 'organism_id', 'id');
+    }
 
     /**
      * References all ingoing edges from this node

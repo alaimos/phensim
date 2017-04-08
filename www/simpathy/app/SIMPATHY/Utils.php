@@ -136,6 +136,25 @@ final class Utils
         return true;
     }
 
+    private static function recursiveFilter($objects)
+    {
+        if (is_object($objects)) {
+            if (method_exists($objects, 'getKey')) {
+                return $objects->getKey();
+            } else {
+                return (string)$objects;
+            }
+        } elseif (is_array($objects)) {
+            return '[' . implode(',', array_map(function ($k, $v) {
+                    return $k . '=>' . self::recursiveFilter($v);
+                }, array_keys($objects), $objects)) . ']';
+        } elseif (is_resource($objects)) {
+            return '';
+        } else {
+            return $objects;
+        }
+    }
+
     /**
      * Generate an unique key starting from a set of objects
      *
@@ -145,24 +164,7 @@ final class Utils
      */
     public static function makeKey(/*...*/)
     {
-        $objects = array_filter(array_map(function ($e) {
-            if (is_object($e)) {
-                if (method_exists($e, 'getKey')) {
-                    return $e->getKey();
-                } else {
-                    return (string)$e;
-                }
-            } elseif (is_array($e)) {
-                return implode(',', $e);
-            } elseif (is_resource($e)) {
-                return null;
-            } else {
-                return $e;
-            }
-        }, func_get_args()), function ($e) {
-            return $e !== null;
-        });
-        return md5(implode('-', $objects));
+        return md5(self::recursiveFilter(func_get_args()));
     }
 
     /**
@@ -213,6 +215,7 @@ final class Utils
      * @param string           $command
      * @param CommandException $e
      * @param array            $errorCodeMap
+     *
      * @return boolean
      * @throws CommandException
      */

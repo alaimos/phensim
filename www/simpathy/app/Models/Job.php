@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Laratrust\Contracts\Ownable;
 
 /**
- * App\Models\Jobs
+ * App\Models\Job
  *
  * @property int                   $id
  * @property int                   $user_id
@@ -114,14 +114,17 @@ class Job extends Model implements Ownable
     /**
      * Compute a job key
      *
-     * @param string  $jobType
-     * @param array   $jobParameters
-     * @param integer $userId
+     * @param string                   $jobType
+     * @param array                    $jobParameters
+     * @param integer|\App\Models\User $userId
      *
      * @return string
      */
     public static function computeKey($jobType, array $jobParameters, $userId)
     {
+        if ($userId instanceof User) {
+            $userId = $userId->id;
+        }
         return Utils::makeKey('type', $jobType, 'parameters', $jobParameters, 'user_id', $userId);
     }
 
