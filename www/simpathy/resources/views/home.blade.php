@@ -77,7 +77,7 @@
                                        href="{{ route('submit-enriched') }}">
                                         <i class="fa fa-smile-o text-white-op"></i>
                                     </a>
-                                    <h5 class="push-5-t">Enriched Simulation</h5>
+                                    <h5 class="push-5-t">Advanced Simulation</h5>
                                     <div class="font-s13">Run a simulation using custom enriched pathways</div>
                                 </li>
                                 <li>
