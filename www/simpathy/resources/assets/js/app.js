@@ -1,4 +1,3 @@
-
 /**
  * First we will load all of this project's JavaScript dependencies which
  * includes Vue and other libraries. It is a great starting point when
@@ -13,6 +12,9 @@ require('./bootstrap');
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
 
+const VueBus = new Vue();
+window.VueBus = VueBus;
+
 Vue.component('passport-clients', require('./components/passport/Clients.vue'));
 
 Vue.component('passport-authorized-clients', require('./components/passport/AuthorizedClients.vue'));
@@ -21,9 +23,12 @@ Vue.component('passport-personal-access-tokens', require('./components/passport/
 
 Vue.component('jobs-table', require('./components/home/JobsTable.vue'));
 
-Vue.component('nodes-select', require('./components/submit/NodesSelector.vue'));
+Vue.component('nodes-selector', require('./components/submission/NodesSelector.vue'));
+
+Vue.component('nodes-selector-h', require('./components/submission/NodesSelectorHorizontal.vue'));
 
 const app = new Vue({
     el: '#app'
 });
-window.VueApp = app;
+
+

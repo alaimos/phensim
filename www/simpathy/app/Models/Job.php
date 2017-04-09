@@ -115,17 +115,16 @@ class Job extends Model implements Ownable
      * Compute a job key
      *
      * @param string                   $jobType
-     * @param array                    $jobParameters
      * @param integer|\App\Models\User $userId
      *
      * @return string
      */
-    public static function computeKey($jobType, array $jobParameters, $userId)
+    public static function computeKey($jobType, $userId)
     {
         if ($userId instanceof User) {
             $userId = $userId->id;
         }
-        return Utils::makeKey('type', $jobType, 'parameters', $jobParameters, 'user_id', $userId);
+        return Utils::makeKey('type', $jobType, 'time', microtime(true), 'user_id', $userId);
     }
 
     /**
@@ -135,7 +134,7 @@ class Job extends Model implements Ownable
      */
     public function generateKey()
     {
-        return self::computeKey($this->job_type, $this->job_parameters, $this->user_id);
+        return self::computeKey($this->job_type, $this->user_id);
     }
 
     /**

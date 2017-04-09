@@ -26,7 +26,9 @@
                         <div class="row">
                             <div class="col-sm-12">
                                 <div class="alert alert-danger alert-dismissable">
-                                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">
+                                        &times;
+                                    </button>
                                     <h4 class="font-w300 push-15"><strong>Whoops!</strong> Something went wrong!</h4>
                                     <ul>
                                         @foreach ($errors->all() as $error)
@@ -37,8 +39,8 @@
 
                             </div>
                         </div>
-                    @endif
-                    <!-- Simple Classic Wizard -->
+                @endif
+                <!-- Simple Classic Wizard -->
                     <div class="js-wizard-simple block">
                         <!-- Step Tabs -->
                         <ul class="nav nav-tabs nav-justified">
@@ -79,12 +81,10 @@
                             <!-- Step 2 -->
                             <div class="tab-pane push-30-t push-50" id="simple-sim-sub-step2">
                                 <div class="form-group{{ $errors->has('overexp-nodes') ? ' has-error' : '' }}">
-                                    <div class="col-sm-8 col-sm-offset-2">
-                                        <label for="overexp-nodes" class="control-label">Select over-expressed
-                                            nodes</label>
-                                        <select class="form-control" id="overexp-nodes" name="overexp-nodes[]" multiple>
-                                        </select>
-                                    </div>
+                                    <nodes-selector id="overexp-nodes" name="overexp-nodes[]"
+                                                    label="Select over-expressed nodes"
+                                                    data_url="{{ route('list-nodes') }}"
+                                                    org_field="organism"></nodes-selector>
                                 </div>
                                 <div class="form-group{{ $errors->has('overexp-file') ? ' has-error' : '' }}">
                                     <div class="col-sm-8 col-sm-offset-2">
@@ -98,13 +98,10 @@
                             <!-- Step 3 -->
                             <div class="tab-pane push-30-t push-50" id="simple-sim-sub-step3">
                                 <div class="form-group{{ $errors->has('underexp-nodes') ? ' has-error' : '' }}">
-                                    <div class="col-sm-8 col-sm-offset-2">
-                                        <label for="underexp-nodes" class="control-label">Select under-expressed
-                                            nodes</label>
-                                        <select class="form-control" id="underexp-nodes" name="underexp-nodes[]"
-                                                multiple>
-                                        </select>
-                                    </div>
+                                    <nodes-selector id="underexp-nodes" name="underexp-nodes[]"
+                                                    label="Select under-expressed nodes"
+                                                    data_url="{{ route('list-nodes') }}"
+                                                    org_field="organism"></nodes-selector>
                                 </div>
                                 <div class="form-group{{ $errors->has('underexp-file') ? ' has-error' : '' }}">
                                     <div class="col-sm-8 col-sm-offset-2">
@@ -118,12 +115,10 @@
                             <!-- Step 4 -->
                             <div class="tab-pane push-30-t push-50" id="simple-sim-sub-step4">
                                 <div class="form-group{{ $errors->has('nonexp-nodes') ? ' has-error' : '' }}">
-                                    <div class="col-sm-8 col-sm-offset-2">
-                                        <label for="nonexp-nodes" class="control-label">Select non-expressed
-                                            nodes</label>
-                                        <select class="form-control" id="nonexp-nodes" name="nonexp-nodes[]" multiple>
-                                        </select>
-                                    </div>
+                                    <nodes-selector id="nonexp-nodes" name="nonexp-nodes[]"
+                                                    label="Select non-expressed nodes"
+                                                    data_url="{{ route('list-nodes') }}"
+                                                    org_field="organism"></nodes-selector>
                                 </div>
                                 <div class="form-group{{ $errors->has('nonexp-file') ? ' has-error' : '' }}">
                                     <div class="col-sm-8 col-sm-offset-2">
@@ -195,63 +190,6 @@
 @push('inline-scripts')
 <script>
     $(function () {
-        var getOrganism = function () {
-            return $('#organism').val();
-        }, prepareSelect = function (id) {
-            let $selectNoi = window.$('#' + id);
-            if ($selectNoi.hasClass('ok')) {
-                $selectNoi.select2('destroy').removeClass('ok');
-            }
-            $selectNoi.select2({
-                ajax:               {
-                    url:            '{{ route('list-nodes') }}',
-                    dataType:       'json',
-                    delay:          250,
-                    data:           function (params) {
-                        return {
-                            organism: getOrganism(),
-                            q:        params.term, // search term
-                            page:     params.page
-                        };
-                    },
-                    processResults: function (data, params) {
-                        params.page = params.page || 1;
-                        let results = [];
-                        $.each(data.data, function (i, v) {
-                            results.push({
-                                id:        v.accession,
-                                text:      v.accession,
-                                name:      v.name,
-                                accession: v.accession,
-                            });
-                        });
-                        return {
-                            results:    results,
-                            pagination: {
-                                more: (params.page * 30) < data.total
-                            }
-                        };
-                    },
-                    cache:          true
-                },
-                escapeMarkup:       function (markup) {
-                    return markup;
-                }, // let our custom formatter work
-                minimumInputLength: 1,
-                templateResult:     function (result) {
-                    if (result.loading) return result.text;
-                    return $('<div class="row">' +
-                        '<div class="col-xs-2">' + result.accession + '</div>' +
-                        '<div class="col-xs-9">' + result.name + '</div>' +
-                        '</div>');
-                },
-                templateSelection:  function (selection) {
-                    return selection.accession || selection.text;
-                }
-            }).addClass('ok');
-        };
-
-
         $('.js-wizard-simple').bootstrapWizard({
             'tabClass':         '',
             'firstSelector':    '.wizard-first',
@@ -274,19 +212,15 @@
                 if ($progress) {
                     $progress.css({width: $percent + '%'});
                 }
-
                 if ($current == 2) {
-                    prepareSelect('overexp-nodes');
+                    VueBus.$emit('prepareSelect', 'overexp-nodes');
                 }
-
                 if ($current == 3) {
-                    prepareSelect('underexp-nodes');
+                    VueBus.$emit('prepareSelect', 'underexp-nodes');
                 }
-
                 if ($current == 4) {
-                    prepareSelect('nonexp-nodes');
+                    VueBus.$emit('prepareSelect', 'nonexp-nodes');
                 }
-
                 // If it's the last tab then hide the last button and show the finish instead
                 if ($current >= $total) {
                     $btnNext.hide();

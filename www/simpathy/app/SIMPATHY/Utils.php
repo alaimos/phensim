@@ -14,7 +14,7 @@ final class Utils
      *
      * @return bool
      */
-    public static function delete($path)
+    public static function delete(string $path): bool
     {
         if (!file_exists($path)) {
             return false;
@@ -38,7 +38,7 @@ final class Utils
      *
      * @return void
      */
-    public static function createDirectory($directory)
+    public static function createDirectory(string $directory)
     {
         if (!file_exists($directory)) {
             @mkdir($directory, 0777, true);
@@ -53,7 +53,7 @@ final class Utils
      *
      * @return string
      */
-    public static function getStorageDirectory($type)
+    public static function getStorageDirectory(string $type): string
     {
         $path = storage_path('app/' . $type);
         if (!file_exists($path)) {
@@ -69,7 +69,7 @@ final class Utils
      *
      * @return string
      */
-    public static function storageFile($type)
+    public static function storageFile(string $type): string
     {
         return self::getStorageDirectory($type) . DIRECTORY_SEPARATOR . self::makeKey(rand(), microtime(true));
     }
@@ -79,7 +79,7 @@ final class Utils
      *
      * @return string
      */
-    public static function tempDir()
+    public static function tempDir(): string
     {
         $dirName = storage_path('tmp');
         if (!file_exists($dirName)) {
@@ -96,7 +96,7 @@ final class Utils
      *
      * @return string
      */
-    public static function tempFilename($prefix = '', $extension = '')
+    public static function tempFilename(string $prefix = '', string $extension = ''): string
     {
         $filename = $prefix . self::makeKey($prefix, microtime(true));
         if (!empty($extension)) {
@@ -113,7 +113,7 @@ final class Utils
      *
      * @return string
      */
-    public static function tempFile($prefix = '', $extension = '')
+    public static function tempFile(string $prefix = '', string $extension = ''): string
     {
         return self::tempDir() . DIRECTORY_SEPARATOR . self::tempFilename($prefix, $extension);
     }
@@ -126,7 +126,7 @@ final class Utils
      *
      * @return boolean
      */
-    public static function runCommand($command, array &$output = null)
+    public static function runCommand(string $command, array &$output = null): bool
     {
         $returnCode = -1;
         exec($command, $output, $returnCode);
@@ -136,7 +136,7 @@ final class Utils
         return true;
     }
 
-    private static function recursiveFilter($objects)
+    private static function recursiveFilter($objects): string
     {
         if (is_object($objects)) {
             if (method_exists($objects, 'getKey')) {
@@ -162,7 +162,7 @@ final class Utils
      *
      * @return string
      */
-    public static function makeKey(/*...*/)
+    public static function makeKey(/*...*/): string
     {
         return md5(self::recursiveFilter(func_get_args()));
     }
@@ -174,7 +174,7 @@ final class Utils
      *
      * @return string
      */
-    public static function compressArray(array $array)
+    public static function compressArray(array $array): string
     {
         return base64_encode(gzcompress(serialize($array), 9));
     }
@@ -186,7 +186,7 @@ final class Utils
      *
      * @return array
      */
-    public static function uncompressArray($string)
+    public static function uncompressArray(string $string): array
     {
         return (array)unserialize(gzuncompress(base64_decode($string)));
     }
@@ -200,7 +200,7 @@ final class Utils
      *
      * @return string
      */
-    public static function formatDouble($number, $decimals = 4, $scientific = true)
+    public static function formatDouble(float $number, int $decimals = 4, bool $scientific = true): string
     {
         if ($scientific && $number != 0 && abs($number) < pow(10, -$decimals)) {
             return sprintf('%.4e', $number);
@@ -219,7 +219,7 @@ final class Utils
      * @return boolean
      * @throws CommandException
      */
-    public static function mapCommandException($command, CommandException $e, array $errorCodeMap = [])
+    public static function mapCommandException(string $command, CommandException $e, array $errorCodeMap = []): bool
     {
         $code = intval($e->getMessage());
         if (isset($errorCodeMap[$code])) {
@@ -236,8 +236,153 @@ final class Utils
      *
      * @return integer
      */
-    public static function countLines($file)
+    public static function countLines(string $file): int
     {
         return intval(exec('wc -l ' . escapeshellarg($file)));
     }
+
+    /**
+     * Checks if a file could contain node types
+     *
+     * @param string $file
+     *
+     * @return bool
+     */
+    public static function checkNodeTypeFile(string $file): bool
+    {
+        if (!file_exists($file)) return false;
+        $fp = @fopen($file, 'r');
+        if (!$fp) return false;
+        while (($line = fgets($fp)) !== false) {
+            if (empty($line) || $line{0} == '#') continue;
+            $fields = explode("\t", trim($line));
+            $c = count($fields);
+            if ($c == 1) continue;
+            if ($c == 2 && !is_numeric($fields[1])) return false;
+            if ($c > 2) return false;
+        }
+        @fclose($fp);
+        return true;
+    }
+
+    /**
+     * Checks if a file could contain edge types
+     *
+     * @param string $file
+     *
+     * @return bool
+     */
+    public static function checkEdgeTypeFile(string $file): bool
+    {
+        if (!file_exists($file)) return false;
+        $fp = @fopen($file, 'r');
+        if (!$fp) return false;
+        while (($line = fgets($fp)) !== false) {
+            if (empty($line) || $line{0} == '#') continue;
+            $fields = explode("\t", trim($line));
+            $c = count($fields);
+            if ($c > 1) return false;
+        }
+        @fclose($fp);
+        return true;
+    }
+
+    /**
+     * Checks if a file could contain edge subtypes
+     *
+     * @param string $file
+     *
+     * @return bool
+     */
+    public static function checkEdgeSubTypeFile(string $file): bool
+    {
+        if (!file_exists($file)) return false;
+        $fp = @fopen($file, 'r');
+        if (!$fp) return false;
+        while (($line = fgets($fp)) !== false) {
+            if (empty($line) || $line{0} == '#') continue;
+            $fields = explode("\t", trim($line));
+            $c = count($fields);
+            if ($c == 1) continue;
+            if ($c >= 2 && !is_numeric($fields[1])) return false;
+            if ($c >= 3 && !is_numeric($fields[2])) return false;
+            if ($c > 4) return false;
+        }
+        @fclose($fp);
+        return true;
+    }
+
+    /**
+     * Checks if a file could contain an enrichment db
+     *
+     * @param string $file
+     *
+     * @return bool
+     */
+    public static function checkDbFile(string $file): bool
+    {
+        if (!file_exists($file)) return false;
+        $fp = @fopen($file, 'r');
+        if (!$fp) return false;
+        while (($line = fgets($fp)) !== false) {
+            if (empty($line) || $line{0} == '#') continue;
+            $fields = explode("\t", trim($line));
+            $c = count($fields);
+            if ($c != 9) return false;
+        }
+        @fclose($fp);
+        return true;
+    }
+
+    /**
+     * Checks if a file is a valid simpathy input file
+     *
+     * @param string        $file
+     * @param callable|null $callback
+     *
+     * @return bool
+     */
+    public static function checkInputFile(string $file, callable $callback = null): bool
+    {
+        if (!file_exists($file)) return false;
+        $fp = @fopen($file, 'r');
+        if (!$fp) return false;
+        $aType = [
+            Launcher::OVEREXPRESSION  => true,
+            Launcher::UNDEREXPRESSION => true,
+            Launcher::BOTH            => true,
+        ];
+        while (($line = fgets($fp)) !== false) {
+            if (empty($line) || $line{0} == '#') continue;
+            $fields = explode("\t", trim($line));
+            $c = count($fields);
+            if ($c != 2) return false;
+            $fields[1] = strtoupper($fields[1]);
+            if (!isset($aType[$fields[1]])) return false;
+            if ($callback !== null && is_callable($callback)) {
+                call_user_func($callback, $fields);
+            }
+        }
+        @fclose($fp);
+        return true;
+    }
+
+    /**
+     * Read simpathy input file
+     *
+     * @param string $file
+     *
+     * @return array
+     */
+    public static function readInputFile(string $file): array
+    {
+        $inputArray = [];
+        $check = self::checkInputFile($file, function ($fields) use (&$inputArray) {
+            $inputArray[$fields[0]] = $fields[1];
+        });
+        if (!$check) return null;
+        return $inputArray;
+    }
+
+
 }
