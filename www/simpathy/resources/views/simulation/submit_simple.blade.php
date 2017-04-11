@@ -66,7 +66,7 @@
                     {!! Form::open(['route' => 'do-submit-simple', 'method' => 'post', 'class' => 'form-horizontal',
                     'files' => true]) !!}
                     <!-- Steps Content -->
-                        <div class="block-content tab-content" style="min-height: 300px">
+                        <div class="block-content tab-content" style="min-height: 320px">
                             <!-- Step 1 -->
                             <div class="tab-pane push-30-t push-50 active" id="simple-sim-sub-step1">
                                 <div class="form-group{{ $errors->has('organism') ? ' has-error' : '' }}">
@@ -130,7 +130,7 @@
                             <!-- END Step 4 -->
 
                             <!-- Step 5 -->
-                            <div class="tab-pane push-30-t push-50" id="simple-sim-sub-step5">
+                            <div class="tab-pane push-30-t" id="simple-sim-sub-step5">
                                 <div class="form-group"{{ $errors->has('epsilon') ? ' has-error' : '' }}>
                                     <div class="col-sm-8 col-sm-offset-2">
                                         {!! Form::label('epsilon', 'Epsilon value', ['class' => 'control-label']) !!}
@@ -149,6 +149,16 @@
                                                for="enrich-mirnas">
                                             <input type="checkbox" id="enrich-mirnas" checked
                                                    name="enrich-mirnas"><span></span> Enrich pathways with miRNAs
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group"{{ $errors->has('meta-pathway') ? ' has-error' : '' }}>
+                                    <div class="col-sm-8 col-sm-offset-2">
+                                        <label class="css-input switch switch-sm switch-primary"
+                                               for="meta-pathway">
+                                            <input type="checkbox" id="meta-pathway" checked
+                                                   name="meta-pathway"><span></span> Compute simulations on the
+                                            meta-pathway
                                         </label>
                                     </div>
                                 </div>

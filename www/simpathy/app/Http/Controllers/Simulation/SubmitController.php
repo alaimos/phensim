@@ -135,21 +135,20 @@ class SubmitController extends Controller
         $epsilon = doubleval($request->get('epsilon', 0.001));
         $seed = $request->get('random-seed');
         $enrich = in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON']);
-        $jobParameters = [
-            'organism'     => $organism,
-            'nodes'        => $nodes,
-            'nonExpressed' => $nonExp,
-            'epsilon'      => $epsilon,
-            'seed'         => $seed,
-            'enrich'       => $enrich,
-        ];
-        $job = Job::create([
-            'user_id'        => \Auth::id(),
-            'job_type'       => 'simple_simulation',
-            'job_status'     => Job::QUEUED,
-            'job_parameters' => $jobParameters,
-            'job_data'       => [],
-            'job_log'        => '',
+        $metaPathway = in_array($request->get('meta-pathway'), ['on', 1, 'On', 'ON']);
+        $job = Job::buildJob('simulation', [
+            'organism'             => $organism,
+            'simulationParameters' => $nodes,
+            'nonExpressed'         => $nonExp,
+            'dbFilter'             => null,
+            'epsilon'              => $epsilon,
+            'seed'                 => $seed,
+            'enrichMirs'           => $enrich,
+            'metaPathway'          => $metaPathway,
+            'enrichDb'             => null,
+            'nodeTypes'            => null,
+            'edgeTypes'            => null,
+            'edgeSubTypes'         => null,
         ]);
         $this->dispatch(new DispatcherJob($job->id));
         return redirect()->route('user-home');
@@ -241,22 +240,15 @@ class SubmitController extends Controller
             'valid_edge_sub_type' => 'You must upload a valid custom edge subtype file',
         ]);
         $nonExp = (array)$request->get('nonexp-nodes', []);
-        /** @var Job $job */
-        $job = Job::create([
-            'user_id'        => \Auth::id(),
-            'job_type'       => 'advanced_simulation',
-            'job_status'     => Job::QUEUED,
-            'job_parameters' => [
-                'organism'             => $request->get('organism', 'hsa'),
-                'simulationParameters' => Utils::readInputFile($request->file('simulation-input')->path()),
-                'nonExpressed'         => $nonExp,
-                'dbFilter'             => $request->get('db-filter'),
-                'epsilon'              => doubleval($request->get('epsilon', 0.001)),
-                'seed'                 => $request->get('random-seed'),
-                'enrichMirs'           => in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON']),
-            ],
-            'job_data'       => [],
-            'job_log'        => '',
+        $job = Job::buildJob('simulation', [
+            'organism'             => $request->get('organism', 'hsa'),
+            'simulationParameters' => Utils::readInputFile($request->file('simulation-input')->path()),
+            'nonExpressed'         => $nonExp,
+            'dbFilter'             => $request->get('db-filter'),
+            'epsilon'              => doubleval($request->get('epsilon', 0.001)),
+            'seed'                 => $request->get('random-seed'),
+            'enrichMirs'           => in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON']),
+            'metaPathway'          => in_array($request->get('meta-pathway'), ['on', 1, 'On', 'ON']),
         ]);
         $job->addParameters([
             'enrichDb'     => $this->prepareUploadedFile($request, $job, 'enrich-db'),

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Exceptions\SecurityException;
 use App\SIMPATHY\Utils;
+use Auth;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Laratrust\Contracts\Ownable;
@@ -99,6 +100,29 @@ class Job extends Model implements Ownable
             $query->where('job_type', '=', $jobType);
         }
         return $query;
+    }
+
+    /**
+     * Create a job
+     *
+     * @param string $type
+     * @param array  $parameters
+     * @param array  $jobData
+     *
+     * @return \App\Models\Job
+     */
+    public static function buildJob(string $type, array $parameters = [], array $jobData = [])
+    {
+        /** @var \App\Models\Job $job */
+        $job = Job::create([
+            'user_id'        => Auth::id(),
+            'job_type'       => $type,
+            'job_status'     => Job::QUEUED,
+            'job_parameters' => $parameters,
+            'job_data'       => $jobData,
+            'job_log'        => '',
+        ]);
+        return $job;
     }
 
     /**
