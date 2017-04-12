@@ -20,18 +20,18 @@ abstract class AbstractHandler implements HandlerInterface
      *
      * @param \App\Models\Job $jobData
      */
-    public function __construct($jobData)
+    public function __construct(JobData $jobData)
     {
         $this->setJobData($jobData);
     }
 
 
     /**
-     * Get the current job object
+     * Get the current job
      *
-     * @return JobData
+     * @return \App\Models\Job
      */
-    public function getJobData()
+    public function getJobData(): JobData
     {
         return $this->jobData;
     }
@@ -42,7 +42,7 @@ abstract class AbstractHandler implements HandlerInterface
      * @param JobData $jobData
      * @return $this
      */
-    public function setJobData($jobData)
+    public function setJobData(JobData $jobData)
     {
         if (!$this->canHandleJob($jobData)) {
             throw new JobException('This handler (' . get_class($this) . ') cannot handle a job of type ' . $jobData->job_type . '.');
@@ -57,10 +57,10 @@ abstract class AbstractHandler implements HandlerInterface
      * @param string           $command
      * @param CommandException $e
      * @param array            $errorCodeMap
-     * @return boolean
+     * @return void
      * @throws JobException
      */
-    protected function mapCommandException($command, CommandException $e, array $errorCodeMap = [])
+    protected function mapCommandException(string $command, CommandException $e, array $errorCodeMap = [])
     {
         $code = intval($e->getMessage());
         if (isset($errorCodeMap[$code])) {
@@ -79,13 +79,14 @@ abstract class AbstractHandler implements HandlerInterface
      * @return boolean
      * @throws JobException
      */
-    protected function runCommand($command, array &$output = null, array $errorCodeMap = [])
+    protected function runCommand(string $command, array &$output = null, array $errorCodeMap = []): bool
     {
         try {
             return Utils::runCommand($command, $output);
         } catch (CommandException $e) {
-            return $this->mapCommandException($command, $e, $errorCodeMap);
+            $this->mapCommandException($command, $e, $errorCodeMap);
         }
+        return false;
     }
 
     /**
@@ -95,7 +96,7 @@ abstract class AbstractHandler implements HandlerInterface
      * @param boolean $appendNewLine
      * @return $this
      */
-    public function log($text, $appendNewLine = true)
+    public function log(string $text, bool $appendNewLine = true)
     {
         $this->jobData->appendLog($text, $appendNewLine);
         return $this;

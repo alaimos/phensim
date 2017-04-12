@@ -21,7 +21,7 @@ class DispatcherJob implements ShouldQueue
      *
      * @param int $jobDataId
      */
-    public function __construct($jobDataId)
+    public function __construct(int $jobDataId)
     {
         if (JobData::find($jobDataId) === null) {
             throw new JobException('The identifier provided to the job dispatcher is invalid.');

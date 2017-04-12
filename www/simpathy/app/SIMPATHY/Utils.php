@@ -4,6 +4,7 @@ namespace App\SIMPATHY;
 
 
 use App\Exceptions\CommandException;
+use App\Models\Organism;
 
 final class Utils
 {
@@ -382,6 +383,27 @@ final class Utils
         });
         if (!$check) return null;
         return $inputArray;
+    }
+
+    /**
+     * Checks if a file is a valid simpathy input file
+     *
+     * @param array $data
+     *
+     * @return bool
+     */
+    public static function checkSimulationParameters(array $data): bool
+    {
+        if (empty($data)) return false;
+        $aType = [
+            Launcher::OVEREXPRESSION  => true,
+            Launcher::UNDEREXPRESSION => true,
+            Launcher::BOTH            => true,
+        ];
+        foreach ($data as $gene => $type) {
+            if (!isset($aType[$type])) return false;
+        }
+        return true;
     }
 
 
