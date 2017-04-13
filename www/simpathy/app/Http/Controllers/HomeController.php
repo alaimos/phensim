@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Job;
 use Datatables;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class HomeController extends Controller
 {
+
     /**
      * Create a new controller instance.
      */
@@ -21,7 +24,7 @@ class HomeController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function index(): \Illuminate\View\View
+    public function index(): View
     {
         return view('home', [
             'queuedJobs'     => Job::listJobs(Job::QUEUED)->count(),
@@ -32,6 +35,26 @@ class HomeController extends Controller
     }
 
     /**
+     * Return a job data
+     *
+     * @param Job $job
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function jobLog(Job $job): JsonResponse
+    {
+        if (!$job || !$job->exists) {
+            abort(404, 'Unable to find the job');
+        }
+        if (!$job->canBeRead()) {
+            abort(403, 'You are not allowed to view this job');
+        }
+        return response()->json($job->toArray());
+    }
+
+    /**
+     * Prepare data for the jobs table
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function jobsData(): JsonResponse
@@ -47,7 +70,7 @@ class HomeController extends Controller
                     $text = '<i class="fa fa-pause" aria-hidden="true"></i> ';
                     break;
                 case Job::PROCESSING:
-                    $text = '<i class="fa fa-spinner faa-spin animated" aria-hidden="true"></i> ';
+                    $text = '<i class="fa fa-spinner fa-spin animated" aria-hidden="true"></i> ';
                     break;
                 case Job::FAILED:
                     $text = '<i class="fa fa-exclamation-circle" aria-hidden="true"></i> ';
@@ -63,5 +86,43 @@ class HomeController extends Controller
             ])->render();
         })->rawColumns(['action', 'job_status']);
         return $table->make(true);
+    }
+
+    /**
+     * Redirect to the real job viewer
+     *
+     * @param \App\Models\Job $job
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function viewJob(Job $job): RedirectResponse
+    {
+        if (!$job || !$job->exists) {
+            abort(404, 'Unable to find the job.');
+        }
+        if (!$job->canBeRead()) {
+            abort(403, 'You are not allowed to view this job');
+        }
+        $route = 'view-' . $job->job_type . '-job';
+        return redirect()->route($route, ['job' => $job]);
+    }
+
+    /**
+     * Delete a job
+     *
+     * @param \App\Models\Job $job
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function deleteJob(Job $job): RedirectResponse
+    {
+        if (!$job || !$job->exists) {
+            abort(404, 'Unable to find the job.');
+        }
+        if (!$job->canBeDeleted()) {
+            abort(403, 'You are not allowed to delete this job');
+        }
+        $job->delete();
+        return redirect()->back();
     }
 }

@@ -84,8 +84,13 @@
             viewLog(id) {
                 this.currentId = id;
                 axios.get(this.logUrl()).then(data => {
-                    this.dialog.find('.modal-body').find('pre').html(data.log);
+                    this.dialog.find('.modal-body').find('pre').html(data.data.job_log);
                     this.dialog.modal('show');
+                    if (data.data.job_status !== "processing") {
+                        this.dialog.find('.live-log-button').hide();
+                    } else {
+                        this.dialog.find('.live-log-button').show();
+                    }
                     window.$('i.loading-job').remove();
                 }).catch(error => {
                     this.dialog.find('.modal-body').find('pre').html(error);
@@ -114,8 +119,14 @@
                         timer = setInterval(() => {
                             if (!this.currentId) return;
                             axios.get(this.logUrl()).then(data => {
-                                console.log(data);
-                                this.dialog.find('.modal-body').find('pre').html(data.log);
+                                this.dialog.find('.modal-body').find('pre').html(data.data.job_log);
+                                if (data.data.job_status !== "processing") {
+                                    this.dialog.find('.live-log-button').hide();
+                                    updatingIcon.html('');
+                                    clearInterval(timer);
+                                } else {
+                                    this.dialog.find('.live-log-button').show();
+                                }
                             }).catch(error => {
                                 this.dialog.find('.modal-body').find('pre').html(error);
                             });
@@ -159,7 +170,7 @@
 
                     }
                 });
-                tbl.on('click', 'a.btn-view-job', () => {
+                tbl.on('click', 'a.btn-view-job', function () {
                     let t = $(this), id = t.data('id');
                     t.parent().append('&nbsp;&nbsp;<i class="fa fa-spinner fa-pulse fa-fw loading-job"></i>');
                     self.viewLog(id);

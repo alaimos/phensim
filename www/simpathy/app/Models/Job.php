@@ -441,6 +441,24 @@ class Job extends Model implements Ownable
      *
      * @return bool
      */
+    public function canBeRead(User $user = null)
+    {
+        if ($user === null) {
+            $user = \Auth::user();
+        }
+        if ($user === null) {
+            return false;
+        }
+        return $user->hasRole('administrator') || $user->canAndOwns('read-job', $this);
+    }
+
+    /**
+     * Checks if an user can update this job
+     *
+     * @param \App\Models\User|null $user
+     *
+     * @return bool
+     */
     public function canBeUpdated(User $user = null)
     {
         if ($user === null) {

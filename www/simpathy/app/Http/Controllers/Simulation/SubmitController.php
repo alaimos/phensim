@@ -7,6 +7,7 @@ use App\Jobs\DispatcherJob;
 use App\Models\Job;
 use App\Models\Node;
 use App\Models\Organism;
+use App\SIMPATHY\Constants;
 use App\SIMPATHY\Launcher;
 use App\SIMPATHY\Utils;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator as LengthAwarePaginatorContract;
@@ -22,6 +23,14 @@ use Validator;
 
 class SubmitController extends Controller
 {
+
+    /**
+     * Create a new controller instance.
+     */
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
 
     /**
      * Render Simple Submission Form
@@ -136,7 +145,7 @@ class SubmitController extends Controller
         $seed = $request->get('random-seed');
         $enrich = in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON']);
         $metaPathway = in_array($request->get('meta-pathway'), ['on', 1, 'On', 'ON']);
-        $job = Job::buildJob('simulation', [
+        $job = Job::buildJob(Constants::SIMULATION_JOB, [
             'organism'             => $organism,
             'simulationParameters' => $nodes,
             'nonExpressed'         => $nonExp,
@@ -240,7 +249,7 @@ class SubmitController extends Controller
             'valid_edge_sub_type' => 'You must upload a valid custom edge subtype file',
         ]);
         $nonExp = (array)$request->get('nonexp-nodes', []);
-        $job = Job::buildJob('simulation', [
+        $job = Job::buildJob(Constants::SIMULATION_JOB, [
             'organism'             => $request->get('organism', 'hsa'),
             'simulationParameters' => Utils::readInputFile($request->file('simulation-input')->path()),
             'nonExpressed'         => $nonExp,

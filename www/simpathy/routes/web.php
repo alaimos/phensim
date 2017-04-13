@@ -23,7 +23,11 @@ Route::get('/home', 'HomeController@index')->name('user-home');
 
 Route::any('/jobs/list', 'HomeController@jobsData')->name('jobs-list');
 
-Route::any('/jobs/{job}/log', 'HomeController@jobLog')->name('job-log');
+Route::any('/jobs/{job}/view', 'HomeController@viewJob')->middleware(['permission:read-job'])->name('job-view');
+
+Route::any('/jobs/{job}/delete', 'HomeController@deleteJob')->middleware(['permission:delete-job'])->name('job-delete');
+
+Route::any('/jobs/{job}/log', 'HomeController@jobLog')->middleware(['permission:read-job'])->name('job-log');
 
 Route::group(['prefix'    => 'simulation', 'middleware' => ['auth', 'role:user|administrator'],
               'namespace' => 'Simulation'], function () {
@@ -34,4 +38,6 @@ Route::group(['prefix'    => 'simulation', 'middleware' => ['auth', 'role:user|a
         Route::post('enriched', 'SubmitController@doSubmitEnriched')->name('do-submit-enriched');
         Route::match(['get', 'post'], 'list/nodes', 'SubmitController@listNodes')->name('list-nodes');
     });
+    Route::get('{job}/view', 'SimulationController@viewSimulation')->middleware(['permission:read-job'])
+         ->name('view-simulation-job');
 });
