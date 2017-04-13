@@ -38,7 +38,9 @@ class DispatcherJob implements ShouldQueue
     {
         $jobData = null;
         try {
+            /** @var JobData $jobData */
             $jobData = JobData::whereId($this->jobDataId)->first();
+            \Auth::login($jobData->user, false);
             $class = '\App\Jobs\Handlers\\' . studly_case($jobData->job_type);
             if (!class_exists($class)) {
                 $this->fail(new JobException('Job handler (' . $class . ') not found.'));
@@ -51,7 +53,11 @@ class DispatcherJob implements ShouldQueue
                 $jobData->job_status = JobData::COMPLETED;
                 $jobData->save();
             }
+            \Auth::logout();
         } catch (\Exception $e) {
+            if (\Auth::id() !== null) {
+                \Auth::logout();
+            }
             if ($jobData instanceof JobData) {
                 $jobData->job_status = JobData::FAILED;
                 $jobData->appendLog("Error!\nAn exception occurred during execution: " . $e->getMessage());

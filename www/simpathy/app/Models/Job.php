@@ -37,10 +37,10 @@ use Laratrust\Contracts\Ownable;
  */
 class Job extends Model implements Ownable
 {
-    const QUEUED     = 'queued';
+    const QUEUED = 'queued';
     const PROCESSING = 'processing';
-    const COMPLETED  = 'completed';
-    const FAILED     = 'failed';
+    const COMPLETED = 'completed';
+    const FAILED = 'failed';
 
     /**
      * The attributes that should be cast to native types.
@@ -70,8 +70,12 @@ class Job extends Model implements Ownable
      */
     public static function canListJobs(User $user = null)
     {
-        if ($user === null) $user = \Auth::user();
-        if ($user === null) return false;
+        if ($user === null) {
+            $user = \Auth::user();
+        }
+        if ($user === null) {
+            return false;
+        }
         return $user->hasRole('administrator') || $user->can('read-job');
     }
 
@@ -182,9 +186,38 @@ class Job extends Model implements Ownable
      *
      * @return mixed
      */
-    public function getParameter($parameter, $default = null)
+    public function getParameter(string $parameter, $default = null)
     {
         return (isset($this->job_parameters[$parameter])) ? $this->job_parameters[$parameter] : $default;
+    }
+
+    /**
+     * Get and cast a parameter
+     *
+     * @param string          $parameter
+     * @param string|callable $type
+     * @param null            $default
+     * @param bool            $keepNull
+     * @return bool|float|int|mixed|null
+     */
+    public function getTypedParameter(string $parameter, $type, $default = null, $keepNull = true)
+    {
+        $value = $this->getParameter($parameter, $default);
+        if ($keepNull && empty($value)) {
+            return null;
+        }
+        if ($type == 'int') {
+            return intval($value);
+        } elseif ($type == 'bool' || $type == 'boolean') {
+            return boolval($value);
+        } elseif ($type == 'numeric' || $type == 'double' || $type == 'float') {
+            return floatval($value);
+        } elseif ($type == 'array') {
+            return (array)$value;
+        } elseif (is_callable($type)) {
+            return call_user_func($type, $value);
+        }
+        return $value;
     }
 
     /**
@@ -195,7 +228,7 @@ class Job extends Model implements Ownable
      *
      * @return $this
      */
-    public function setParameter($parameter, $value)
+    public function setParameter(string $parameter, $value)
     {
         $tmp = $this->job_parameters;
         $tmp[$parameter] = $value;
@@ -210,7 +243,7 @@ class Job extends Model implements Ownable
      *
      * @return $this
      */
-    public function addParameters($parameters)
+    public function addParameters(array $parameters)
     {
         foreach ($parameters as $param => $value) {
             $this->setParameter($param, $value);
@@ -225,7 +258,7 @@ class Job extends Model implements Ownable
      *
      * @return $this
      */
-    public function setParameters($parameters)
+    public function setParameters(array $parameters)
     {
         $this->job_parameters = [];
         return $this->addParameters($parameters);
@@ -295,6 +328,7 @@ class Job extends Model implements Ownable
         if ($appendNewLine) {
             $text .= "\n";
         }
+        echo $text;
         $this->job_log = $this->job_log . $text;
         if ($commit) {
             $this->save();
@@ -391,8 +425,12 @@ class Job extends Model implements Ownable
      */
     public static function canBeCreated(User $user = null)
     {
-        if ($user === null) $user = \Auth::user();
-        if ($user === null) return false;
+        if ($user === null) {
+            $user = \Auth::user();
+        }
+        if ($user === null) {
+            return false;
+        }
         return $user->hasRole('administrator') || $user->can('create-job');
     }
 
@@ -405,8 +443,12 @@ class Job extends Model implements Ownable
      */
     public function canBeUpdated(User $user = null)
     {
-        if ($user === null) $user = \Auth::user();
-        if ($user === null) return false;
+        if ($user === null) {
+            $user = \Auth::user();
+        }
+        if ($user === null) {
+            return false;
+        }
         return $user->hasRole('administrator') || $user->canAndOwns('update-job', $this);
     }
 
@@ -419,8 +461,12 @@ class Job extends Model implements Ownable
      */
     public function canBeDeleted(User $user = null)
     {
-        if ($user === null) $user = \Auth::user();
-        if ($user === null) return false;
+        if ($user === null) {
+            $user = \Auth::user();
+        }
+        if ($user === null) {
+            return false;
+        }
         return $user->hasRole('administrator') || $user->canAndOwns('delete-job', $this);
     }
 }

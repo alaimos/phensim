@@ -6,6 +6,7 @@ namespace App\Jobs\Handlers;
 use App\Exceptions\JobException;
 use App\Models\Job as JobData;
 use App\Models\Organism;
+use App\SIMPATHY\Launcher;
 use App\SIMPATHY\Utils;
 
 class Simulation extends AbstractHandler
@@ -59,24 +60,45 @@ class Simulation extends AbstractHandler
         }
         $this->log('OK!');
         $this->log('Running SIMPATHY Simulation...', false);
-
-        $this->log('OK!');
-
-        /*$this->jobData->setData([
-            'annotationKey'  => $key,
-            'annotationFile' => $annotationFile,
-        ]);*/
+        $launcher = new Launcher($this->jobData);
+        $launcher
+            ->setOrganism($organism->accession)
+            ->setIsMerged($this->jobData->getTypedParameter('metaPathway', 'bool', false, false))
+            ->setSeed($this->jobData->getTypedParameter('seed', 'int'))
+            ->setEpsilon($this->jobData->getTypedParameter('epsilon', 'float', 0.001, false))
+            ->setSimulationParameters($simulationParameters)
+            ->setNonExpressedNodes($this->jobData->getTypedParameter('nonExpressed', 'array', [], false));
+        $mirs = $this->jobData->getTypedParameter('enrichMirs', 'bool', true, false);
+        if ($mirs) {
+            $launcher->addEnricher('mirna');
+        }
+        if (!empty($enrichDb)) {
+            $launcher->addEnricher('textEnricher');
+            $launcher->addEnricherParameters('inputFile', $enrichDb);
+            $filter = $this->jobData->getParameter('dbFilter');
+            if (!empty($filter)) {
+                $launcher->addEnricherParameters('filter', $filter);
+            }
+            if (!empty($nodeTypes)) {
+                $launcher->addEnricherParameters('nodeTypesFile', $nodeTypes);
+            }
+            if (!empty($edgeTypes)) {
+                $launcher->addEnricherParameters('edgeTypesFile', $edgeTypes);
+            }
+            if (!empty($edgeSubTypes)) {
+                $launcher->addEnricherParameters('edgeSubTypesFile', $edgeSubTypes);
+            }
+        }
+        try {
+            $result = $launcher->run();
+            $this->log('OK!');
+            $this->log(implode(PHP_EOL, $result));
+        } catch (\Exception $e) {
+            throw new JobException($e->getMessage(), 0, $e);
+        }
+        $this->jobData->setData([
+            'outputFile' => $launcher->getOutputFilename(),
+        ]);
         $this->log('Completed!');
-
-
-        /*
-            'dbFilter'             => null,
-            'enrichDb'             => null,
-            'nodeTypes'            => null,
-            'edgeTypes'            => null,
-            'edgeSubTypes'         => null,
-        ]
-         */
-        // TODO: Implement handle() method.
     }
 }

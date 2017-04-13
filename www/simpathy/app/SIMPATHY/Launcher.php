@@ -8,11 +8,11 @@ use App\SIMPATHY\Exception\LauncherException;
 
 final class Launcher
 {
-    const MITHRIL_JAR                        = 'bin/MITHrIL2.jar';
-    const MITHRIL_EXEC                       = 'java -jar %1$s %2$s %3$s';
-    const SIMPATHY                           = 'simpathy';
-    const MERGED_SIMPATHY                    = 'merged-simpathy';
-    const MERGED_SIMPATHY_EXCLUDE_VALUES     = [
+    const MITHRIL_JAR = 'bin/MITHrIL2.jar';
+    const MITHRIL_EXEC = 'java -jar %1$s %2$s %3$s';
+    const SIMPATHY = 'simpathy';
+    const MERGED_SIMPATHY = 'merged-simpathy';
+    const MERGED_SIMPATHY_EXCLUDE_VALUES = [
         'Endocrine and metabolic diseases',
         'Neurodegenerative diseases',
         'Human Diseases',
@@ -20,33 +20,33 @@ final class Launcher
         'Infectious diseases',
         'Cardiovascular diseases',
     ];
-    const MERGED_SIMPATHY_EXCLUDE            = '-exclude-categories %s';
-    const SIMPATHY_ENRICHERS                 = '-e %s';
-    const SIMPATHY_ENRICHER_PARAMETER        = '-p %s=%s';
-    const SIMPATHY_EPSILON                   = '-epsilon %.10f';
-    const SIMPATHY_INPUT                     = '-i %s';
-    const SIMPATHY_ITERATIONS                = '-number-of-iterations %d';
+    const MERGED_SIMPATHY_EXCLUDE = '-exclude-categories %s';
+    const SIMPATHY_ENRICHERS = '-e %s';
+    const SIMPATHY_ENRICHER_PARAMETER = '-p %s=%s';
+    const SIMPATHY_EPSILON = '-epsilon %.10f';
+    const SIMPATHY_INPUT = '-i %s';
+    const SIMPATHY_ITERATIONS = '-number-of-iterations %d';
     const SIMPATHY_MIRNA_ENRICHMENT_EVIDENCE = '-enrichment-evidence-type %s';
-    const SIMPATHY_NON_EXPRESSED             = '-non-expressed-nodes %s';
-    const SIMPATHY_ORGANISM                  = '-organism %s';
-    const SIMPATHY_OUTPUT                    = '-o %s';
-    const SIMPATHY_SEED                      = '-seed %d';
-    const SIMPATHY_VERBOSE                   = '-verbose';
-    const SIMPATHY_SUPPORTED_EVIDENCES       = ['STRONG', 'WEAK', 'PREDICTION'];
-    const OVEREXPRESSION                     = 'OVEREXPRESSION';
-    const UNDEREXPRESSION                    = 'UNDEREXPRESSION';
-    const BOTH                               = 'BOTH';
+    const SIMPATHY_NON_EXPRESSED = '-non-expressed-nodes %s';
+    const SIMPATHY_ORGANISM = '-organism %s';
+    const SIMPATHY_OUTPUT = '-o %s';
+    const SIMPATHY_SEED = '-seed %d';
+    const SIMPATHY_VERBOSE = '-verbose';
+    const SIMPATHY_SUPPORTED_EVIDENCES = ['STRONG', 'WEAK', 'PREDICTION'];
+    const OVEREXPRESSION = 'OVEREXPRESSION';
+    const UNDEREXPRESSION = 'UNDEREXPRESSION';
+    const BOTH = 'BOTH';
 
-    private $isMerged                = false;
-    private $enrichers               = [];
-    private $enricherParameters      = [];
-    private $epsilon                 = 0.001;
-    private $simulationParameters    = [];
-    private $simulationIterations    = 2001;
+    private $isMerged = false;
+    private $enrichers = [];
+    private $enricherParameters = [];
+    private $epsilon = 0.001;
+    private $simulationParameters = [];
+    private $simulationIterations = 2001;
     private $miRNAEnrichmentEvidence = 'STRONG';
-    private $nonExpressedNodes       = [];
-    private $organism                = 'hsa';
-    private $seed                    = null;
+    private $nonExpressedNodes = [];
+    private $organism = 'hsa';
+    private $seed = null;
 
     /**
      * The working directory of this job
@@ -70,6 +70,11 @@ final class Launcher
     private $inputFiles = [];
 
 
+    /**
+     * Launcher constructor.
+     *
+     * @param null|string|\App\Models\Job $directory
+     */
     public function __construct($directory = null)
     {
         if ($directory !== null) {
@@ -113,7 +118,7 @@ final class Launcher
     /**
      * Add one or more enricher for this analysis
      *
-     * @param array $enricher
+     * @param array|string $enricher
      *
      * @return $this
      */
