@@ -29,6 +29,8 @@ Vue.component('nodes-selector-h', require('./components/submission/NodesSelector
 
 Vue.component('pathways-table', require('./components/jobs/PathwaysTable.vue'));
 
+Vue.component('nodes-table', require('./components/jobs/NodesTable.vue'));
+
 const app = new Vue({
     el: '#app'
 });

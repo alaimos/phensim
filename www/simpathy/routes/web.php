@@ -40,8 +40,12 @@ Route::group(['prefix'    => 'simulation', 'middleware' => ['auth', 'role:user|a
     });
     Route::get('{job}/view', 'SimulationController@viewSimulation')->middleware(['permission:read-job'])
          ->name('view-simulation-job');
-    Route::any('{job}/view/pathways/list', 'SimulationController@simulationPathwayListData')
+    Route::get('{job}/download', 'SimulationController@downloadData')->middleware(['permission:read-job'])
+         ->name('download-simulation-data');
+    Route::any('{job}/view/pathways/list', 'SimulationController@pathwaysListData')
          ->middleware(['permission:read-job'])->name('view-pathway-list-data');
     Route::get('{job}/view/pathway/{pid}/view', 'SimulationController@viewPathway')
          ->middleware(['permission:read-job'])->name('view-pathway-results');
+    Route::any('{job}/view/pathway/{pid}/data', 'SimulationController@pathwayViewListData')
+         ->middleware(['permission:read-job'])->name('sim-nodes-list-data');
 });

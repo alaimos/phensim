@@ -4,6 +4,7 @@ namespace App\SIMPATHY;
 
 use App\Models\Job;
 use App\SIMPATHY\Exception\ReaderException;
+use Illuminate\Support\Collection;
 
 final class Reader
 {
@@ -53,7 +54,7 @@ final class Reader
     private function cast(string $field, string $value)
     {
         if (self::FIELDS_CAST[$field] == 'boolean') {
-            return (strtolower($value) == 'no');
+            return (strtolower($value) == 'yes');
         } elseif (self::FIELDS_CAST[$field] == 'double') {
             return doubleval($value);
         } elseif (self::FIELDS_CAST[$field] == 'll') {
@@ -114,11 +115,21 @@ final class Reader
     }
 
     /**
+     * Returns the filename of SIMPATHY output file
+     *
+     * @return string
+     */
+    public function getOutputFilename(): string
+    {
+        return (string)$this->job->getData('outputFile');
+    }
+
+    /**
      * Read list of pathways contained in the simulation
      *
      * @return \Illuminate\Support\Collection
      */
-    public function readPathways()
+    public function readPathwaysList(): Collection
     {
         $results = [];
         $this->reader(function ($fields) use (&$results) {
@@ -137,6 +148,24 @@ final class Reader
             if ($fields['activityScore'] < 0) $results[$pid]['inhibitedNodes']++;
         });
         return collect(array_values($results));
+    }
+
+    /**
+     * Read the list of altered genes for a single pathway
+     *
+     * @param string $pathway
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function readPathway(string $pathway): Collection
+    {
+        $results = [];
+        $this->reader(function ($fields) use (&$results, $pathway) {
+            if ($fields['pathwayId'] == $pathway && $fields['activityScore'] != 0.0) {
+                $results[] = $fields;
+            }
+        });
+        return collect($results);
     }
 
 }

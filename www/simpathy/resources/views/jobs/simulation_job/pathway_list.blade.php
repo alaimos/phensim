@@ -39,6 +39,36 @@
             </div>
         </div>
         <!-- END Page Content -->
+
+        <!-- Download Content -->
+        <div class="content content-boxed">
+            <div class="row">
+                <div class="col-sm-12 col-lg-12">
+                    <div class="block">
+                        <div class="block-header bg-gray-lighter">
+                            <ul class="block-options">
+                                <li>
+                                    <button type="button" data-toggle="block-option"
+                                            data-action="fullscreen_toggle"></button>
+                                </li>
+                            </ul>
+                            <h3 class="block-title"><i class="fa fa-fw fa-download"></i> Downloads</h3>
+                        </div>
+                        <div class="block-content">
+                            <div class="row push-30 push-10-t">
+                                <div class="col-sm-12 text-center">
+                                    <a href="{{ route('download-simulation-data', ['job' => $job]) }}"
+                                       class="btn btn-success">
+                                        <i class="fa fa-download"></i> Download Simulation Data
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END Download Content -->
     </main>
     <!-- END Main Container -->
 @endsection
