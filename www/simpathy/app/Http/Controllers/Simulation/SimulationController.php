@@ -8,8 +8,10 @@ use App\Models\Pathway;
 use App\SIMPATHY\Reader;
 use Datatables;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Yajra\Datatables\Engines\CollectionEngine;
 
 class SimulationController extends Controller
 {
