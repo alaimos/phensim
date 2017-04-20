@@ -16,7 +16,7 @@ use Yajra\Datatables\Engines\CollectionEngine;
 class ApiController extends Controller
 {
 
-    public function index(): View {
+    public function help(): View {
         return view('api.index');
     }
 
