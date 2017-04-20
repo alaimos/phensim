@@ -55,6 +55,7 @@
                         </div>
                     </div>
                     <!-- END History -->
+                    <passport-personal-access-tokens></passport-personal-access-tokens>
                 </div>
                 <div class="col-sm-5 col-lg-4">
                     <!-- Analysis -->

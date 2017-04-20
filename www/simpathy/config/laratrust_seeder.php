@@ -6,12 +6,12 @@ return [
             'users'   => 'c,r,u,d',
             'acl'     => 'c,r,u,d',
             'profile' => 'r,u',
-            'keys'    => 'c,r,u,d',
+            'api'     => 's',
             'job'     => 'c,r,u,d',
         ],
         'user'          => [
             'profile' => 'r,u',
-            'keys'    => 'c,r,u,d',
+            'api'     => 's',
             'job'     => 'c,r,u,d',
         ],
     ],
@@ -21,5 +21,6 @@ return [
         'r' => 'read',
         'u' => 'update',
         'd' => 'delete',
+        's' => 'use',
     ],
 ];

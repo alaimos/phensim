@@ -11,35 +11,42 @@
 <template>
     <div>
         <div>
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>
-                            Personal Access Tokens
-                        </span>
-
-                        <a class="action-link" @click="showCreateTokenForm">
-                            Create New Token
-                        </a>
-                    </div>
+            <div class="block">
+                <div class="block-header bg-gray-lighter">
+                    <ul class="block-options">
+                        <li>
+                            <button type="button" @click="showCreateTokenForm" title="Create New Token">
+                                <i class="si si-plus"></i>
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" data-toggle="block-option"
+                                    data-action="fullscreen_toggle"></button>
+                        </li>
+                    </ul>
+                    <h3 class="block-title"><i class="fa fa-fw fa-user-secret"></i> Your API Tokens</h3>
                 </div>
+                <div class="block-content">
+                    <div class="push-15">
+                        <p>
+                            Please add one or more tokens if you wish to use SIMPATHY through its API interface.
+                        </p>
+                        <!-- No Tokens Notice -->
+                        <p class="m-b-none" v-if="tokens.length === 0">
+                            You have not created any personal access tokens.
+                        </p>
 
-                <div class="panel-body">
-                    <!-- No Tokens Notice -->
-                    <p class="m-b-none" v-if="tokens.length === 0">
-                        You have not created any personal access tokens.
-                    </p>
-
-                    <!-- Personal Access Tokens -->
-                    <table class="table table-borderless m-b-none" v-if="tokens.length > 0">
-                        <thead>
+                        <!-- Personal Access Tokens -->
+                        <table class="table table-condensed table-responsive table-hover table-striped no-wrap"
+                               v-if="tokens.length > 0">
+                            <thead>
                             <tr>
                                 <th>Name</th>
-                                <th></th>
+                                <th style="width: 10%">Delete</th>
                             </tr>
-                        </thead>
+                            </thead>
 
-                        <tbody>
+                            <tbody>
                             <tr v-for="token in tokens">
                                 <!-- Client Name -->
                                 <td style="vertical-align: middle;">
@@ -48,13 +55,14 @@
 
                                 <!-- Delete Button -->
                                 <td style="vertical-align: middle;">
-                                    <a class="action-link text-danger" @click="revoke(token)">
-                                        Delete
+                                    <a class="btn btn-xs btn-danger" @click="revoke(token)" title="Delete">
+                                        <i class="fa fa-trash" aria-hidden="true"></i>
                                     </a>
                                 </td>
                             </tr>
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -90,7 +98,8 @@
                                 <label class="col-md-4 control-label">Name</label>
 
                                 <div class="col-md-6">
-                                    <input id="create-token-name" type="text" class="form-control" name="name" v-model="form.name">
+                                    <input id="create-token-name" type="text" class="form-control" name="name"
+                                           v-model="form.name">
                                 </div>
                             </div>
 
@@ -103,10 +112,10 @@
                                         <div class="checkbox">
                                             <label>
                                                 <input type="checkbox"
-                                                    @click="toggleScope(scope.id)"
-                                                    :checked="scopeIsAssigned(scope.id)">
+                                                       @click="toggleScope(scope.id)"
+                                                       :checked="scopeIsAssigned(scope.id)">
 
-                                                    {{ scope.id }}
+                                                {{ scope.id }}
                                             </label>
                                         </div>
                                     </div>
@@ -210,9 +219,9 @@
              */
             getTokens() {
                 axios.get('/oauth/personal-access-tokens')
-                        .then(response => {
-                            this.tokens = response.data;
-                        });
+                    .then(response => {
+                        this.tokens = response.data;
+                    });
             },
 
             /**
@@ -220,9 +229,9 @@
              */
             getScopes() {
                 axios.get('/oauth/scopes')
-                        .then(response => {
-                            this.scopes = response.data;
-                        });
+                    .then(response => {
+                        this.scopes = response.data;
+                    });
             },
 
             /**
@@ -241,22 +250,22 @@
                 this.form.errors = [];
 
                 axios.post('/oauth/personal-access-tokens', this.form)
-                        .then(response => {
-                            this.form.name = '';
-                            this.form.scopes = [];
-                            this.form.errors = [];
+                    .then(response => {
+                        this.form.name = '';
+                        this.form.scopes = [];
+                        this.form.errors = [];
 
-                            this.tokens.push(response.data.token);
+                        this.tokens.push(response.data.token);
 
-                            this.showAccessToken(response.data.accessToken);
-                        })
-                        .catch(error => {
-                            if (typeof error.response.data === 'object') {
-                                this.form.errors = _.flatten(_.toArray(error.response.data));
-                            } else {
-                                this.form.errors = ['Something went wrong. Please try again.'];
-                            }
-                        });
+                        this.showAccessToken(response.data.accessToken);
+                    })
+                    .catch(error => {
+                        if (typeof error.response.data === 'object') {
+                            this.form.errors = _.flatten(_.toArray(error.response.data));
+                        } else {
+                            this.form.errors = ['Something went wrong. Please try again.'];
+                        }
+                    });
             },
 
             /**
@@ -293,9 +302,9 @@
              */
             revoke(token) {
                 axios.delete('/oauth/personal-access-tokens/' + token.id)
-                        .then(response => {
-                            this.getTokens();
-                        });
+                    .then(response => {
+                        this.getTokens();
+                    });
             }
         }
     }

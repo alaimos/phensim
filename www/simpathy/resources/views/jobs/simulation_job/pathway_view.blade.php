@@ -53,6 +53,39 @@
             </div>
         </div>
         <!-- END Page Content -->
+        <!-- Page Content -->
+        <div class="content content-boxed">
+            <div class="row">
+                <div class="col-sm-12 col-lg-12">
+                    <!-- Pathway List -->
+                    <div class="block">
+                        <div class="block-header bg-gray-lighter">
+                            <ul class="block-options">
+                                <li>
+                                    <button type="button" data-toggle="block-option"
+                                            data-action="fullscreen_toggle"></button>
+                                </li>
+                            </ul>
+                            <h3 class="block-title"><i class="fa fa-fw fa-code-fork"></i> Viewer</h3>
+                        </div>
+                        <div class="block-content">
+                            <div class="push-15 text-center">
+                                <form method="POST" action="http://www.kegg.jp/kegg-bin/show_pathway"
+                                      target="_blank">
+                                    <input type="hidden" name="map" value="{{ $coloring['mapId'] }}">
+                                    <input type="hidden" name="multi_query" value="{{ $coloring['coloring'] }}">
+                                    <button class="btn btn-success" type="submit">
+                                        View simulation results on KEGG
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- END Pathway List -->
+                </div>
+            </div>
+        </div>
+        <!-- END Page Content -->
         <!-- Go Back Button -->
         <div class="bg-white">
             <section class="content-mini content-mini-full content-boxed">

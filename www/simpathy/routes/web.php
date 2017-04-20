@@ -49,3 +49,11 @@ Route::group(['prefix'    => 'simulation', 'middleware' => ['auth', 'role:user|a
     Route::any('{job}/view/pathway/{pid}/data', 'SimulationController@pathwayViewListData')
          ->middleware(['permission:read-job'])->name('sim-nodes-list-data');
 });
+
+Route::get('/home/api', 'Api\ApiController@index')->middleware(['auth', 'role:user|administrator',
+                                                                //'permission:use-api',
+                                                               ])->name('api-index');
+
+Route::group(['prefix' => 'api', 'namespace' => 'Api', 'middleware' => 'auth:api', 'permission:use-api'], function () {
+    Route::get('/', 'ApiController@index')->name('api-index');
+});

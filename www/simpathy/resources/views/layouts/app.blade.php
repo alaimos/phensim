@@ -62,7 +62,7 @@
                         @endif
                         @if(Auth::user() !== null && Auth::user()->hasPermission('read-keys'))
                             <li>
-                                <a href="{{ url('/api') }}"><i class="si si-energy"></i><span
+                                <a href="{{ url('/home/api') }}"><i class="si si-energy"></i><span
                                             class="sidebar-mini-hide">API</span></a>
                             </li>
                         @endif

@@ -105,9 +105,10 @@ class SimulationController extends Controller
         $pathway = Pathway::whereAccession($pid)->first();
         if (!$pathway || !$pathway->exists) abort(404, 'Unable to find the pathway.');
         return view('jobs.simulation_job.pathway_view', [
-            'job'     => $job,
-            'pid'     => $pid,
-            'pathway' => $pathway,
+            'job'      => $job,
+            'pid'      => $pid,
+            'pathway'  => $pathway,
+            'coloring' => (new Reader($job))->makePathwayColoring($pid),
         ]);
     }
 

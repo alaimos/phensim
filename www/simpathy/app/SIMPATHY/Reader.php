@@ -3,15 +3,16 @@
 namespace App\SIMPATHY;
 
 use App\Models\Job;
+use App\Models\Node;
 use App\SIMPATHY\Exception\ReaderException;
 use Illuminate\Support\Collection;
 
 final class Reader
 {
 
-    const FIELDS_ALL  = ['pathwayId', 'pathwayName', 'nodeId', 'nodeName', 'isEndpoint', 'isDirectTarget',
-                         'activityScore', 'pValue', 'll', 'targetedBy'];
-    const FIELDS_CAST = [
+    const FIELDS_ALL          = ['pathwayId', 'pathwayName', 'nodeId', 'nodeName', 'isEndpoint', 'isDirectTarget',
+                                 'activityScore', 'pValue', 'll', 'targetedBy'];
+    const FIELDS_CAST         = [
         'pathwayId'      => null,
         'pathwayName'    => 'pathway',
         'nodeId'         => null,
@@ -23,7 +24,10 @@ final class Reader
         'll'             => 'll',
         'targetedBy'     => 'array',
     ];
-    const LL          = ['activation', 'inhibition', 'other'];
+    const LL                  = ['activation', 'inhibition', 'other'];
+    const ACTIVATION_COLORING = '%s red,black';
+    const INHIBITION_COLORING = '%s blue,yellow';
+    const GID_RXP             = '/^[0-9]+$/';
 
     /**
      * @var \App\Models\Job
@@ -34,6 +38,8 @@ final class Reader
      * Reader Constructor
      *
      * @param \App\Models\Job $job
+     *
+     * @throws \App\SIMPATHY\Exception\ReaderException
      */
     public function __construct(Job $job)
     {
@@ -61,8 +67,7 @@ final class Reader
             $tmp = array_map('doubleval', explode(",", $value));
             return array_combine(self::LL, array_slice($tmp, 0, 3));
         } elseif (self::FIELDS_CAST[$field] == 'array') {
-            if (empty($value)) return [];
-            return explode(",", $value);
+            return (empty($value)) ? [] : explode(",", $value);
         } elseif (self::FIELDS_CAST[$field] == 'pathway') {
             return preg_replace('/\s+\-\s+enriched/i', '', $value);
         }
@@ -79,9 +84,7 @@ final class Reader
     private function prepare(array $fields)
     {
         $n = count($fields);
-        if ($n == 9) {
-            $fields[] = '';
-        }
+        if ($n == 9) $fields[] = '';
         $fields = array_combine(self::FIELDS_ALL, $fields);
         array_walk($fields, function (&$value, $key) {
             $value = $this->cast($key, $value);
@@ -94,14 +97,14 @@ final class Reader
      *
      * @param callable $action
      *
+     * @throws \App\SIMPATHY\Exception\ReaderException
+     *
      * @return void
      */
     private function reader(callable $action)
     {
         $fp = @fopen($this->job->getData('outputFile'), 'r');
-        if (!$fp) {
-            throw new ReaderException('Unable to open simpathy output file');
-        }
+        if (!$fp) throw new ReaderException('Unable to open simpathy output file');
         while (($line = fgets($fp)) !== false) {
             $line = trim($line);
             if (!empty($line) && $line{0} != '#') {
@@ -143,9 +146,15 @@ final class Reader
                     'inhibitedNodes' => 0,
                 ];
             }
-            if ($fields['isDirectTarget']) $results[$pid]['directTargets']++;
-            if ($fields['activityScore'] > 0) $results[$pid]['activatedNodes']++;
-            if ($fields['activityScore'] < 0) $results[$pid]['inhibitedNodes']++;
+            if ($fields['isDirectTarget']) {
+                $results[$pid]['directTargets']++;
+            }
+            if ($fields['activityScore'] > 0) {
+                $results[$pid]['activatedNodes']++;
+            }
+            if ($fields['activityScore'] < 0) {
+                $results[$pid]['inhibitedNodes']++;
+            }
         });
         return collect(array_values($results));
     }
@@ -153,19 +162,55 @@ final class Reader
     /**
      * Read the list of altered genes for a single pathway
      *
-     * @param string $pathway
+     * @param string        $pathway
+     * @param callable|null $callback
      *
      * @return \Illuminate\Support\Collection
      */
-    public function readPathway(string $pathway): Collection
+    public function readPathway(string $pathway, callable $callback = null): Collection
     {
         $results = [];
-        $this->reader(function ($fields) use (&$results, $pathway) {
+        $this->reader(function ($fields) use (&$results, $pathway, $callback) {
             if ($fields['pathwayId'] == $pathway && $fields['activityScore'] != 0.0) {
-                $results[] = $fields;
+                if ($callback !== null) {
+                    $tmp = call_user_func($callback, $fields);
+                    if ($tmp !== null) {
+                        $results[] = $tmp;
+                    }
+                } else {
+                    $results[] = $fields;
+                }
             }
         });
         return collect($results);
+    }
+
+    /**
+     * Returns parameters for pathway coloring kegg link
+     *
+     * @param string $pathway
+     *
+     * @return array
+     */
+    public function makePathwayColoring(string $pathway): array
+    {
+        $mapId        = str_ireplace('path:', '', $pathway);
+        $coloringData = $this->readPathway($pathway, function (array $data) {
+            /** @var Node $node */
+            $node = Node::whereAccession($data['nodeId'])->first();
+            if ($node !== null && $node->type != 'mirna') {
+                if ($data['activityScore'] > 0) {
+                    return sprintf(self::ACTIVATION_COLORING, $node->accession);
+                } elseif ($data['activityScore'] < 0) {
+                    return sprintf(self::INHIBITION_COLORING, $node->accession);
+                }
+            }
+            return null;
+        });
+        return [
+            'mapId'    => $mapId,
+            'coloring' => $coloringData->implode(PHP_EOL),
+        ];
     }
 
 }
