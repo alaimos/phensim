@@ -37,10 +37,15 @@ use Laratrust\Contracts\Ownable;
  */
 class Job extends Model implements Ownable
 {
-    const QUEUED = 'queued';
+
+    use PresentUri;
+
+    const QUEUED     = 'queued';
     const PROCESSING = 'processing';
-    const COMPLETED = 'completed';
-    const FAILED = 'failed';
+    const COMPLETED  = 'completed';
+    const FAILED     = 'failed';
+
+    protected static $route = 'api-get-job';
 
     /**
      * The attributes that should be cast to native types.
@@ -59,6 +64,24 @@ class Job extends Model implements Ownable
      */
     protected $fillable = [
         'user_id', 'job_key', 'job_type', 'job_status', 'job_parameters', 'job_data', 'job_log',
+    ];
+
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array
+     */
+    protected $hidden = [
+        'user_id', 'job_data', 'job_parameters',
+    ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [
+        'owner', 'uri',
     ];
 
     /**
@@ -198,6 +221,7 @@ class Job extends Model implements Ownable
      * @param string|callable $type
      * @param null            $default
      * @param bool            $keepNull
+     *
      * @return bool|float|int|mixed|null
      */
     public function getTypedParameter(string $parameter, $type, $default = null, $keepNull = true)
@@ -263,7 +287,6 @@ class Job extends Model implements Ownable
         $this->job_parameters = [];
         return $this->addParameters($parameters);
     }
-
 
     /**
      * Get the value of a parameter for this job
@@ -387,7 +410,6 @@ class Job extends Model implements Ownable
         return parent::delete();
     }
 
-
     /**
      * Save the model to the database.
      *
@@ -411,7 +433,7 @@ class Job extends Model implements Ownable
      *
      * @return mixed
      */
-    public function ownerKey()
+    public function ownerKey(): int
     {
         return $this->user_id;
     }
@@ -423,7 +445,7 @@ class Job extends Model implements Ownable
      *
      * @return bool
      */
-    public static function canBeCreated(User $user = null)
+    public static function canBeCreated(User $user = null): bool
     {
         if ($user === null) {
             $user = \Auth::user();
@@ -441,7 +463,7 @@ class Job extends Model implements Ownable
      *
      * @return bool
      */
-    public function canBeRead(User $user = null)
+    public function canBeRead(User $user = null): bool
     {
         if ($user === null) {
             $user = \Auth::user();
@@ -459,7 +481,7 @@ class Job extends Model implements Ownable
      *
      * @return bool
      */
-    public function canBeUpdated(User $user = null)
+    public function canBeUpdated(User $user = null): bool
     {
         if ($user === null) {
             $user = \Auth::user();
@@ -477,7 +499,7 @@ class Job extends Model implements Ownable
      *
      * @return bool
      */
-    public function canBeDeleted(User $user = null)
+    public function canBeDeleted(User $user = null): bool
     {
         if ($user === null) {
             $user = \Auth::user();
@@ -487,4 +509,15 @@ class Job extends Model implements Ownable
         }
         return $user->hasRole('administrator') || $user->canAndOwns('delete-job', $this);
     }
+
+    /**
+     * Accessor for the custom JSON attribute owner
+     *
+     * @return \App\Models\User
+     */
+    public function getOwnerAttribute(): User
+    {
+        return $this->user()->getResults();
+    }
+
 }

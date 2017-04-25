@@ -96,10 +96,8 @@ class ImportPathways extends Command
         $this->info("Exporting MITHrIL 2 pathways for organism " . $organism);
         $m2 = resource_path('bin/MITHrIL2.jar');
         $command = 'java -jar ' . escapeshellarg($m2) . ' exportgraph -verbose -organism ' . escapeshellarg($organism) .
-                   ' -enrichment-evidence-type STRONG -exclude-categories "Endocrine and metabolic diseases,' .
-                   'Neurodegenerative diseases,Human Diseases,Immune diseases,Infectious diseases,Cardiovascular ' .
-                   'diseases" -no ' . escapeshellarg($this->nodesFile) . ' -eo ' . escapeshellarg($this->edgesFile) .
-                   ' -mo ' . escapeshellarg($this->mapFile);
+                   ' -enrichment-evidence-type STRONG -disable-priority -no ' . escapeshellarg($this->nodesFile) .
+                   ' -eo ' . escapeshellarg($this->edgesFile) . ' -mo ' . escapeshellarg($this->mapFile);
         $return = null;
         passthru($command, $return);
         if ($return == 0) {

@@ -60,7 +60,7 @@
                                             class="sidebar-mini-hide">User Panel</span></a>
                             </li>
                         @endif
-                        @if(Auth::user() !== null && Auth::user()->hasPermission('read-keys'))
+                        @if(Auth::user() !== null && Auth::user()->hasPermission('use-api'))
                             <li>
                                 <a href="{{ url('/home/api') }}"><i class="si si-energy"></i><span
                                             class="sidebar-mini-hide">API</span></a>
