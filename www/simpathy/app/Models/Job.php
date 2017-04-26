@@ -34,6 +34,8 @@ use Laratrust\Contracts\Ownable;
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Job whereUpdatedAt($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Job whereUserId($value)
  * @mixin \Eloquent
+ * @property-read \App\Models\User $owner
+ * @property-read string $uri
  */
 class Job extends Model implements Ownable
 {

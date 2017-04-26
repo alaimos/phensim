@@ -20,6 +20,8 @@ class DispatcherJob implements ShouldQueue
      * Create a new job instance.
      *
      * @param int $jobDataId
+     *
+     * @throws \App\Exceptions\JobException
      */
     public function __construct(int $jobDataId)
     {
