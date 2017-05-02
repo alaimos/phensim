@@ -21,6 +21,18 @@ Route::get('logout', 'Auth\LoginController@logout')->name('logout');
 
 Route::get('/home', 'HomeController@index')->name('user-home');
 
+Route::get('/references', function () {
+    return view('references');
+});
+
+Route::get('/help', function () {
+    return view('help');
+});
+
+Route::get('/contacts', function () {
+    return view('contacts');
+});
+
 Route::any('/jobs/list', 'HomeController@jobsData')->name('jobs-list');
 
 Route::any('/jobs/{job}/view', 'HomeController@viewJob')->middleware(['permission:read-job'])->name('job-view');

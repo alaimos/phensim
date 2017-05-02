@@ -168,7 +168,12 @@ class SimulationController extends Controller
      */
     public function getSimulation($job): JsonResponse
     {
-        return response()->json($this->getJob($job, false));
+        $job = $this->getJob($job, false);
+        $arr = $job->toArray();
+        $arr['parametersUri'] = route('api-get-simulation-parameters', ['job' => $job]);
+        $arr['rawResultsUri'] = route('api-get-simulation-results-raw', ['job' => $job]);
+        $arr['pathwayResultsUri'] = route('api-get-simulation-results-pathways', ['job' => $job]);
+        return response()->json($arr);
     }
 
     /**
@@ -224,7 +229,15 @@ class SimulationController extends Controller
     {
         $job = $this->getJob($job);
         $reader = new Reader($job);
-        return response()->json($reader->readPathwaysList());
+        $pathways = $reader->readPathwaysList();
+        $pathways = $pathways->map(function ($item) use ($job) {
+            $item['uri'] = route('api-get-simulation-results-one-pathway', [
+                'job'     => $job,
+                'pathway' => $item['id'],
+            ]);
+            return $item;
+        });
+        return response()->json($pathways);
     }
 
     /**

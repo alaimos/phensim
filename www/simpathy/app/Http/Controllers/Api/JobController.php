@@ -37,7 +37,9 @@ class JobController extends Controller
         if (!$job->canBeRead()) {
             abort(403, 'You are not allowed to view this job');
         }
-        return response()->json($job);
+        $data = $job->toArray();
+        $data['analysisUri'] = route('api-get-' . $job->job_type, ['job' => $job]);
+        return response()->json($data);
     }
 
 }
