@@ -34,8 +34,7 @@ use Laratrust\Contracts\Ownable;
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Job whereUpdatedAt($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Job whereUserId($value)
  * @mixin \Eloquent
- * @property-read \App\Models\User $owner
- * @property-read string $uri
+ * @property-read string           $uri
  */
 class Job extends Model implements Ownable
 {
@@ -74,7 +73,7 @@ class Job extends Model implements Ownable
      * @var array
      */
     protected $hidden = [
-        'user_id', 'job_data', 'job_parameters',
+        'user_id', 'job_key', 'job_data', 'job_parameters',
     ];
 
     /**
@@ -83,7 +82,7 @@ class Job extends Model implements Ownable
      * @var array
      */
     protected $appends = [
-        'owner', 'uri',
+        'uri',
     ];
 
     /**
@@ -510,16 +509,6 @@ class Job extends Model implements Ownable
             return false;
         }
         return $user->hasRole('administrator') || $user->canAndOwns('delete-job', $this);
-    }
-
-    /**
-     * Accessor for the custom JSON attribute owner
-     *
-     * @return \App\Models\User
-     */
-    public function getOwnerAttribute(): User
-    {
-        return $this->user()->getResults();
     }
 
 }

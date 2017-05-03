@@ -3,26 +3,327 @@
 @section('content')
     <!-- Main Container -->
     <main id="main-container">
-        <!-- Page Header -->
-        <div class="content bg-primary-dark">
-            <section class="content content-full content-boxed">
-                <div class="push-50-t push-15 text-center">
-                    <h1 class="h2 text-white push-5-t">SIMPATHY APIs</h1>
-                    <h2 class="h5 text-white-op">A guide to SIMPATHY API interface</h2>
+        <!-- Story Content -->
+        <div class="bg-white">
+            <section class="content content-boxed">
+                <!-- Section Content -->
+                <h1 class="text-black text-center push-30-t push-10">SIMPATHY APIs</h1>
+                <div class="row push-50-t push-50 nice-copy-story">
+                    <div class="col-sm-8 col-sm-offset-2">
+                        <h2 class="font-w400 text-black push-20">Introduction</h2>
+                        <p>This is a brief specification of the REST-like APIs provided by SIMPATHY.
+                            You can access APIs by generating a token from the section in your User Panel.</p>
+                        <p>All Requests MUST contain the following headers:</p>
+                        <pre>Accept: application/json
+Authorization: Bearer YOUR_API_AUTHENTICATION_TOKEN</pre>
+                        <h3 class="font-w400 text-black push-20">HTTP Return Codes</h3>
+                        <p>HTTP return codes are used to identify the state of a request:</p>
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th class="text-center" style="width: 50px;">Code</th>
+                                <th>Description</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td class="text-center">200</td>
+                                <td>Your request has been completed correctly. The payload will contain all the data.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center">401</td>
+                                <td>You are not authorized to use API. Did you forget your authentication token?</td>
+                            </tr>
+                            <tr>
+                                <td class="text-center">403</td>
+                                <td>You are not allowed to perform the specified action. The payload might contain more
+                                    details.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center">404</td>
+                                <td>The resource you are looking for was not found. Did you specify the correct URL?
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center">422</td>
+                                <td>Some validation error were found when sending your request. The payload will contain
+                                    more details.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-center">500</td>
+                                <td>An error occurred during processing. The payload will contain more details.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <h2 class="font-w400 text-black push-20">Resources and Operations</h2>
+                        <h3 class="font-w400 text-black push-20">Jobs</h3>
+                        @include('api.action', [
+                            'title' => 'List of jobs',
+                            'description' => 'Shows a list of available jobs.',
+                            'method' => 'GET',
+                            'url' => '/api/jobs',
+                            'queryParameters' => [
+                                ['name' => 'status', 'type' => 'string', 'desc' => 'One of the following values: queued, processing, completed, failed.']
+                            ],
+                            'postParameters' => [],
+                            'responseDescription' => 'A collection of objects representing a job. Each object has the following fields:',
+                            'responseParams' => [
+                                ['name' => 'id', 'type' => 'integer', 'desc' => 'An unique identifier assigned to this job'],
+                                ['name' => 'job_type', 'type' => 'string', 'desc' => 'The type of job. Currently only simulation jobs are supported'],
+                                ['name' => 'job_status', 'type' => 'string', 'desc' => 'The current status of the job'],
+                                ['name' => 'job_log', 'type' => 'string', 'desc' => 'The output log generated by this job'],
+                                ['name' => 'created_at', 'type' => 'string', 'desc' => 'The date and time of creation of this job'],
+                                ['name' => 'updated_at', 'type' => 'string', 'desc' => 'The date and time of update of this job'],
+                                ['name' => 'uri', 'type' => 'string', 'desc' => 'An uri to get more details about this job']
+                            ],
+                            'example' => '[
+  {
+    "id": 1,
+    "job_type": "simulation",
+    "job_status": "completed",
+    "job_log": "Something",
+    "created_at": "2017-04-24 15:33:33",
+    "updated_at": "2017-04-24 15:48:56",
+    "uri": "'.url('/api/jobs/1').'"
+  },
+  ...
+]'
+                        ])
+                        @include('api.action', [
+                            'title' => 'Get a job',
+                            'description' => 'Get all the details of a job',
+                            'method' => 'GET',
+                            'url' => '/api/jobs/<JOB_ID>',
+                            'queryParameters' => [],
+                            'postParameters' => [],
+                            'responseDescription' => 'An object representing a job with the following fields:',
+                            'responseParams' => [
+                                ['name' => 'id', 'type' => 'integer', 'desc' => 'An unique identifier assigned to this job'],
+                                ['name' => 'job_type', 'type' => 'string', 'desc' => 'The type of job. Currently only simulation jobs are supported'],
+                                ['name' => 'job_status', 'type' => 'string', 'desc' => 'The current status of the job'],
+                                ['name' => 'job_log', 'type' => 'string', 'desc' => 'The output log generated by this job'],
+                                ['name' => 'created_at', 'type' => 'string', 'desc' => 'The date and time of creation of this job'],
+                                ['name' => 'updated_at', 'type' => 'string', 'desc' => 'The date and time of update of this job'],
+                                ['name' => 'uri', 'type' => 'string', 'desc' => 'An uri to get more details about this job'],
+                                ['name' => 'analysisUri', 'type' => 'string', 'desc' => 'An uri to get more details about the analysis'],
+                            ],
+                            'example' => '{
+  "id": 1,
+  "job_type": "simulation",
+  "job_status": "completed",
+  "job_log": "something",
+  "created_at": "2017-04-24 15:33:33",
+  "updated_at": "2017-04-24 15:48:56",
+  "uri": "'.url('/api/jobs/1').'",
+  "analysisUri": "'.url('/api/simulations/1').'"
+}'
+                        ])
+                        <h3 class="font-w400 text-black push-20">Simulations</h3>
+                        @include('api.action', [
+                            'title' => 'List of simulations',
+                            'description' => 'Shows a list of available simulations.',
+                            'method' => 'GET',
+                            'url' => '/api/simulations',
+                            'queryParameters' => [
+                                ['name' => 'status', 'type' => 'string', 'desc' => 'One of the following values: queued, processing, completed, failed.']
+                            ],
+                            'postParameters' => [],
+                            'responseDescription' => 'A collection of objects representing a simulations. Each object has the following fields:',
+                            'responseParams' => [
+                                ['name' => 'id', 'type' => 'integer', 'desc' => 'An unique identifier assigned to this simulation'],
+                                ['name' => 'job_status', 'type' => 'string', 'desc' => 'The current status of the simulation'],
+                                ['name' => 'job_log', 'type' => 'string', 'desc' => 'The output log generated by this simulation'],
+                                ['name' => 'created_at', 'type' => 'string', 'desc' => 'The date and time of creation of this simulation'],
+                                ['name' => 'updated_at', 'type' => 'string', 'desc' => 'The date and time of update of this simulation'],
+                                ['name' => 'uri', 'type' => 'string', 'desc' => 'An uri to get more details about this simulations']
+                            ],
+                            'example' => '[
+  {
+    "id": 1,
+    "job_type": "simulation",
+    "job_status": "completed",
+    "job_log": "Something",
+    "created_at": "2017-04-24 15:33:33",
+    "updated_at": "2017-04-24 15:48:56",
+    "uri": "'.url('/api/simulations/1').'"
+  },
+  ...
+]'
+                        ])
+                        @include('api.action', [
+                            'title' => 'Submit a simulation',
+                            'description' => 'Submit a new simulation job',
+                            'method' => 'POST',
+                            'url' => '/api/simulations',
+                            'queryParameters' => [],
+                            'postParameters' => [
+                                ['name' => 'organism', 'type' => 'string', 'desc' => 'The organism used for the simulation'],
+                                ['name' => 'simulationParameters', 'type' => 'string', 'desc' => 'A list of simulation parameters in the format used for the Advanced Submission Form.'],
+                                ['name' => 'enrichDb', 'type' => 'string', 'desc' => 'An optional  enrichment database in the format used for the Advanced Submission Form.'],
+                                ['name' => 'dbFilter', 'type' => 'string', 'desc' => 'An optional  filter used for the enrichment database'],
+                                ['name' => 'nodeTypes', 'type' => 'string', 'desc' => 'An optional  list of node types in the format used for the Advanced Submission Form.'],
+                                ['name' => 'edgeTypes', 'type' => 'string', 'desc' => 'An optional  list of edge types in the format used for the Advanced Submission Form.'],
+                                ['name' => 'edgeSubTypes', 'type' => 'string', 'desc' => 'A list of edge subtypes in the format used for the Advanced Submission Form.'],
+                                ['name' => 'epsilon', 'type' => 'double', 'desc' => 'The threshold used for the selection of non-expressed nodes'],
+                                ['name' => 'seed', 'type' => 'integer|null', 'desc' => 'An optional number used for the random number generator'],
+                                ['name' => 'enrichMirs', 'type' => 'boolean', 'desc' => 'Uses pathways enriched with miRNAs'],
+                                ['name' => 'metaPathway', 'type' => 'boolean', 'desc' => 'Uses the meta-pathway built by merging all pathways'],
+                            ],
+                            'responseDescription' => 'The simulation job created by this request. See below for more details.',
+                            'responseParams' => false,
+                            'example' => false
+                        ])
+                        @include('api.action', [
+                            'title' => 'Get a simulations',
+                            'description' => 'Get all the details of a simulation',
+                            'method' => 'GET',
+                            'url' => '/api/simulations/<JOB_ID>',
+                            'queryParameters' => [],
+                            'postParameters' => [],
+                            'responseDescription' => 'An object representing a simulations with the following fields:',
+                            'responseParams' => [
+                                ['name' => 'id', 'type' => 'integer', 'desc' => 'An unique identifier assigned to this simulation'],
+                                ['name' => 'job_status', 'type' => 'string', 'desc' => 'The current status of the simulation'],
+                                ['name' => 'job_log', 'type' => 'string', 'desc' => 'The output log generated by this simulation'],
+                                ['name' => 'created_at', 'type' => 'string', 'desc' => 'The date and time of creation of this simulation'],
+                                ['name' => 'updated_at', 'type' => 'string', 'desc' => 'The date and time of update of this simulation'],
+                                ['name' => 'uri', 'type' => 'string', 'desc' => 'An uri to get more details about this simulation'],
+                                ['name' => 'parametersUri', 'type' => 'string', 'desc' => 'An uri to get the parameters of this simulation'],
+                                ['name' => 'rawResultsUri', 'type' => 'string', 'desc' => 'An uri to get the raw results of this simulation'],
+                                ['name' => 'pathwayResultsUri', 'type' => 'string', 'desc' => 'An uri to get the list of pathways analyzed by this simulation'],
+                            ],
+                            'example' => '{
+  "id": 1,
+  "job_type": "simulation",
+  "job_status": "completed",
+  "job_log": "something",
+  "created_at": "2017-04-24 15:33:33",
+  "updated_at": "2017-04-24 15:48:56",
+  "uri": "'.url('/api/simulations/1').'",
+  "parametersUri": "'.url('/api/simulations/1/parameters').'",
+  "rawResultsUri": "'.url('/api/simulations/1/results/raw').'",
+  "pathwayResultsUri": "'.url('/api/simulations/1/results/pathways').'"
+}'
+                        ])
+                        @include('api.action', [
+                            'title' => 'Get simulation parameters',
+                            'description' => 'Get all the parameters of a specific simulation',
+                            'method' => 'GET',
+                            'url' => '/api/simulations/<JOB_ID>/parameters',
+                            'queryParameters' => [],
+                            'postParameters' => [],
+                            'responseDescription' => 'An object giving all the parameters:',
+                            'responseParams' => [
+                                ['name' => 'organism', 'type' => 'string', 'desc' => 'The organism of this simulation'],
+                                ['name' => 'simulationParameters', 'type' => 'array', 'desc' => 'The list of simulated nodes'],
+                                ['name' => 'nonExpressed', 'type' => 'array', 'desc' => 'The list of non-expressed nodes'],
+                                ['name' => 'dbFilter', 'type' => 'string', 'desc' => 'A string used to filter the enrichment database'],
+                                ['name' => 'epsilon', 'type' => 'doble', 'desc' => 'The threshold used for the selection of non-expressed nodes'],
+                                ['name' => 'seed', 'type' => 'integer', 'desc' => 'A number used as seed for the random number generator (null for a random seed).'],
+                                ['name' => 'metaPathway', 'type' => 'boolean', 'desc' => 'Is this computation performed on the meta-pathway?'],
+                                ['name' => 'enrichDb', 'type' => 'string', 'desc' => 'The database file used for the enrichment'],
+                                ['name' => 'nodeTypes', 'type' => 'string', 'desc' => 'The database file used to add node types'],
+                                ['name' => 'edgeTypes', 'type' => 'string', 'desc' => 'The database file used to add edge types'],
+                                ['name' => 'edgeSubTypes', 'type' => 'string', 'desc' => 'The database file used to add edge subtypes'],
+                            ],
+                            'example' => '{
+  "organism": "hsa",
+  "simulationParameters": {
+    "1956": "OVEREXPRESSION",
+    "2475": "OVEREXPRESSION",
+    "7157": "UNDEREXPRESSION"
+  },
+  "nonExpressed": [],
+  "dbFilter": null,
+  "epsilon": 0.001,
+  "seed": null,
+  "enrichMirs": true,
+  "metaPathway": true,
+  "enrichDb": null,
+  "nodeTypes": null,
+  "edgeTypes": null,
+  "edgeSubTypes": null
+}'
+                        ])
+                        @include('api.action', [
+                            'title' => 'Get raw simulation results',
+                            'description' => 'Get all the results of a simulation in raw format',
+                            'method' => 'GET',
+                            'url' => '/api/simulations/<JOB_ID>/results/raw',
+                            'queryParameters' => [],
+                            'postParameters' => [],
+                            'responseDescription' => 'An object with a single "output" field. The output field contains the text of SIMPATHY output file.',
+                            'responseParams' => null,
+                            'example' => null,
+                        ])
+                        @include('api.action', [
+                            'title' => 'Get list of simulated pathways',
+                            'description' => 'Get the list of simulated pathways returned by SIMPATHY',
+                            'method' => 'GET',
+                            'url' => '/api/simulations/<JOB_ID>/results/pathways',
+                            'queryParameters' => [],
+                            'postParameters' => [],
+                            'responseDescription' => 'A collection of objects with the following fields:',
+                            'responseParams' => [
+                                ['name' => 'id', 'type' => 'string', 'desc' => 'The KEGG Pathway identifier'],
+                                ['name' => 'name', 'type' => 'string', 'desc' => 'The name of the KEGG pathway'],
+                                ['name' => 'directTargets', 'type' => 'integer', 'desc' => 'The number of nodes directly targeted by the simulated elements'],
+                                ['name' => 'activatedNodes', 'type' => 'integer', 'desc' => 'The number of activated nodes'],
+                                ['name' => 'inhibitedNodes', 'type' => 'integer', 'desc' => 'The number of inhibited nodes'],
+                                ['name' => 'uri', 'type' => 'string', 'desc' => 'An uri to gather details about simulated nodes'],
+                            ],
+                            'example' => '[
+  {
+    "id": "path:hsa00190",
+    "name": "Oxidative phosphorylation",
+    "directTargets": 0,
+    "activatedNodes": 0,
+    "inhibitedNodes": 1,
+    "uri": "'.url('/api/simulations/1/results/pathways/path:hsa00190').'"
+  },
+  ...
+]'
+                        ])
+                        @include('api.action', [
+                            'title' => 'Get simulation results by pathway',
+                            'description' => 'Get the results returned by a simulation for a specific pathway',
+                            'method' => 'GET',
+                            'url' => '/api/simulations/<JOB_ID>/results/pathways/<PATHWAY_ID>',
+                            'queryParameters' => [],
+                            'postParameters' => [],
+                            'responseDescription' => 'A collection of objects with the following fields:',
+                            'responseParams' => [
+                                ['name' => 'nodeId', 'type' => 'string', 'desc' => 'The identifier of a node'],
+                                ['name' => 'nodeName', 'type' => 'string', 'desc' => 'The name of a node'],
+                                ['name' => 'isEndpoint', 'type' => 'boolean', 'desc' => 'Is the node a pathway endpoint?'],
+                                ['name' => 'isDirectTarget', 'type' => 'boolean', 'desc' => 'Is the node a direct target of the simulated elements'],
+                                ['name' => 'activityScore', 'type' => 'double', 'desc' => 'The computed activity score'],
+                                ['name' => 'pValue', 'type' => 'double', 'desc' => 'A p-value computed for the activity score'],
+                                ['name' => 'targetedBy', 'type' => 'array', 'desc' => 'A list of simulated elements which targets this node'],
+                            ],
+                            'example' => '[
+  {
+    "nodeId": "cpd:C00008",
+    "nodeName": "ADP",
+    "isEndpoint": true,
+    "isDirectTarget": false,
+    "activityScore": -1.7938149684102,
+    "pValue": 0.058211207820444,
+    "targetedBy": []
+  },
+  ...
+]'
+                        ])
+                    </div>
                 </div>
+                <!-- END Section Content -->
             </section>
         </div>
-        <!-- END Page Header -->
+        <!-- END Story Content -->
 
-        <!-- Page Content -->
-        <div class="content content-boxed">
-            <div class="row">
-                <div class="col-sm-12">
-                    @TODO
-                </div>
-            </div>
-        </div>
-        <!-- END Page Content -->
     </main>
     <!-- END Main Container -->
 @endsection
