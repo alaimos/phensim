@@ -81,14 +81,14 @@
                                     <h5 class="push-5-t">Advanced Simulation</h5>
                                     <div class="font-s13">Run a simulation using custom enriched pathways</div>
                                 </li>
-                                <li>
+                                {{--<li>
                                     <a class="item item-rounded pull-left push-10-r bg-danger"
                                        href="{{ url('/') }}">
                                         <i class="si si-layers text-white-op"></i>
                                     </a>
                                     <h5 class="push-10-t">SPECifIC</h5>
                                     <div class="font-s13">Run SPECifIC on the results of a simulation</div>
-                                </li>
+                                </li>--}}
                             </ul>
                         </div>
                     </div>

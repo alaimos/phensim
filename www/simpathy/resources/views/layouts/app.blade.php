@@ -67,6 +67,9 @@
                             </li>
                         @endif
                         <li>
+                            <a href="{{ url('/help') }}"><i class="si si-question"></i><span class="sidebar-mini-hide">User Manual</span></a>
+                        </li>
+                        <li>
                             <a href="{{ url('/references') }}"><i class="si si-book-open"></i><span
                                         class="sidebar-mini-hide">References</span></a>
                         </li>
