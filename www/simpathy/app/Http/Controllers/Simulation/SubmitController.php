@@ -217,7 +217,7 @@ class SubmitController extends Controller
         $file = $request->file($key);
         if ($file !== null && $file instanceof UploadedFile) {
             $moved = $file->move($job->getJobDirectory(), str_replace('-', '_', $key));
-            return $moved->getPath();
+            return $moved->getPathname();
         }
         return null;
     }

@@ -47,15 +47,15 @@ class Simulation extends AbstractHandler
             throw new JobException('Invalid enrichment database.');
         }
         $nodeTypes = $this->jobData->getParameter('nodeTypes');
-        if (!empty($nodeTypes) && !Utils::checkDbFile($nodeTypes)) {
+        if (!empty($nodeTypes) && !Utils::checkNodeTypeFile($nodeTypes)) {
             throw new JobException('Invalid node types file.');
         }
         $edgeTypes = $this->jobData->getParameter('edgeTypes');
-        if (!empty($edgeTypes) && !Utils::checkDbFile($edgeTypes)) {
+        if (!empty($edgeTypes) && !Utils::checkEdgeTypeFile($edgeTypes)) {
             throw new JobException('Invalid edge type file.');
         }
         $edgeSubTypes = $this->jobData->getParameter('edgeSubTypes');
-        if (!empty($edgeSubTypes) && !Utils::checkDbFile($edgeSubTypes)) {
+        if (!empty($edgeSubTypes) && !Utils::checkEdgeSubTypeFile($edgeSubTypes)) {
             throw new JobException('Invalid edge subtype file.');
         }
         $this->log('OK!');

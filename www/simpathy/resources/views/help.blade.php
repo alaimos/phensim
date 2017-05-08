@@ -119,12 +119,13 @@
                             In order for the enrichment process to be successful, the destination node must already be
                             present in the pathway. The source node may also be absent, and will be added during the
                             enrichment phase. The following is an example of enrichment file.</p>
-                        <pre>{{ "VES1\tVescicle 1\tVESCICLE\t7157\tTP53\tVESCICLE_EDGE\tACTIVATION\tVescicle1\n".
-                         "VES1\tVescicle 1\tVESCICLE\t2475\tMTOR\tVESCICLE_EDGE\tINHIBITION\tVescicle1\n".
-                         "VES1\tVescicle 1\tVESCICLE\thsa-miR-7-5p\t\tVESCICLE_EDGE\tINHIBITION\tVescicle1\n".
-                         "VES2\tVescicle 2\tVESCICLE\thsa-let-7e-5p\t\tVESCICLE_EDGE\tINHIBITION\tVescicle2\n".
-                         "VES2\tVescicle 2\tVESCICLE\thsa-miR-21-3p7157\t\tVESCICLE_EDGE\tACTIVATION\tVescicle2\n".
-                         "VES2\tVescicle 2\tVESCICLE\t57527\tRPTOR\tVESCICLE_EDGE\tACTIVATION\tVescicle2\n"}}</pre>
+                        <pre>{{ "VES1\tVescicle 1\tVESCICLE\t7157\tTP53\tGENE\tVESCICLE_EDGE\tACTIVATION\tVescicle1\n".
+                         "VES1\tVescicle 1\tVESCICLE\t2475\tMTOR\tGENE\tVESCICLE_EDGE\tINHIBITION\tVescicle1\n".
+                         "VES1\tVescicle 1\tVESCICLE\thsa-miR-7-5p\t\tMIRNA\tVESCICLE_EDGE\tINHIBITION\tVescicle1\n".
+                         "VES2\tVescicle 2\tVESCICLE\thsa-let-7e-5p\t\tMIRNA\tVESCICLE_EDGE\tINHIBITION\tVescicle2\n".
+                         "VES2\tVescicle 2\tVESCICLE\thsa-miR-21-3p\t\tMIRNA\tVESCICLE_EDGE\tACTIVATION\tVescicle2\n".
+                         "VES2\tVescicle 2\tVESCICLE\t57527\tRPTOR\tGENE\tVESCICLE_EDGE\tACTIVATION\tVescicle2\n
+                         "}}</pre>
                         <p>The previous sample file contains two different vescicles. We can enrich a pathway with
                             only selecting the first vescicle by specifying <strong>Vescicle1</strong> in the
                             <strong>Optional Db Filter</strong> field or the second vesicle by specifying <strong>Vescicle2</strong>.
