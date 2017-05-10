@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Exceptions\SecurityException;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laratrust\Contracts\Ownable;
@@ -63,7 +64,7 @@ class User extends Authenticatable implements Ownable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password',
+        'name', 'email', 'password', 'remember_token', 'secret',
     ];
 
     /**
@@ -146,4 +147,37 @@ class User extends Authenticatable implements Ownable
     {
         return $this->id;
     }
+
+    /**
+     * Save the model to the database.
+     *
+     * @param  array $options
+     *
+     * @return bool
+     */
+    public function save(array $options = [])
+    {
+        if (!$this->exists) {
+            $this->remember_token = null;
+            $this->secret = bcrypt(str_random(32));
+        }
+        return parent::save($options);
+    }
+
+    /**
+     * Delete the model from the database.
+     *
+     * @return bool|null
+     *
+     * @throws \Exception
+     */
+    public function delete()
+    {
+        if (!$this->canBeDeleted()) {
+            throw new SecurityException('The current user is not allowed to delete this object');
+        }
+        return parent::delete();
+    }
+
+
 }
