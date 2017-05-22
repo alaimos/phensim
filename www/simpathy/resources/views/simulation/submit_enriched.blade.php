@@ -69,9 +69,15 @@
                                     @endif
                                 </div>
                             </div>
-                            <nodes-selector-h id="nonexp-nodes" name="nonexp-nodes[]" label="Non-expressed nodes"
-                                              data_url="{{ route('list-nodes') }}" org_field="organism"
-                                              error="{{ ($errors->has('nonexp-nodes')) ? $errors->first('nonexp-nodes') : '' }}"></nodes-selector-h>
+                            <div class="form-group{{ $errors->has('nonexp-nodes') ? ' has-error' : '' }}">
+                                {!! Form::label('nonexp-nodes', 'Non-expressed nodes', ['class' => 'col-md-3 control-label']) !!}
+                                <div class="col-md-9">
+                                    {!! Form::file('nonexp-nodes', ['class' => 'form-control']) !!}
+                                    @if($errors->has('nonexp-nodes'))
+                                        <div class="help-block">{{ $errors->first('nonexp-nodes') }}</div>
+                                    @endif
+                                </div>
+                            </div>
                             <div class="form-group{{ $errors->has('custom-node-types') ? ' has-error' : '' }}">
                                 {!! Form::label('custom-node-types', 'Custom Node Type File', ['class' => 'col-md-3 control-label']) !!}
                                 <div class="col-md-9">

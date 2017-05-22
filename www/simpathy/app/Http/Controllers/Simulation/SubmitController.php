@@ -236,7 +236,7 @@ class SubmitController extends Controller
             'organism'             => 'required|exists:organisms,accession',
             'simulation-input'     => 'required|file|validParameters',
             'enrich-db'            => 'sometimes|file|validDb',
-            'nonexp-nodes'         => 'sometimes|array',
+            'nonexp-nodes'         => 'sometimes|file',
             'custom-node-types'    => 'sometimes|file|validNodeType',
             'custom-edge-types'    => 'sometimes|file|validEdgeType',
             'custom-edge-subtypes' => 'sometimes|file|validEdgeSubType',
@@ -248,7 +248,12 @@ class SubmitController extends Controller
             'valid_edge_type'     => 'You must upload a valid custom edge type file',
             'valid_edge_sub_type' => 'You must upload a valid custom edge subtype file',
         ]);
-        $nonExp = (array)$request->get('nonexp-nodes', []);
+        $nonExp = [];
+        if (($file = $request->file('nonexp-nodes')) !== null) {
+            if ($file->isValid()) {
+                $nonExp = array_filter(array_unique($this->readSimpleNodesFile($file->path())));
+            }
+        }
         $job = Job::buildJob(Constants::SIMULATION_JOB, [
             'organism'             => $request->get('organism', 'hsa'),
             'simulationParameters' => Utils::readInputFile($request->file('simulation-input')->path()),
