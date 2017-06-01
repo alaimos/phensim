@@ -93,7 +93,6 @@ class Simulation extends AbstractHandler
             $result = $launcher->run();
             $this->log('OK!');
             $this->log(implode(PHP_EOL, $result));
-            $this->log($launcher->getCommandLine());
         } catch (\Exception $e) {
             throw new JobException($e->getMessage(), 0, $e);
         }
