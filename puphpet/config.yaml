@@ -20,8 +20,8 @@ vagrantfile:
                         update_guest_tools: 0
                 machines:
                     vflm_kx8v8r2lx1o2:
-                        id: simpathy
-                        hostname: simpathy.local
+                        id: phensim
+                        hostname: phensim.local
                         network:
                             private_network: 192.168.56.155
                             forwarded_port:
@@ -230,10 +230,10 @@ apache:
         - rewrite
     vhosts:
         av_4jla96zfap1m:
-            servername: simpathy.app
+            servername: phensim.app
             serveraliases:
-                - www.simpathy.app
-            docroot: /var/www/simpathy/public
+                - www.phensim.app
+            docroot: /var/www/phensim/public
             port: '80'
             setenvif:
                 - 'Authorization "(.*)" HTTP_AUTHORIZATION=$1'
@@ -247,7 +247,7 @@ apache:
             ssl_cipher: ''
             directories:
                 avd_1o59akpatftw:
-                    path: /var/www/simpathy/public
+                    path: /var/www/phensim/public
                     directoryindex: 'index.php app.dev'
                     options:
                         - Indexes
@@ -409,15 +409,15 @@ mariadb:
         override_options: {  }
     users:
         mariadbnu_xl9jh1a1gi99:
-            name: simpathy
+            name: phensim
             password: '123'
     databases:
         mariadbnd_rshayyrk69kw:
-            name: simpathy
+            name: phensim
             sql: ''
     grants:
         mariadbng_mnbm60e52fir:
-            user: simpathy
+            user: phensim
             table: '*.*'
             privileges:
                 - ALL
@@ -506,4 +506,3 @@ solr:
     settings:
         version: 5.5.2
         port: '8984'
-
