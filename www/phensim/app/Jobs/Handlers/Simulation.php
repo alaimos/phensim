@@ -6,8 +6,8 @@ namespace App\Jobs\Handlers;
 use App\Exceptions\JobException;
 use App\Models\Job as JobData;
 use App\Models\Organism;
-use App\SIMPATHY\Launcher;
-use App\SIMPATHY\Utils;
+use App\PHENSIM\Launcher;
+use App\PHENSIM\Utils;
 
 class Simulation extends AbstractHandler
 {

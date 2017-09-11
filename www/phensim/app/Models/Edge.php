@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\SIMPATHY\Utils;
+use App\PHENSIM\Utils;
 use Illuminate\Database\Eloquent\Model;
 
 /**

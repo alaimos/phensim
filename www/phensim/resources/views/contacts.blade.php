@@ -54,7 +54,7 @@
                             <div class="row items-push">
                                 <div class="col-md-12"><p>
                                         For bugs reporting, please open a new issue in the GitHub repository of this
-                                        project: <a href="https://github.com/alaimos/simpathy/issues">https://github.com/alaimos/simpathy/issues</a>.
+                                        project: <a href="https://github.com/alaimos/phensim/issues">https://github.com/alaimos/phensim/issues</a>.
                                     </p></div>
                             </div>
                         </div>

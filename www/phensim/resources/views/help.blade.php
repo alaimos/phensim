@@ -7,12 +7,12 @@
         <div class="bg-white">
             <section class="content content-boxed">
                 <!-- Section Content -->
-                <h1 class="text-black text-center push-30-t push-10">SIMPATHY User Manual</h1>
+                <h1 class="text-black text-center push-30-t push-10">PHENSIM User Manual</h1>
                 <div class="row push-50-t push-50 nice-copy-story">
                     <div class="col-sm-8 col-sm-offset-2 text-justify">
                         <h1 class="font-w400 text-black push-20">Introduction</h1>
 
-                        <p>SIMPATHY is a software developed to simulate the de-regulation of elements on pathways.
+                        <p>PHENSIM is a software developed to simulate the de-regulation of elements on pathways.
                             The tool, available as a web application, provides a convenient GUI for submitting
                             and displaying simulations, and APIs for submitting batch jobs. The features offered by
                             the two interfaces are almost identical.</p>
@@ -39,7 +39,7 @@
 
                         <h1 class="font-w400 text-black push-20">User Panel</h1>
                         <p>The User Panel is the main page from which an user can access all services provided by
-                            SIMPATHY. From the page, the user can:</p>
+                            PHENSIM. From the page, the user can:</p>
                         <ul>
                             <li>submit new simulations by choosing an activity from the <strong>Analysis</strong> panel
                                 on the left,
@@ -104,7 +104,7 @@
                         </ul>
                         <h1 class="font-w400 text-black push-20">Advanced Simulation Form</h1>
                         <p>The advanced simulation form allows users to perform simulations by manually specifying all
-                            parameters in the format required by SIMPATHY. Although more complex, this feature offers
+                            parameters in the format required by PHENSIM. Although more complex, this feature offers
                             greater flexibility than the previous one. Indeed, the user can upload
                             a database for custom pathway enrichment (adding items such as drugs, exogenous elements,
                             vesicles, exosomes, or other elements for which the user knows interactions with genes
@@ -192,7 +192,7 @@
                             The custom edge subtypes file is an optional tab-separated text file where each row
                             represents a new edge subtype. The edge subtype explain the effect that the source node
                             has on the target node (eg activation or inhibition), ad is fundamental for the correct
-                            computation of SIMPATHY activity score.</p>
+                            computation of PHENSIM activity score.</p>
                         <p>Each row in the enrichment file has 2 fields: the name of the subtype, a weight used
                             to represent the effect (+1 activation, -1 inhibition, 0 no effect).</p>
                         <p>An optional third field might be specified. The third field represents the priority of

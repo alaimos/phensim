@@ -18,7 +18,7 @@
     <!-- Error Footer -->
     <div class="content pulldown text-muted text-center">
         Would you like to let us know about it?<br>
-        <a class="link-effect" href="https://github.com/alaimos/simpathy/issues">Report it</a>.
+        <a class="link-effect" href="https://github.com/alaimos/phensim/issues">Report it</a>.
     </div>
     <!-- END Error Footer -->
 @endsection

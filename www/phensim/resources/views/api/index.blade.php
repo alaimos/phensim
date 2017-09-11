@@ -7,11 +7,11 @@
         <div class="bg-white">
             <section class="content content-boxed">
                 <!-- Section Content -->
-                <h1 class="text-black text-center push-30-t push-10">SIMPATHY APIs</h1>
+                <h1 class="text-black text-center push-30-t push-10">PHENSIM APIs</h1>
                 <div class="row push-50-t push-50 nice-copy-story">
                     <div class="col-sm-8 col-sm-offset-2">
                         <h2 class="font-w400 text-black push-20">Introduction</h2>
-                        <p>This is a brief specification of the REST-like APIs provided by SIMPATHY.
+                        <p>This is a brief specification of the REST-like APIs provided by PHENSIM.
                             You can access APIs by generating a token from the section in your User Panel.</p>
                         <p>All Requests MUST contain the following headers:</p>
                         <pre>Accept: application/json
@@ -255,13 +255,13 @@ Authorization: Bearer YOUR_API_AUTHENTICATION_TOKEN</pre>
                             'url' => '/api/simulations/<JOB_ID>/results/raw',
                             'queryParameters' => [],
                             'postParameters' => [],
-                            'responseDescription' => 'An object with a single "output" field. The output field contains the text of SIMPATHY output file.',
+                            'responseDescription' => 'An object with a single "output" field. The output field contains the text of PHENSIM output file.',
                             'responseParams' => null,
                             'example' => null,
                         ])
                         @include('api.action', [
                             'title' => 'Get list of simulated pathways',
-                            'description' => 'Get the list of simulated pathways returned by SIMPATHY',
+                            'description' => 'Get the list of simulated pathways returned by PHENSIM',
                             'method' => 'GET',
                             'url' => '/api/simulations/<JOB_ID>/results/pathways',
                             'queryParameters' => [],

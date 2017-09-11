@@ -9,7 +9,7 @@
                 <h1 class="h2 text-white push-10 visibility-hidden" data-toggle="appear"
                     data-class="animated fadeInDown">Sign up</h1>
                 <h2 class="h5 text-white-op visibility-hidden" data-toggle="appear"
-                    data-class="animated fadeInDown">You need to have an account to use SIMPATHY.</h2>
+                    data-class="animated fadeInDown">You need to have an account to use PHENSIM.</h2>
             </div>
             <!-- END Section Content -->
         </section>

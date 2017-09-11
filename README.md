@@ -1,5 +1,5 @@
-# SIMPATHY
+# PHENSIM
 
-SIMPATHY - SIMulations on PATHwaYs
+PHENSIM - PHENotypes SIMulator
 
-https://simpathy.atlas.dmi.unict.it
+https://phensim.atlas.dmi.unict.it

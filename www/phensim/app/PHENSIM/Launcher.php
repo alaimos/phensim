@@ -1,10 +1,10 @@
 <?php
 
-namespace App\SIMPATHY;
+namespace App\PHENSIM;
 
 use App\Exceptions\CommandException;
 use App\Models\Job;
-use App\SIMPATHY\Exception\LauncherException;
+use App\PHENSIM\Exception\LauncherException;
 
 final class Launcher
 {

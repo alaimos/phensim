@@ -5,8 +5,8 @@
 <html class="no-focus" lang="en"> <!--<![endif]-->
 <head>
     <meta charset="utf-8">
-    <title>SIMPATHY - Simulations on Pathways</title>
-    <meta name="description" content="SIMPATHY - Simulations on Pathways">
+    <title>PHENSIM - Phenotypes Simulator</title>
+    <meta name="description" content="PHENSIM - Phenotypes Simulator">
     <meta name="author" content="S. Alaimo, Ph.D.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">

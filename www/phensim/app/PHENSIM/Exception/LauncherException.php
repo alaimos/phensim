@@ -1,6 +1,6 @@
 <?php
 
-namespace App\SIMPATHY\Exception;
+namespace App\PHENSIM\Exception;
 
 
 class LauncherException extends \RuntimeException

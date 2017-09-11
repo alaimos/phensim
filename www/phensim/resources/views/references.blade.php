@@ -13,7 +13,7 @@
                                     </p>
                                     <div class="well"><p>
                                             S. Alaimo, A. Ferro, and A. Pulvirenti.
-                                            <span class="font-w600">SIMPATHY</span>.
+                                            <span class="font-w600">PHENSIM</span>.
                                             2017
                                         </p></div>
                                 </div>

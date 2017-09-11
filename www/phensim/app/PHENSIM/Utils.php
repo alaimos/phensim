@@ -1,6 +1,6 @@
 <?php
 
-namespace App\SIMPATHY;
+namespace App\PHENSIM;
 
 
 use App\Exceptions\CommandException;

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\SIMPATHY;
+namespace App\PHENSIM;
 
 use App\Models\Job;
 use App\Models\Node;
-use App\SIMPATHY\Exception\ReaderException;
+use App\PHENSIM\Exception\ReaderException;
 use Illuminate\Support\Collection;
 
 final class Reader
@@ -39,7 +39,7 @@ final class Reader
      *
      * @param \App\Models\Job $job
      *
-     * @throws \App\SIMPATHY\Exception\ReaderException
+     * @throws \App\PHENSIM\Exception\ReaderException
      */
     public function __construct(Job $job)
     {
@@ -97,7 +97,7 @@ final class Reader
      *
      * @param callable $action
      *
-     * @throws \App\SIMPATHY\Exception\ReaderException
+     * @throws \App\PHENSIM\Exception\ReaderException
      *
      * @return void
      */

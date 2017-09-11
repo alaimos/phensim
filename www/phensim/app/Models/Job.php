@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Exceptions\SecurityException;
-use App\SIMPATHY\Utils;
+use App\PHENSIM\Utils;
 use Auth;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;

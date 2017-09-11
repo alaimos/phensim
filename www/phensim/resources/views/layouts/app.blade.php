@@ -1,6 +1,6 @@
 @include('layouts.header')
 <!-- Page Container -->
-<!--
+{{-- <!--
     Available Classes:
 
     'enable-cookies'             Remembers active color theme between pages (when set through color theme list)
@@ -18,7 +18,7 @@
 
     'header-navbar-fixed'        Enables fixed header
     'header-navbar-transparent'  Enables a transparent header (if also fixed, it will get a solid dark background color on scrolling)
--->
+--> --}}
 <div id="page-container"
      class="sidebar-l sidebar-mini sidebar-o side-scroll header-navbar-fixed header-navbar-transparent">
     <!-- Sidebar -->
@@ -38,10 +38,14 @@
                     <a class="h5 text-white" href="{{ url('/') }}">
                         <span class="h4 font-w600 text-primary sidebar-maxi-hidden"><i class="fa fa-smile-o"></i></span>
                         <span class="h4 font-w600 sidebar-mini-hide">
-                            <span class="text-primary">S</span><span class="">I</span><span
-                                    class="text-primary">M</span><span class="">P</span><span
-                                    class="text-primary">A</span><span class="">T</span><span
-                                    class="text-primary">H</span><span class="">Y</span></span>
+                            &nbsp;<span class="text-primary">P</span>
+                            <span class="">H</span>
+                            <span class="text-primary">E</span>
+                            <span class="">N</span>
+                            <span class="text-primary">S</span>
+                            <span class="">I</span>
+                            <span class="text-primary">M</span>
+                        </span>
                     </a>
                 </div>
                 <!-- END Side Header -->
@@ -121,11 +125,16 @@
             <ul class="nav-header pull-left">
                 <li class="header-content">
                     <a class="h5 text-white" href="{{ url('/') }}">
-                        <span class="h4 font-w600 text-primary">S</span><span
-                                class="h4 font-w600 sidebar-mini-hide"><span class="">P</span><span
-                                    class="text-primary">E</span><span class="">C</span><span
-                                    class="text-primary">i</span><span class="">f</span><span
-                                    class="text-primary">I</span><span class="">C</span></span>
+                        <span class="h4 font-w600 text-primary sidebar-maxi-hidden"><i class="fa fa-smile-o"></i></span>
+                        <span class="h4 font-w600 sidebar-mini-hide">
+                            <span class="text-primary">P</span>
+                            <span class="">H</span>
+                            <span class="text-primary">E</span>
+                            <span class="">N</span>
+                            <span class="text-primary">S</span>
+                            <span class="">I</span>
+                            <span class="text-primary">M</span>
+                        </span>
                     </a>
                 </li>
             </ul>

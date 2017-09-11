@@ -29,7 +29,7 @@
                 <div class="block-content">
                     <div class="push-15">
                         <p>
-                            Please add one or more tokens if you wish to use SIMPATHY through its API interface.
+                            Please add one or more tokens if you wish to use PHENSIM through its API interface.
                         </p>
                         <!-- No Tokens Notice -->
                         <p class="m-b-none" v-if="tokens.length === 0">

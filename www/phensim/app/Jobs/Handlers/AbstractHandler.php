@@ -4,7 +4,7 @@ namespace App\Jobs\Handlers;
 
 use App\Exceptions\CommandException;
 use App\Exceptions\JobException;
-use App\SIMPATHY\Utils;
+use App\PHENSIM\Utils;
 use Illuminate\Queue\InteractsWithQueue;
 use App\Models\Job as JobData;
 

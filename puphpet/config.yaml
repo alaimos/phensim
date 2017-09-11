@@ -91,6 +91,7 @@ server:
     install: '1'
     packages:
         - htop
+        - libzip-dev
 users_groups:
     install: '1'
     groups: {  }

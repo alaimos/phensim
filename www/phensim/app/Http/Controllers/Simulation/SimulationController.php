@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Simulation;
 use App\Http\Controllers\Controller;
 use App\Models\Job;
 use App\Models\Pathway;
-use App\SIMPATHY\Reader;
+use App\PHENSIM\Reader;
 use Datatables;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;

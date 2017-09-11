@@ -8,13 +8,17 @@
             <div class="push-50-t push-50">
                 <h1 class="font-s48 font-w700 text-white push-10 visibility-hidden text-center" data-toggle="appear"
                     data-class="animated fadeInDown">
-                    <span class="text-primary">S</span><span class="">I</span><span class="text-primary">M</span><span
-                            class="">P</span><span class="text-primary">A</span><span class="">T</span><span
-                            class="text-primary">H</span><span class="">Y</span>
+                    <span class="text-primary">P</span>
+                    <span class="">H</span>
+                    <span class="text-primary">E</span>
+                    <span class="">N</span>
+                    <span class="text-primary">S</span>
+                    <span class="">I</span>
+                    <span class="text-primary">M</span>
                 </h1>
                 <h2 class="h3 font-w400 text-white-op push-50 visibility-hidden text-center" data-toggle="appear"
                     data-timeout="750">
-                    SIMulations on PATHwaYs
+                    PHENotypes SIMulator
                 </h2>
                 {{--
                 <div class="row">

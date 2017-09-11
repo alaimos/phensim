@@ -6,7 +6,7 @@ use App\Models\Edge;
 use App\Models\Node;
 use App\Models\Organism;
 use App\Models\Pathway;
-use App\SIMPATHY\Utils;
+use App\PHENSIM\Utils;
 use Illuminate\Console\Command;
 
 class ImportPathways extends Command
