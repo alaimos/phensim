@@ -336,7 +336,7 @@ final class Utils
     }
 
     /**
-     * Checks if a file is a valid simpathy input file
+     * Checks if a file is a valid phensim input file
      *
      * @param string        $file
      * @param callable|null $callback
@@ -369,7 +369,7 @@ final class Utils
     }
 
     /**
-     * Read simpathy input file
+     * Read phensim input file
      *
      * @param string $file
      *
@@ -386,7 +386,7 @@ final class Utils
     }
 
     /**
-     * Checks if a file is a valid simpathy input file
+     * Checks if a file is a valid phensim input file
      *
      * @param array $data
      *

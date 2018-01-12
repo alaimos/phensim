@@ -99,6 +99,13 @@ class SimulationController extends Controller
         return $filename;
     }
 
+    /**
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \Error
+     * @throws \Exception
+     */
     public function submitSimulation(Request $request): JsonResponse
     {
         if (!Job::canBeCreated()) {
@@ -119,7 +126,6 @@ class SimulationController extends Controller
                 'epsilon'      => doubleval($request->get('epsilon', 0.001)),
                 'seed'         => $request->get('random-seed'),
                 'enrichMirs'   => in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON']),
-                'metaPathway'  => in_array($request->get('meta-pathway'), ['on', 1, 'On', 'ON']),
             ]);
             $simulationInputFile = $this->prepareUploadedFile($request, $job, 'simulation-input', function ($f) {
                 return Utils::checkInputFile($f);
@@ -146,11 +152,6 @@ class SimulationController extends Controller
             $job->save();
             $this->dispatch(new DispatcherJob($job->id));
         } catch (\Exception $e) {
-            if ($job !== null) {
-                $job->delete();
-            }
-            throw $e;
-        } catch (\Error $e) {
             if ($job !== null) {
                 $job->delete();
             }

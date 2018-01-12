@@ -104,7 +104,7 @@ final class Reader
     private function reader(callable $action)
     {
         $fp = @fopen($this->job->getData('outputFile'), 'r');
-        if (!$fp) throw new ReaderException('Unable to open simpathy output file');
+        if (!$fp) throw new ReaderException('Unable to open phensim output file');
         while (($line = fgets($fp)) !== false) {
             $line = trim($line);
             if (!empty($line) && $line{0} != '#') {

@@ -135,18 +135,6 @@
                                     @endif
                                 </div>
                             </div>
-                            <div class="form-group"{{ $errors->has('meta-pathway') ? ' has-error' : '' }}>
-                                <div class="col-sm-9 col-sm-offset-3">
-                                    <label class="css-input switch switch-sm switch-primary control-label"
-                                           for="meta-pathway">
-                                        <input type="checkbox" id="meta-pathway" checked
-                                               name="meta-pathway"><span></span> Compute simulations on the meta-pathway
-                                    </label>
-                                    @if($errors->has('meta-pathway'))
-                                        <div class="help-block">{{ $errors->first('meta-pathway') }}</div>
-                                    @endif
-                                </div>
-                            </div>
                         </div>
                     </div>
                     {!! Form::close() !!}
@@ -159,8 +147,8 @@
     <!-- END Main Container -->
 @endsection
 @push('inline-scripts')
-<script>
-    $(function () {
-    });
-</script>
+    <script>
+        $(function () {
+        });
+    </script>
 @endpush

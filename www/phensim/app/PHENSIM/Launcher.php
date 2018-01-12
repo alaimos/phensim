@@ -8,11 +8,10 @@ use App\PHENSIM\Exception\LauncherException;
 
 final class Launcher
 {
-    const MITHRIL_JAR = 'bin/MITHrIL2.jar';
-    const MITHRIL_EXEC = 'java -jar %1$s %2$s %3$s';
-    const SIMPATHY = 'simpathy';
-    const MERGED_SIMPATHY = 'merged-simpathy';
-    const MERGED_SIMPATHY_EXCLUDE_VALUES = [
+    const MITHRIL_JAR                        = 'bin/MITHrIL2.jar';
+    const MITHRIL_EXEC                       = 'java -jar %1$s %2$s %3$s';
+    const SIMPATHY                           = 'merged-phensim';
+    const MERGED_SIMPATHY_EXCLUDE_VALUES     = [
         'Endocrine and metabolic diseases',
         'Neurodegenerative diseases',
         'Human Diseases',
@@ -20,33 +19,32 @@ final class Launcher
         'Infectious diseases',
         'Cardiovascular diseases',
     ];
-    const MERGED_SIMPATHY_EXCLUDE = '-exclude-categories %s';
-    const SIMPATHY_ENRICHERS = '-e %s';
-    const SIMPATHY_ENRICHER_PARAMETER = '-p %s=%s';
-    const SIMPATHY_EPSILON = '-epsilon %.10f';
-    const SIMPATHY_INPUT = '-i %s';
-    const SIMPATHY_ITERATIONS = '-number-of-iterations %d';
+    const MERGED_SIMPATHY_EXCLUDE            = '-exclude-categories %s';
+    const SIMPATHY_ENRICHERS                 = '-e %s';
+    const SIMPATHY_ENRICHER_PARAMETER        = '-p %s=%s';
+    const SIMPATHY_EPSILON                   = '-epsilon %.10f';
+    const SIMPATHY_INPUT                     = '-i %s';
+    const SIMPATHY_ITERATIONS                = '-number-of-iterations %d';
     const SIMPATHY_MIRNA_ENRICHMENT_EVIDENCE = '-enrichment-evidence-type %s';
-    const SIMPATHY_NON_EXPRESSED = '-non-expressed-nodes %s';
-    const SIMPATHY_ORGANISM = '-organism %s';
-    const SIMPATHY_OUTPUT = '-o %s';
-    const SIMPATHY_SEED = '-seed %d';
-    const SIMPATHY_VERBOSE = '-verbose';
-    const SIMPATHY_SUPPORTED_EVIDENCES = ['STRONG', 'WEAK', 'PREDICTION'];
-    const OVEREXPRESSION = 'OVEREXPRESSION';
-    const UNDEREXPRESSION = 'UNDEREXPRESSION';
-    const BOTH = 'BOTH';
+    const SIMPATHY_NON_EXPRESSED             = '-non-expressed-nodes %s';
+    const SIMPATHY_ORGANISM                  = '-organism %s';
+    const SIMPATHY_OUTPUT                    = '-o %s';
+    const SIMPATHY_SEED                      = '-seed %d';
+    const SIMPATHY_VERBOSE                   = '-verbose';
+    const SIMPATHY_SUPPORTED_EVIDENCES       = ['STRONG', 'WEAK', 'PREDICTION'];
+    const OVEREXPRESSION                     = 'OVEREXPRESSION';
+    const UNDEREXPRESSION                    = 'UNDEREXPRESSION';
+    const BOTH                               = 'BOTH';
 
-    private $isMerged = false;
-    private $enrichers = [];
-    private $enricherParameters = [];
-    private $epsilon = 0.001;
-    private $simulationParameters = [];
-    private $simulationIterations = 2001;
+    private $enrichers               = [];
+    private $enricherParameters      = [];
+    private $epsilon                 = 0.001;
+    private $simulationParameters    = [];
+    private $simulationIterations    = 2001;
     private $miRNAEnrichmentEvidence = 'STRONG';
-    private $nonExpressedNodes = [];
-    private $organism = 'hsa';
-    private $seed = null;
+    private $nonExpressedNodes       = [];
+    private $organism                = 'hsa';
+    private $seed                    = null;
 
     /**
      * The working directory of this job
@@ -80,29 +78,6 @@ final class Launcher
         if ($directory !== null) {
             $this->setWorkingDirectory($directory);
         }
-    }
-
-    /**
-     * Does this analysis employ the meta-pathway version of SIMPATHY?
-     *
-     * @return bool
-     */
-    public function isIsMerged()
-    {
-        return $this->isMerged;
-    }
-
-    /**
-     * Set if the meta-pathway version of SIMPATHY will be employed
-     *
-     * @param bool $isMerged
-     *
-     * @return $this
-     */
-    public function setIsMerged($isMerged)
-    {
-        $this->isMerged = $isMerged;
-        return $this;
     }
 
     /**
@@ -432,7 +407,7 @@ final class Launcher
         if (empty($this->simulationParameters)) {
             throw new LauncherException('You must specify at least one simulation parameter');
         }
-        $inputFile = $this->workingDirectory . Utils::tempFilename('simpathy_input', 'tsv');
+        $inputFile = $this->workingDirectory . Utils::tempFilename('phensim_input', 'tsv');
         $fp = @fopen($inputFile, 'w');
         if (!$fp) {
             throw new LauncherException('Unable to create SIMPATHY input file');
@@ -454,7 +429,7 @@ final class Launcher
      */
     private function buildOutputFile(array &$resultArray)
     {
-        $outputFile = $this->workingDirectory . Utils::tempFilename('simpathy_output', 'tsv');
+        $outputFile = $this->workingDirectory . Utils::tempFilename('phensim_output', 'tsv');
         $this->buildParameter($outputFile, self::SIMPATHY_OUTPUT, $resultArray);
         $this->outputFilename = $outputFile;
     }
@@ -510,17 +485,15 @@ final class Launcher
     }
 
     /**
-     * Build the command to run simpathy using parameters provided by the user
+     * Build the command to run phensim using parameters provided by the user
      *
      * @return string
      */
     private function buildCommandLine()
     {
-        $algorithm = ($this->isMerged) ? self::MERGED_SIMPATHY : self::SIMPATHY;
+        $algorithm = self::SIMPATHY;
         $parameters = [];
-        if ($this->isMerged) {
-            $this->buildListParameter(self::MERGED_SIMPATHY_EXCLUDE_VALUES, self::MERGED_SIMPATHY_EXCLUDE, $parameters);
-        }
+        $this->buildListParameter(self::MERGED_SIMPATHY_EXCLUDE_VALUES, self::MERGED_SIMPATHY_EXCLUDE, $parameters);
         $this->buildInputFile($parameters);
         $this->buildOutputFile($parameters);
         $this->buildListParameter($this->enrichers, self::SIMPATHY_ENRICHERS, $parameters);
@@ -550,7 +523,7 @@ final class Launcher
         try {
             $result = Utils::runCommand($command, $commandOutput);
         } catch (CommandException $e) {
-            Utils::mapCommandException('simpathy', $e, [
+            Utils::mapCommandException('phensim', $e, [
                 101 => 'Invalid input file: file does not exist.',
                 102 => 'Invalid species: species not found.',
                 103 => (is_array($commandOutput)) ? array_pop($commandOutput) : 'Unknown error',

@@ -352,7 +352,7 @@ class Job extends Model implements Ownable
         if ($appendNewLine) {
             $text .= "\n";
         }
-        echo $text;
+        //echo $text; // @TODO FOR DEBUG ONLY
         $this->job_log = $this->job_log . $text;
         if ($commit) {
             $this->save();

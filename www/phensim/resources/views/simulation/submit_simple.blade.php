@@ -152,16 +152,6 @@
                                         </label>
                                     </div>
                                 </div>
-                                <div class="form-group"{{ $errors->has('meta-pathway') ? ' has-error' : '' }}>
-                                    <div class="col-sm-8 col-sm-offset-2">
-                                        <label class="css-input switch switch-sm switch-primary"
-                                               for="meta-pathway">
-                                            <input type="checkbox" id="meta-pathway" checked
-                                                   name="meta-pathway"><span></span> Compute simulations on the
-                                            meta-pathway
-                                        </label>
-                                    </div>
-                                </div>
                             </div>
                             <!-- END Step 5 -->
                         </div>

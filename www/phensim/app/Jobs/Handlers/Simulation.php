@@ -63,7 +63,6 @@ class Simulation extends AbstractHandler
         $launcher = new Launcher($this->jobData);
         $launcher
             ->setOrganism($organism->accession)
-            ->setIsMerged($this->jobData->getTypedParameter('metaPathway', 'bool', false, false))
             ->setSeed($this->jobData->getTypedParameter('seed', 'int'))
             ->setEpsilon($this->jobData->getTypedParameter('epsilon', 'float', 0.001, false))
             ->setSimulationParameters($simulationParameters)

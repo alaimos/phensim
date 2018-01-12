@@ -50,6 +50,7 @@ class SimulationController extends Controller
      * @param \App\Models\Job $job
      *
      * @return \Illuminate\Http\JsonResponse
+     * @throws \Exception
      */
     public function pathwaysListData(Job $job): JsonResponse
     {
@@ -86,7 +87,7 @@ class SimulationController extends Controller
             abort(403, 'You are not allowed to view this job');
         }
         $fileName = (new Reader($job))->getOutputFilename();
-        return response()->download($fileName, 'simpathy-output-' . $job->id . '.tsv');
+        return response()->download($fileName, 'phensim-output-' . $job->id . '.tsv');
     }
 
     /**
@@ -119,6 +120,7 @@ class SimulationController extends Controller
      * @param string          $pid
      *
      * @return \Illuminate\Http\JsonResponse
+     * @throws \Exception
      */
     public function pathwayViewListData(Job $job, string $pid): JsonResponse
     {

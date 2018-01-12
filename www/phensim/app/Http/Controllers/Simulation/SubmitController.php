@@ -144,7 +144,6 @@ class SubmitController extends Controller
         $epsilon = doubleval($request->get('epsilon', 0.001));
         $seed = $request->get('random-seed');
         $enrich = in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON']);
-        $metaPathway = in_array($request->get('meta-pathway'), ['on', 1, 'On', 'ON']);
         $job = Job::buildJob(Constants::SIMULATION_JOB, [
             'organism'             => $organism,
             'simulationParameters' => $nodes,
@@ -153,7 +152,6 @@ class SubmitController extends Controller
             'epsilon'              => $epsilon,
             'seed'                 => $seed,
             'enrichMirs'           => $enrich,
-            'metaPathway'          => $metaPathway,
             'enrichDb'             => null,
             'nodeTypes'            => null,
             'edgeTypes'            => null,
@@ -262,7 +260,6 @@ class SubmitController extends Controller
             'epsilon'              => doubleval($request->get('epsilon', 0.001)),
             'seed'                 => $request->get('random-seed'),
             'enrichMirs'           => in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON']),
-            'metaPathway'          => in_array($request->get('meta-pathway'), ['on', 1, 'On', 'ON']),
         ]);
         $job->addParameters([
             'enrichDb'     => $this->prepareUploadedFile($request, $job, 'enrich-db'),
