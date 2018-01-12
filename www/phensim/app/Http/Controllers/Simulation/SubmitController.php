@@ -138,6 +138,7 @@ class SubmitController extends Controller
         ], [
             'has_nodes' => 'You must specify overexpressed or underexpressed nodes.',
         ]);
+        $name = trim($request->get('job_name', ''));
         $organism = $request->get('organism', 'hsa');
         $nodes = $this->prepareSimpleSimulationList($request);
         $nonExp = $this->prepareSimpleNodesList($request, 'nonexp-nodes', 'nonexp-file');
@@ -156,7 +157,7 @@ class SubmitController extends Controller
             'nodeTypes'            => null,
             'edgeTypes'            => null,
             'edgeSubTypes'         => null,
-        ]);
+        ], [], $name);
         $this->dispatch(new DispatcherJob($job->id));
         return redirect()->route('user-home');
     }
@@ -252,6 +253,7 @@ class SubmitController extends Controller
                 $nonExp = array_filter(array_unique($this->readSimpleNodesFile($file->path())));
             }
         }
+        $name = trim($request->get('job_name', ''));
         $job = Job::buildJob(Constants::SIMULATION_JOB, [
             'organism'             => $request->get('organism', 'hsa'),
             'simulationParameters' => Utils::readInputFile($request->file('simulation-input')->path()),
@@ -260,7 +262,7 @@ class SubmitController extends Controller
             'epsilon'              => doubleval($request->get('epsilon', 0.001)),
             'seed'                 => $request->get('random-seed'),
             'enrichMirs'           => in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON']),
-        ]);
+        ], [], $name);
         $job->addParameters([
             'enrichDb'     => $this->prepareUploadedFile($request, $job, 'enrich-db'),
             'nodeTypes'    => $this->prepareUploadedFile($request, $job, 'custom-node-types'),

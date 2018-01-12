@@ -35,6 +35,8 @@ use Laratrust\Contracts\Ownable;
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Job whereUserId($value)
  * @mixin \Eloquent
  * @property-read string           $uri
+ * @property string                $job_name
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Job whereJobName($value)
  */
 class Job extends Model implements Ownable
 {
@@ -64,7 +66,7 @@ class Job extends Model implements Ownable
      * @var array
      */
     protected $fillable = [
-        'user_id', 'job_key', 'job_type', 'job_status', 'job_parameters', 'job_data', 'job_log',
+        'user_id', 'job_key', 'job_type', 'job_status', 'job_parameters', 'job_data', 'job_log', 'job_name',
     ];
 
     /**
@@ -136,10 +138,11 @@ class Job extends Model implements Ownable
      * @param string $type
      * @param array  $parameters
      * @param array  $jobData
+     * @param string $jobName
      *
      * @return \App\Models\Job
      */
-    public static function buildJob(string $type, array $parameters = [], array $jobData = [])
+    public static function buildJob(string $type, array $parameters = [], array $jobData = [], $jobName = '')
     {
         /** @var \App\Models\Job $job */
         $job = Job::create([
@@ -149,6 +152,7 @@ class Job extends Model implements Ownable
             'job_parameters' => $parameters,
             'job_data'       => $jobData,
             'job_log'        => '',
+            'job_name'       => $jobName,
         ]);
         return $job;
     }
@@ -177,6 +181,17 @@ class Job extends Model implements Ownable
             $userId = $userId->id;
         }
         return Utils::makeKey('type', $jobType, 'time', microtime(true), 'user_id', $userId);
+    }
+
+    /**
+     * Get the name of the job
+     *
+     * @return string
+     */
+    public function getJobName(): string
+    {
+        $jn = trim($this->job_name);
+        return (empty($jn)) ? "Job of " . $this->created_at->toDayDateTimeString() : $jn;
     }
 
     /**

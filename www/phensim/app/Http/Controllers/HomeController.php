@@ -56,6 +56,7 @@ class HomeController extends Controller
      * Prepare data for the jobs table
      *
      * @return \Illuminate\Http\JsonResponse
+     * @throws \Exception
      */
     public function jobsData(): JsonResponse
     {
@@ -63,6 +64,8 @@ class HomeController extends Controller
         $table = Datatables::of(Job::listJobs());
         $table->editColumn('job_type', function (Job $job) {
             return ucwords(str_replace(['-', '_'], ' ', $job->job_type));
+        })->editColumn('job_name', function (Job $job) {
+            return $job->getJobName();
         })->editColumn('job_status', function (Job $job) {
             $text = '';
             switch ($job->job_status) {
@@ -113,6 +116,7 @@ class HomeController extends Controller
      * @param \App\Models\Job $job
      *
      * @return \Illuminate\Http\RedirectResponse
+     * @throws \Exception
      */
     public function deleteJob(Job $job): RedirectResponse
     {

@@ -73,7 +73,8 @@
                                 <form method="POST" action="http://www.kegg.jp/kegg-bin/show_pathway"
                                       target="_blank">
                                     <input type="hidden" name="map" value="{{ $coloring['mapId'] }}">
-                                    <input type="hidden" name="multi_query" value="{{ $coloring['coloring'] }}">
+                                    <textarea name="multi_query"
+                                              style="display: none;">{{ $coloring['coloring'] }}</textarea>
                                     <button class="btn btn-success" type="submit">
                                         View simulation results on KEGG
                                     </button>

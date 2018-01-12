@@ -45,7 +45,7 @@
                         <!-- Step Tabs -->
                         <ul class="nav nav-tabs nav-justified">
                             <li class="active">
-                                <a href="#simple-sim-sub-step1" data-toggle="tab">1. Select organisms</a>
+                                <a href="#simple-sim-sub-step1" data-toggle="tab">1. Name and Organism</a>
                             </li>
                             <li>
                                 <a href="#simple-sim-sub-step2" data-toggle="tab">2. Over-expressed Nodes</a>
@@ -69,6 +69,12 @@
                         <div class="block-content tab-content" style="min-height: 320px">
                             <!-- Step 1 -->
                             <div class="tab-pane push-30-t push-50 active" id="simple-sim-sub-step1">
+                                <div class="form-group{{ $errors->has('job_name') ? ' has-error' : '' }}">
+                                    <div class="col-sm-8 col-sm-offset-2">
+                                        {!! Form::label('job_name', 'Give your job a name', ['class' => 'control-label']) !!}
+                                        {!! Form::text('job_name', null, ['class' => 'form-control']) !!}
+                                    </div>
+                                </div>
                                 <div class="form-group{{ $errors->has('organism') ? ' has-error' : '' }}">
                                     <div class="col-sm-8 col-sm-offset-2">
                                         {!! Form::label('organism', 'Select an organism', ['class' => 'control-label']) !!}
@@ -188,56 +194,56 @@
     <!-- END Main Container -->
 @endsection
 @push('inline-scripts')
-<script>
-    $(function () {
-        $('.js-wizard-simple').bootstrapWizard({
-            'tabClass':         '',
-            'firstSelector':    '.wizard-first',
-            'previousSelector': '.wizard-prev',
-            'nextSelector':     '.wizard-next',
-            'lastSelector':     '.wizard-last',
-            'onTabShow':        function ($tab, $navigation, $index) {
-                var $total = $navigation.find('li').length;
-                var $current = $index + 1;
-                var $percent = ($current / $total) * 100;
+    <script>
+        $(function () {
+            $('.js-wizard-simple').bootstrapWizard({
+                'tabClass':         '',
+                'firstSelector':    '.wizard-first',
+                'previousSelector': '.wizard-prev',
+                'nextSelector':     '.wizard-next',
+                'lastSelector':     '.wizard-last',
+                'onTabShow':        function ($tab, $navigation, $index) {
+                    var $total = $navigation.find('li').length;
+                    var $current = $index + 1;
+                    var $percent = ($current / $total) * 100;
 
-                // Get vital wizard elements
-                var $wizard = $navigation.parents('.block');
-                var $progress = $wizard.find('.wizard-progress > .progress-bar');
-                var $btnPrev = $wizard.find('.wizard-prev');
-                var $btnNext = $wizard.find('.wizard-next');
-                var $btnFinish = $wizard.find('.wizard-finish');
+                    // Get vital wizard elements
+                    var $wizard = $navigation.parents('.block');
+                    var $progress = $wizard.find('.wizard-progress > .progress-bar');
+                    var $btnPrev = $wizard.find('.wizard-prev');
+                    var $btnNext = $wizard.find('.wizard-next');
+                    var $btnFinish = $wizard.find('.wizard-finish');
 
-                // Update progress bar if there is one
-                if ($progress) {
-                    $progress.css({width: $percent + '%'});
+                    // Update progress bar if there is one
+                    if ($progress) {
+                        $progress.css({width: $percent + '%'});
+                    }
+                    if ($current == 2) {
+                        VueBus.$emit('prepareSelect', 'overexp-nodes');
+                    }
+                    if ($current == 3) {
+                        VueBus.$emit('prepareSelect', 'underexp-nodes');
+                    }
+                    if ($current == 4) {
+                        VueBus.$emit('prepareSelect', 'nonexp-nodes');
+                    }
+                    // If it's the last tab then hide the last button and show the finish instead
+                    if ($current >= $total) {
+                        $btnNext.hide();
+                        $btnFinish.show();
+                    } else {
+                        $btnNext.show();
+                        $btnFinish.hide();
+                    }
                 }
-                if ($current == 2) {
-                    VueBus.$emit('prepareSelect', 'overexp-nodes');
+            });
+            $('.js-wizard-simple ul.nav').find('li > a').each(function () {
+                var $this = $(this), $url = $this.attr('href'), $obj = $($url);
+                if ($obj.find('.has-error').length > 0) {
+                    $this.addClass('text-danger');
                 }
-                if ($current == 3) {
-                    VueBus.$emit('prepareSelect', 'underexp-nodes');
-                }
-                if ($current == 4) {
-                    VueBus.$emit('prepareSelect', 'nonexp-nodes');
-                }
-                // If it's the last tab then hide the last button and show the finish instead
-                if ($current >= $total) {
-                    $btnNext.hide();
-                    $btnFinish.show();
-                } else {
-                    $btnNext.show();
-                    $btnFinish.hide();
-                }
-            }
+            });
+
         });
-        $('.js-wizard-simple ul.nav').find('li > a').each(function () {
-            var $this = $(this), $url = $this.attr('href'), $obj = $($url);
-            if ($obj.find('.has-error').length > 0) {
-                $this.addClass('text-danger');
-            }
-        });
-
-    });
-</script>
+    </script>
 @endpush

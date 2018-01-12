@@ -33,6 +33,16 @@
                             <h3 class="block-title">Advanced Simulation</h3>
                         </div>
                         <div class="block-content block-content-narrow">
+                            <div class="form-group{{ $errors->has('job_name') ? ' has-error' : '' }}">
+                                {!! Form::label('job_name', 'Job name', ['class' => 'col-md-3 control-label']) !!}
+                                <div class="col-md-9">
+                                    {!! Form::text('job_name', null, ['class' => 'form-control']) !!}
+                                    @if($errors->has('job_name'))
+                                        <div class="help-block">{{ $errors->first('job_name') }}</div>
+                                    @endif
+                                </div>
+                            </div>
+
                             <div class="form-group{{ $errors->has('organism') ? ' has-error' : '' }}">
                                 {!! Form::label('organism', 'Select an organism', ['class' => 'col-md-3 control-label']) !!}
                                 <div class="col-md-9">

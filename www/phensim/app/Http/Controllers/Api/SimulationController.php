@@ -116,6 +116,7 @@ class SimulationController extends Controller
             'simulation-input' => 'required',
             'epsilon'          => 'sometimes|numeric',
         ]);
+        $name = trim($request->get('name', ''));
         $nonExp = (array)$request->get('nonexp-nodes', []);
         $job = null;
         try {
@@ -126,7 +127,7 @@ class SimulationController extends Controller
                 'epsilon'      => doubleval($request->get('epsilon', 0.001)),
                 'seed'         => $request->get('random-seed'),
                 'enrichMirs'   => in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON']),
-            ]);
+            ], [], $name);
             $simulationInputFile = $this->prepareUploadedFile($request, $job, 'simulation-input', function ($f) {
                 return Utils::checkInputFile($f);
             });

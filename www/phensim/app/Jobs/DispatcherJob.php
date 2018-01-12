@@ -47,6 +47,7 @@ class DispatcherJob implements ShouldQueue
             if (!class_exists($class)) {
                 $this->fail(new JobException('Job handler (' . $class . ') not found.'));
             } else {
+                $jobData->job_log = '';
                 $jobData->job_status = JobData::PROCESSING;
                 $jobData->save();
                 /** @var AbstractHandler $handler */

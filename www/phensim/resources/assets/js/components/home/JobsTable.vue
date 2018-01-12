@@ -8,6 +8,7 @@
                         <thead>
                         <tr>
                             <th>#</th>
+                            <th>Name</th>
                             <th>Type</th>
                             <th>Status</th>
                             <th>Created At</th>
@@ -152,6 +153,7 @@
                     },
                     columns:    [
                         {data: 'id', name: 'id'},
+                        {data: 'job_name', name: 'job_name'},
                         {data: 'job_type', name: 'job_type'},
                         {data: 'job_status', name: 'job_status'},
                         {data: 'created_at', name: 'created_at'},
