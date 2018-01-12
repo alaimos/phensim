@@ -160,6 +160,7 @@ Authorization: Bearer YOUR_API_AUTHENTICATION_TOKEN</pre>
                             'url' => '/api/simulations',
                             'queryParameters' => [],
                             'postParameters' => [
+                                ['name' => 'name', 'type' => 'string', 'desc' => 'A name to recognize the simulation'],
                                 ['name' => 'organism', 'type' => 'string', 'desc' => 'The organism used for the simulation'],
                                 ['name' => 'simulationParameters', 'type' => 'string', 'desc' => 'A list of simulation parameters in the format used for the Advanced Submission Form.'],
                                 ['name' => 'enrichDb', 'type' => 'string', 'desc' => 'An optional  enrichment database in the format used for the Advanced Submission Form.'],
