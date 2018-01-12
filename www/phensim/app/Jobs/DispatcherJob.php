@@ -58,12 +58,12 @@ class DispatcherJob implements ShouldQueue
             }
             \Auth::logout();
         } catch (\Exception $e) {
-            if (\Auth::id() !== null) {
-                \Auth::logout();
-            }
             if ($jobData instanceof JobData) {
                 $jobData->job_status = JobData::FAILED;
                 $jobData->appendLog("Error!\nAn exception occurred during execution: " . $e->getMessage());
+            }
+            if (\Auth::id() !== null) {
+                \Auth::logout();
             }
             $this->fail($e);
         }
