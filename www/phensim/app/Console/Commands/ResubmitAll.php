@@ -38,7 +38,7 @@ class ResubmitAll extends Command
     public function handle()
     {
         foreach (Job::all() as $job) {
-            $this->info("Dispatching job " . $job->getJobName());
+            $this->info("Dispatching job \"" . $job->getJobName() . "\" (" . $job->id . ") of " . $job->user->name);
             dispatch(new DispatcherJob($job->id));
         }
         return 0;
