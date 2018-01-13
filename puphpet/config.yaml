@@ -231,9 +231,9 @@ apache:
         - rewrite
     vhosts:
         av_4jla96zfap1m:
-            servername: phensim.app
+            servername: phensim.test
             serveraliases:
-                - www.phensim.app
+                - www.phensim.test
             docroot: /var/www/phensim/public
             port: '80'
             setenvif:

@@ -5,13 +5,12 @@ namespace App\Http\Controllers\Simulation;
 use App\Http\Controllers\Controller;
 use App\Models\Job;
 use App\Models\Pathway;
+use App\PHENSIM\ExtendedCollectionEngine;
 use App\PHENSIM\Reader;
 use Datatables;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Yajra\Datatables\Engines\CollectionEngine;
 
 class SimulationController extends Controller
 {
@@ -137,14 +136,65 @@ class SimulationController extends Controller
         })->editColumn('activityScore', function (array $data) {
             return number_format($data['activityScore'], 4);
         })->editColumn('pValue', function (array $data) {
-            return number_format($data['pValue'], 4);
+            if ($data['pValue'] < 0.0001) {
+                return '< 0.0001';
+            } else {
+                return number_format($data['pValue'], 4);
+            }
         })->editColumn('nodeId', function (array $data) {
             return $this->parseNode($data['nodeId']);
         })->editColumn('isEndpoint', function (array $data) {
             return ($data['isEndpoint'] ? 'Yes' : 'No');
         })->editColumn('isDirectTarget', function (array $data) {
             return ($data['isDirectTarget'] ? 'Yes' : 'No');
-        })->rawColumns(['nodeId'])->removeColumn('ll', 'pathwayId', 'pathwayName');
+        })->rawColumns(['nodeId'])->removeColumn('ll', 'pathwayId', 'pathwayName')
+              ->order(function (ExtendedCollectionEngine $table, $getColumnName) {
+                  $criteria = $table->request->orderableColumns();
+                  $isCaseInsensitive = $table->isCaseInsensitive();
+                  if ($criteria) {
+                      $comparator = function ($a, $b) use ($isCaseInsensitive, $criteria, $getColumnName) {
+                          foreach ($criteria as $orderable) {
+                              $column = $getColumnName($orderable['column']);
+                              $direction = $orderable['direction'];
+                              if ($direction === 'desc') {
+                                  $first = $b;
+                                  $second = $a;
+                              } else {
+                                  $first = $a;
+                                  $second = $b;
+                              }
+                              if ($column == 'activityScore') {
+                                  $f = doubleval($first[$column]);
+                                  $s = doubleval($second[$column]);
+                                  $cmp = ($f == $s) ? 0 : (($f < $s) ? -1 : 1);
+                              } else {
+                                  if ($isCaseInsensitive) {
+                                      $cmp = strnatcasecmp($first[$column], $second[$column]);
+                                  } else {
+                                      $cmp = strnatcmp($first[$column], $second[$column]);
+                                  }
+                              }
+                              if ($cmp != 0) {
+                                  return $cmp;
+                              }
+                          }
+                          // all elements were equal
+                          return 0;
+                      };
+                      $table->collection = $table->collection
+                          ->map(function ($data) {
+                              return array_dot($data);
+                          })
+                          ->sort($comparator)
+                          ->map(function ($data) {
+                              foreach ($data as $key => $value) {
+                                  unset($data[$key]);
+                                  array_set($data, $key, $value);
+                              }
+                              return $data;
+                          });
+                  }
+              });
         return $table->make(true);
     }
 

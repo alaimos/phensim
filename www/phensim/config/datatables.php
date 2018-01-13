@@ -51,7 +51,7 @@ return [
     'engines'        => [
         'eloquent'   => Yajra\Datatables\Engines\EloquentEngine::class,
         'query'      => Yajra\Datatables\Engines\QueryBuilderEngine::class,
-        'collection' => Yajra\Datatables\Engines\CollectionEngine::class,
+        'collection' => App\PHENSIM\ExtendedCollectionEngine::class, //Yajra\Datatables\Engines\CollectionEngine::class,
     ],
 
     /**
