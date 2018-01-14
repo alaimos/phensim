@@ -49,6 +49,7 @@
             prepareTable() {
                 let $ = window.$, tbl = $('#pathways-list-table'), self = this;
                 tbl.dataTable({
+                    autoWidth: false,
                     processing: true,
                     serverSide: true,
                     ajax:       {

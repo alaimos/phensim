@@ -22,6 +22,51 @@ class SimulationController extends Controller
         $this->middleware('auth');
     }
 
+    private function makeComparator(array $intFields = [], array $doubleFields = []): callable
+    {
+        return function (ExtendedCollectionEngine $table, $getColumnName) use ($intFields, $doubleFields) {
+            $crit = $table->request->orderableColumns();
+            $caseSens = $table->isCaseInsensitive();
+            if ($crit) {
+                $comparator = function ($a, $b) use ($caseSens, $crit, $getColumnName, $intFields, $doubleFields) {
+                    foreach ($crit as $ord) {
+                        $column = $getColumnName($ord['column']);
+                        list($first, $second) = (strtolower($ord['direction']) === 'desc') ? [$b, $a] : [$a, $b];
+                        if (in_array($column, $intFields)) {
+                            $f = intval($first[$column]);
+                            $s = intval($second[$column]);
+                            $cmp = ($f == $s) ? 0 : (($f < $s) ? -1 : 1);
+                        } elseif (in_array($column, $doubleFields)) {
+                            $f = doubleval($first[$column]);
+                            $s = doubleval($second[$column]);
+                            $cmp = ($f == $s) ? 0 : (($f < $s) ? -1 : 1);
+                        } else {
+                            if ($caseSens) {
+                                $cmp = strnatcasecmp($first[$column], $second[$column]);
+                            } else {
+                                $cmp = strnatcmp($first[$column], $second[$column]);
+                            }
+                        }
+                        if ($cmp != 0) {
+                            return $cmp;
+                        }
+                    }
+                    return 0;
+                };
+                $table->collection = $table->collection
+                    ->map(function ($data) {
+                        return array_dot($data);
+                    })->sort($comparator)->map(function ($data) {
+                        foreach ($data as $key => $value) {
+                            unset($data[$key]);
+                            array_set($data, $key, $value);
+                        }
+                        return $data;
+                    });
+            }
+        };
+    }
+
     /**
      * Redirect to the real job viewer
      *
@@ -66,7 +111,7 @@ class SimulationController extends Controller
                 'job'  => $job,
                 'data' => $data,
             ])->render();
-        })->rawColumns(['action']);
+        })->rawColumns(['action'])->order($this->makeComparator(['directTargets', 'activatedNodes', 'inhibitedNodes']));
         return $table->make(true);
     }
 
@@ -148,53 +193,7 @@ class SimulationController extends Controller
         })->editColumn('isDirectTarget', function (array $data) {
             return ($data['isDirectTarget'] ? 'Yes' : 'No');
         })->rawColumns(['nodeId'])->removeColumn('ll', 'pathwayId', 'pathwayName')
-              ->order(function (ExtendedCollectionEngine $table, $getColumnName) {
-                  $criteria = $table->request->orderableColumns();
-                  $isCaseInsensitive = $table->isCaseInsensitive();
-                  if ($criteria) {
-                      $comparator = function ($a, $b) use ($isCaseInsensitive, $criteria, $getColumnName) {
-                          foreach ($criteria as $orderable) {
-                              $column = $getColumnName($orderable['column']);
-                              $direction = $orderable['direction'];
-                              if ($direction === 'desc') {
-                                  $first = $b;
-                                  $second = $a;
-                              } else {
-                                  $first = $a;
-                                  $second = $b;
-                              }
-                              if ($column == 'activityScore') {
-                                  $f = doubleval($first[$column]);
-                                  $s = doubleval($second[$column]);
-                                  $cmp = ($f == $s) ? 0 : (($f < $s) ? -1 : 1);
-                              } else {
-                                  if ($isCaseInsensitive) {
-                                      $cmp = strnatcasecmp($first[$column], $second[$column]);
-                                  } else {
-                                      $cmp = strnatcmp($first[$column], $second[$column]);
-                                  }
-                              }
-                              if ($cmp != 0) {
-                                  return $cmp;
-                              }
-                          }
-                          // all elements were equal
-                          return 0;
-                      };
-                      $table->collection = $table->collection
-                          ->map(function ($data) {
-                              return array_dot($data);
-                          })
-                          ->sort($comparator)
-                          ->map(function ($data) {
-                              foreach ($data as $key => $value) {
-                                  unset($data[$key]);
-                                  array_set($data, $key, $value);
-                              }
-                              return $data;
-                          });
-                  }
-              });
+              ->order($this->makeComparator([], ['activityScore']));
         return $table->make(true);
     }
 

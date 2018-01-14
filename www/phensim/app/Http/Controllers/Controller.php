@@ -18,6 +18,7 @@ class Controller extends BaseController
      * @param array|string $nodes
      *
      * @return string
+     * @throws \Throwable
      */
     protected function parseNode($nodes): string
     {

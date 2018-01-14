@@ -146,7 +146,7 @@ final class Reader
                     'inhibitedNodes' => 0,
                 ];
             }
-            if ($fields['isDirectTarget']) {
+            if ($fields['isDirectTarget'] && $fields['activityScore'] != 0) {
                 $results[$pid]['directTargets']++;
             }
             if ($fields['activityScore'] > 0) {
@@ -194,7 +194,7 @@ final class Reader
      */
     public function makePathwayColoring(string $pathway): array
     {
-        $mapId        = str_ireplace('path:', '', $pathway);
+        $mapId = str_ireplace('path:', '', $pathway);
         $coloringData = $this->readPathway($pathway, function (array $data) {
             /** @var Node $node */
             $node = Node::whereAccession($data['nodeId'])->first();

@@ -47,6 +47,7 @@
             prepareTable() {
                 let $ = window.$, tbl = $('#nodes-list-table'), self = this;
                 tbl.dataTable({
+                    autoWidth: false,
                     processing: true,
                     serverSide: true,
                     ajax:       {
