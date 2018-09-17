@@ -111,7 +111,15 @@ class SimulationController extends Controller
                 'job'  => $job,
                 'data' => $data,
             ])->render();
-        })->rawColumns(['action'])->order($this->makeComparator(['directTargets', 'activatedNodes', 'inhibitedNodes']));
+        })->editColumn('activityScore', function (array $data) {
+            return number_format($data['activityScore'], 4);
+        })->editColumn('pValue', function (array $data) {
+            if ($data['pValue'] < 0.0001) {
+                return '< 0.0001';
+            } else {
+                return number_format($data['pValue'], 4);
+            }
+        })->rawColumns(['action'])->order($this->makeComparator([], ['activityScore', 'pValue']))->removeColumn('ll');
         return $table->make(true);
     }
 

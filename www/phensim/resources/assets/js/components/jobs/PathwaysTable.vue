@@ -5,15 +5,11 @@
                    id="pathways-list-table">
                 <thead>
                 <tr>
-                    <th rowspan="2" style="vertical-align: middle">Id</th>
-                    <th rowspan="2" style="vertical-align: middle">Name</th>
-                    <th rowspan="2" style="vertical-align: middle"># Targets</th>
-                    <th colspan="2" class="text-center"># Nodes</th>
-                    <th rowspan="2" style="vertical-align: middle">Action</th>
-                </tr>
-                <tr>
-                    <th>Activated</th>
-                    <th>Inhibited</th>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Activity Score</th>
+                    <th>p-Value</th>
+                    <th>Action</th>
                 </tr>
                 </thead>
             </table>
@@ -49,7 +45,7 @@
             prepareTable() {
                 let $ = window.$, tbl = $('#pathways-list-table'), self = this;
                 tbl.dataTable({
-                    autoWidth: false,
+                    autoWidth:  false,
                     processing: true,
                     serverSide: true,
                     ajax:       {
@@ -62,19 +58,17 @@
                     columns:    [
                         {data: 'id', name: 'id'},
                         {data: 'name', name: 'name'},
-                        {data: 'directTargets', name: 'directTargets'},
-                        {data: 'activatedNodes', name: 'activatedNodes'},
-                        {data: 'inhibitedNodes', name: 'inhibitedNodes'},
+                        {data: 'activityScore', name: 'activityScore'},
+                        {data: 'pValue', name: 'pValue'},
                         {data: 'action', name: 'action', orderable: false, searchable: false}
                     ],
-                    order:      [[0, 'asc']],
+                    order:      [[3, 'asc'], [2, 'desc']],
                     columnDefs: [
                         {targets: 0},
                         {targets: 1},
-                        {targets: 2, className: 'text-center'},
-                        {targets: 3, className: 'text-center'},
-                        {targets: 4, className: 'text-center'},
-                        {targets: 5, className: 'text-center'}
+                        {targets: 2},
+                        {targets: 3},
+                        {targets: 4, className: 'text-center'}
                     ],
                     language:   {
                         processing: '<i class="fa fa-spinner fa-spin fa-2x fa-fw"></i><span class="sr-only">Loading...</span>'

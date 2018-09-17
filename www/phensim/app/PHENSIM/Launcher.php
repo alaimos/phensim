@@ -10,23 +10,14 @@ final class Launcher
 {
     const MITHRIL_JAR                        = 'bin/MITHrIL2.jar';
     const MITHRIL_EXEC                       = 'java -jar %1$s %2$s %3$s';
-    const SIMPATHY                           = 'merged-phensim';
-    const MERGED_SIMPATHY_EXCLUDE_VALUES     = [
-        'Endocrine and metabolic diseases',
-        'Neurodegenerative diseases',
-        'Human Diseases',
-        'Immune diseases',
-        'Infectious diseases',
-        'Cardiovascular diseases',
-    ];
-    const MERGED_SIMPATHY_EXCLUDE            = '-exclude-categories %s';
+    const SIMPATHY                           = 'phensim -m';
     const SIMPATHY_ENRICHERS                 = '-e %s';
     const SIMPATHY_ENRICHER_PARAMETER        = '-p %s=%s';
     const SIMPATHY_EPSILON                   = '-epsilon %.10f';
     const SIMPATHY_INPUT                     = '-i %s';
     const SIMPATHY_ITERATIONS                = '-number-of-iterations %d';
     const SIMPATHY_MIRNA_ENRICHMENT_EVIDENCE = '-enrichment-evidence-type %s';
-    const SIMPATHY_NON_EXPRESSED             = '-non-expressed-nodes %s';
+    const SIMPATHY_NON_EXPRESSED             = '-non-expressed-file %s';
     const SIMPATHY_ORGANISM                  = '-organism %s';
     const SIMPATHY_OUTPUT                    = '-o %s';
     const SIMPATHY_SEED                      = '-seed %d';
@@ -421,6 +412,29 @@ final class Launcher
     }
 
     /**
+     * Build the file containing non-expressed nodes.
+     *
+     * @param array $resultArray
+     *
+     * @return void
+     */
+    private function buildNonExpressedFile(array &$resultArray)
+    {
+        if (empty($this->nonExpressedNodes)) return;
+        $nonExpFile = $this->workingDirectory . Utils::tempFilename('phensim_nonexp', 'txt');
+        $fp = @fopen($nonExpFile, 'w');
+        if (!$fp) {
+            throw new LauncherException('Unable to create SIMPATHY non-expressed nodes file');
+        }
+        foreach ($this->nonExpressedNodes as $node) {
+            @fwrite($fp, $node);
+        }
+        @fclose($fp);
+        $this->buildParameter($nonExpFile, self::SIMPATHY_NON_EXPRESSED, $resultArray);
+        $this->inputFiles[] = $nonExpFile;
+    }
+
+    /**
      * Build the output file name and command line argument
      *
      * @param array $resultArray
@@ -493,8 +507,8 @@ final class Launcher
     {
         $algorithm = self::SIMPATHY;
         $parameters = [];
-        $this->buildListParameter(self::MERGED_SIMPATHY_EXCLUDE_VALUES, self::MERGED_SIMPATHY_EXCLUDE, $parameters);
         $this->buildInputFile($parameters);
+        $this->buildNonExpressedFile($parameters);
         $this->buildOutputFile($parameters);
         $this->buildListParameter($this->enrichers, self::SIMPATHY_ENRICHERS, $parameters);
         $this->buildEnricherParameters($parameters);
@@ -502,7 +516,6 @@ final class Launcher
         $this->buildParameter($this->simulationIterations, self::SIMPATHY_ITERATIONS, $parameters);
         $this->buildParameter($this->miRNAEnrichmentEvidence, self::SIMPATHY_MIRNA_ENRICHMENT_EVIDENCE, $parameters);
         $this->buildParameter($this->organism, self::SIMPATHY_ORGANISM, $parameters);
-        $this->buildListParameter($this->nonExpressedNodes, self::SIMPATHY_NON_EXPRESSED, $parameters);
         $this->buildParameter($this->seed, self::SIMPATHY_SEED, $parameters);
         $parameters[] = self::SIMPATHY_VERBOSE;
         return sprintf(self::MITHRIL_EXEC, resource_path(self::MITHRIL_JAR), $algorithm, implode(' ', $parameters));

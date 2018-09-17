@@ -11,18 +11,22 @@ final class Reader
 {
 
     const FIELDS_ALL          = ['pathwayId', 'pathwayName', 'nodeId', 'nodeName', 'isEndpoint', 'isDirectTarget',
-                                 'activityScore', 'pValue', 'll', 'targetedBy'];
+                                 'activityScore', 'pValue', 'll', 'pathwayActivityScore', 'pathwayPValue',
+                                 'pathwayll', 'targetedBy'];
     const FIELDS_CAST         = [
-        'pathwayId'      => null,
-        'pathwayName'    => 'pathway',
-        'nodeId'         => null,
-        'nodeName'       => null,
-        'isEndpoint'     => 'boolean',
-        'isDirectTarget' => 'boolean',
-        'activityScore'  => 'double',
-        'pValue'         => 'double',
-        'll'             => 'll',
-        'targetedBy'     => 'array',
+        'pathwayId'            => null,
+        'pathwayName'          => 'pathway',
+        'nodeId'               => null,
+        'nodeName'             => null,
+        'isEndpoint'           => 'boolean',
+        'isDirectTarget'       => 'boolean',
+        'activityScore'        => 'double',
+        'pValue'               => 'double',
+        'll'                   => 'll',
+        'pathwayActivityScore' => 'double',
+        'pathwayPValue'        => 'double',
+        'pathwayll'            => 'll',
+        'targetedBy'           => 'array',
     ];
     const LL                  = ['activation', 'inhibition', 'other'];
     const ACTIVATION_COLORING = '%s red,black';
@@ -84,7 +88,7 @@ final class Reader
     private function prepare(array $fields)
     {
         $n = count($fields);
-        if ($n == 9) $fields[] = '';
+        if ($n == 12) $fields[] = '';
         $fields = array_combine(self::FIELDS_ALL, $fields);
         array_walk($fields, function (&$value, $key) {
             $value = $this->cast($key, $value);
@@ -109,7 +113,7 @@ final class Reader
             $line = trim($line);
             if (!empty($line) && $line{0} != '#') {
                 $fields = explode("\t", $line);
-                if (count($fields) == 9 || count($fields) == 10) {
+                if (count($fields) == 12 || count($fields) == 13) {
                     call_user_func($action, $this->prepare($fields));
                 }
             }
@@ -139,21 +143,12 @@ final class Reader
             $pid = $fields['pathwayId'];
             if (!isset($results[$pid])) {
                 $results[$pid] = [
-                    'id'             => $pid,
-                    'name'           => $fields['pathwayName'],
-                    'directTargets'  => 0,
-                    'activatedNodes' => 0,
-                    'inhibitedNodes' => 0,
+                    'id'            => $pid,
+                    'name'          => $fields['pathwayName'],
+                    'activityScore' => $fields['pathwayActivityScore'],
+                    'pValue'        => $fields['pathwayPValue'],
+                    'll'            => $fields['pathwayll'],
                 ];
-            }
-            if ($fields['isDirectTarget'] && $fields['activityScore'] != 0) {
-                $results[$pid]['directTargets']++;
-            }
-            if ($fields['activityScore'] > 0) {
-                $results[$pid]['activatedNodes']++;
-            }
-            if ($fields['activityScore'] < 0) {
-                $results[$pid]['inhibitedNodes']++;
             }
         });
         return collect(array_values($results));
