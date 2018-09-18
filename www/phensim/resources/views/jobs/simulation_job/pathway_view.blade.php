@@ -70,8 +70,7 @@
                         </div>
                         <div class="block-content">
                             <div class="push-15 text-center">
-                                <form method="POST" action="http://www.kegg.jp/kegg-bin/show_pathway"
-                                      target="_blank">
+                                <form method="GET" action="http://www.kegg.jp/kegg-bin/show_pathway" target="_blank">
                                     <input type="hidden" name="map" value="{{ $coloring['mapId'] }}">
                                     <textarea name="multi_query"
                                               style="display: none;">{{ $coloring['coloring'] }}</textarea>
