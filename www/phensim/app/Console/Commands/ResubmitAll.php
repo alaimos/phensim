@@ -46,6 +46,7 @@ class ResubmitAll extends Command
             $this->info("Dispatching job \"" . $job->getJobName() . "\" (" . $job->id . ") of " . $job->user->name);
             \Auth::login($job->user, false);
             $job->job_status = Job::QUEUED;
+            $job->job_log = '';
             $job->job_data = [];
             $job->save();
             dispatch(new DispatcherJob($job->id));

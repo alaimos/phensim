@@ -42,6 +42,10 @@ class DispatcherJob implements ShouldQueue
         try {
             /** @var JobData $jobData */
             $jobData = JobData::whereId($this->jobDataId)->first();
+            if (in_array($jobData->job_status, [JobData::PROCESSING, JobData::COMPLETED])) {
+                // job is being processed (or has been processed) by another job.
+                return;
+            }
             \Auth::login($jobData->user, false);
             $class = '\App\Jobs\Handlers\\' . studly_case($jobData->job_type);
             if (!class_exists($class)) {
