@@ -17,6 +17,7 @@ class Kernel extends ConsoleKernel
         Commands\IndexPathways::class,
         Commands\ImportAll::class,
         Commands\ResubmitAll::class,
+        Commands\ResubmitOne::class,
     ];
 
     /**

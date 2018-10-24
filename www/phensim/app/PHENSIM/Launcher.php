@@ -427,7 +427,7 @@ final class Launcher
             throw new LauncherException('Unable to create SIMPATHY non-expressed nodes file');
         }
         foreach ($this->nonExpressedNodes as $node) {
-            @fwrite($fp, $node);
+            @fwrite($fp, $node . PHP_EOL);
         }
         @fclose($fp);
         $this->buildParameter($nonExpFile, self::SIMPATHY_NON_EXPRESSED, $resultArray);
