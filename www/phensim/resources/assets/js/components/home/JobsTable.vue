@@ -160,7 +160,7 @@
                         {data: 'created_at', name: 'created_at'},
                         {data: 'action', name: 'action', orderable: false, searchable: false}
                     ],
-                    order:      [[3, 'desc']],
+                    order:      [[4, 'desc']],
                     columnDefs: [
                         {targets: 0},
                         {targets: 1},
