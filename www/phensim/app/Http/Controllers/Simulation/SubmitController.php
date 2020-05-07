@@ -39,9 +39,12 @@ class SubmitController extends Controller
      */
     public function submitSimple(): View
     {
-        return view('simulation.submit_simple', [
-            'organisms' => Organism::pluck('name', 'accession'),
-        ]);
+        return view(
+            'simulation.submit_simple',
+            [
+                'organisms' => Organism::pluck('name', 'accession'),
+            ]
+        );
     }
 
     /**
@@ -54,6 +57,7 @@ class SubmitController extends Controller
     private function readSimpleNodesFile(string $fileName): array
     {
         $content = file_get_contents($fileName);
+
         return array_filter(array_map("trim", preg_split('/[\s,]+/', $content)));
     }
 
@@ -73,10 +77,11 @@ class SubmitController extends Controller
             $nodes = $o;
         } else {
             $file = $request->file($fileField);
-            if ($file != null && $file->isValid()) {
+            if ($file !== null && $file->isValid()) {
                 $nodes = $this->readSimpleNodesFile($file->path());
             }
         }
+
         return array_filter(array_unique($nodes));
     }
 
@@ -96,6 +101,7 @@ class SubmitController extends Controller
         foreach ($this->prepareSimpleNodesList($request, 'underexp-nodes', 'underexp-file') as $n) {
             $inputArray[$n] = Launcher::UNDEREXPRESSION;
         }
+
         return $inputArray;
     }
 
@@ -108,57 +114,75 @@ class SubmitController extends Controller
      */
     public function doSubmitSimple(Request $request): RedirectResponse
     {
-        Validator::extendImplicit('hasNodes', function ($attribute, $value, $parameters, RealValidator $validator) {
-            $allFields = ['overexp-nodes', 'underexp-nodes'];
-            $allFiles = ['overexp-file', 'underexp-file'];
-            $data = $validator->getData();
-            $ok = false;
-            foreach ($allFields as $field) {
-                if ($field != $attribute) {
-                    $val = Arr::get($data, $field);
-                    $ok = $ok || (!empty($val) && is_array($val));
+        Validator::extendImplicit(
+            'hasNodes',
+            function ($attribute, $value, $parameters, RealValidator $validator) {
+                $allFields = ['overexp-nodes', 'underexp-nodes'];
+                $allFiles = ['overexp-file', 'underexp-file'];
+                $data = $validator->getData();
+                $ok = false;
+                foreach ($allFields as $field) {
+                    if ($field !== $attribute) {
+                        $val = Arr::get($data, $field);
+                        $ok = $ok || (!empty($val) && is_array($val));
+                    }
                 }
-            }
-            foreach ($allFiles as $field) {
-                if ($field != $attribute) {
-                    $val = Arr::get($data, $field);
-                    $ok = $ok || (!empty($val) && $val instanceof UploadedFile);
+                foreach ($allFiles as $field) {
+                    if ($field !== $attribute) {
+                        $val = Arr::get($data, $field);
+                        $ok = $ok || (!empty($val) && $val instanceof UploadedFile);
+                    }
                 }
+                if (!$ok && in_array($attribute, $allFields, true) && !empty($value) && is_array($value)) {
+                    $ok = true;
+                }
+                if (!$ok && in_array($attribute, $allFiles) && !empty($value) && $value instanceof UploadedFile) {
+                    $ok = true;
+                }
+
+                return $ok;
             }
-            if (!$ok && in_array($attribute, $allFields) && !empty($value) && is_array($value)) $ok = true;
-            if (!$ok && in_array($attribute, $allFiles) && !empty($value) && $value instanceof UploadedFile) $ok = true;
-            return $ok;
-        });
-        $this->validate($request, [
-            'organism'       => 'required|exists:organisms,accession',
-            'overexp-nodes'  => 'hasNodes',
-            'overexp-file'   => 'hasNodes',
-            'underexp-nodes' => 'hasNodes',
-            'underexp-file'  => 'hasNodes',
-        ], [
-            'has_nodes' => 'You must specify overexpressed or underexpressed nodes.',
-        ]);
+        );
+        $this->validate(
+            $request,
+            [
+                'organism'       => 'required|exists:organisms,accession',
+                'overexp-nodes'  => 'hasNodes',
+                'overexp-file'   => 'hasNodes',
+                'underexp-nodes' => 'hasNodes',
+                'underexp-file'  => 'hasNodes',
+            ],
+            [
+                'has_nodes' => 'You must specify overexpressed or underexpressed nodes.',
+            ]
+        );
         $name = trim($request->get('job_name', ''));
         $organism = $request->get('organism', 'hsa');
         $nodes = $this->prepareSimpleSimulationList($request);
         $nonExp = $this->prepareSimpleNodesList($request, 'nonexp-nodes', 'nonexp-file');
-        $epsilon = doubleval($request->get('epsilon', 0.001));
+        $epsilon = (float)$request->get('epsilon', 0.001);
         $seed = $request->get('random-seed');
-        $enrich = in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON']);
-        $job = Job::buildJob(Constants::SIMULATION_JOB, [
-            'organism'             => $organism,
-            'simulationParameters' => $nodes,
-            'nonExpressed'         => $nonExp,
-            'dbFilter'             => null,
-            'epsilon'              => $epsilon,
-            'seed'                 => $seed,
-            'enrichMirs'           => $enrich,
-            'enrichDb'             => null,
-            'nodeTypes'            => null,
-            'edgeTypes'            => null,
-            'edgeSubTypes'         => null,
-        ], [], $name);
+        $enrich = in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON'], false);
+        $job = Job::buildJob(
+            Constants::SIMULATION_JOB,
+            [
+                'organism'             => $organism,
+                'simulationParameters' => $nodes,
+                'nonExpressed'         => $nonExp,
+                'dbFilter'             => null,
+                'epsilon'              => $epsilon,
+                'seed'                 => $seed,
+                'enrichMirs'           => $enrich,
+                'enrichDb'             => null,
+                'nodeTypes'            => null,
+                'edgeTypes'            => null,
+                'edgeSubTypes'         => null,
+            ],
+            [],
+            $name
+        );
         $this->dispatch(new DispatcherJob($job->id));
+
         return redirect()->route('user-home');
     }
 
@@ -169,9 +193,12 @@ class SubmitController extends Controller
      */
     public function submitEnriched(): View
     {
-        return view('simulation.submit_enriched', [
-            'organisms' => Organism::pluck('name', 'accession'),
-        ]);
+        return view(
+            'simulation.submit_enriched',
+            [
+                'organisms' => Organism::pluck('name', 'accession'),
+            ]
+        );
     }
 
     /**
@@ -179,27 +206,56 @@ class SubmitController extends Controller
      */
     private static function extendValidatorsEnriched()
     {
-        Validator::extendImplicit('validDb', function ($attribute, $value, $parameters, RealValidator $validator) {
-            if ($value instanceof UploadedFile) return Utils::checkDbFile($value->path());
-            return false;
-        });
-        Validator::extendImplicit('validParameters',
-            function ($attribute, $value, $parameters, RealValidator $validator) {
-                if ($value instanceof UploadedFile) return Utils::checkInputFile($value->path());
+        Validator::extendImplicit(
+            'validDb',
+            static function ($attribute, $value, $parameters, RealValidator $validator) {
+                if ($value instanceof UploadedFile) {
+                    return Utils::checkDbFile($value->path());
+                }
+
                 return false;
-            });
-        Validator::extend('validNodeType', function ($attribute, $value, $parameters, RealValidator $validator) {
-            if ($value instanceof UploadedFile) return Utils::checkNodeTypeFile($value->path());
-            return true;
-        });
-        Validator::extend('validEdgeType', function ($attribute, $value, $parameters, RealValidator $validator) {
-            if ($value instanceof UploadedFile) return Utils::checkEdgeTypeFile($value->path());
-            return true;
-        });
-        Validator::extend('validEdgeSubType', function ($attribute, $value, $parameters, RealValidator $validator) {
-            if ($value instanceof UploadedFile) return Utils::checkEdgeSubTypeFile($value->path());
-            return true;
-        });
+            }
+        );
+        Validator::extendImplicit(
+            'validParameters',
+            static function ($attribute, $value, $parameters, RealValidator $validator) {
+                if ($value instanceof UploadedFile) {
+                    return Utils::checkInputFile($value->path());
+                }
+
+                return false;
+            }
+        );
+        Validator::extend(
+            'validNodeType',
+            static function ($attribute, $value, $parameters, RealValidator $validator) {
+                if ($value instanceof UploadedFile) {
+                    return Utils::checkNodeTypeFile($value->path());
+                }
+
+                return true;
+            }
+        );
+        Validator::extend(
+            'validEdgeType',
+            static function ($attribute, $value, $parameters, RealValidator $validator) {
+                if ($value instanceof UploadedFile) {
+                    return Utils::checkEdgeTypeFile($value->path());
+                }
+
+                return true;
+            }
+        );
+        Validator::extend(
+            'validEdgeSubType',
+            static function ($attribute, $value, $parameters, RealValidator $validator) {
+                if ($value instanceof UploadedFile) {
+                    return Utils::checkEdgeSubTypeFile($value->path());
+                }
+
+                return true;
+            }
+        );
     }
 
     /**
@@ -211,13 +267,15 @@ class SubmitController extends Controller
      *
      * @return null|string
      */
-    private function prepareUploadedFile(Request $request, Job $job, string $key)
+    private function prepareUploadedFile(Request $request, Job $job, string $key): ?string
     {
         $file = $request->file($key);
-        if ($file !== null && $file instanceof UploadedFile) {
+        if ($file !== null && ($file instanceof UploadedFile)) {
             $moved = $file->move($job->getJobDirectory(), str_replace('-', '_', $key));
+
             return $moved->getPathname();
         }
+
         return null;
     }
 
@@ -231,46 +289,56 @@ class SubmitController extends Controller
     public function doSubmitEnriched(Request $request): RedirectResponse
     {
         self::extendValidatorsEnriched();
-        $this->validate($request, [
-            'organism'             => 'required|exists:organisms,accession',
-            'simulation-input'     => 'required|file|validParameters',
-            'enrich-db'            => 'sometimes|file|validDb',
-            'nonexp-nodes'         => 'sometimes|file',
-            'custom-node-types'    => 'sometimes|file|validNodeType',
-            'custom-edge-types'    => 'sometimes|file|validEdgeType',
-            'custom-edge-subtypes' => 'sometimes|file|validEdgeSubType',
-            'epsilon'              => 'sometimes|numeric',
-        ], [
-            'valid_db'            => 'You must upload a valid enrichment database file',
-            'valid_parameters'    => 'You must upload a valid simulation parameters file',
-            'valid_node_type'     => 'You must upload a valid custom node type file',
-            'valid_edge_type'     => 'You must upload a valid custom edge type file',
-            'valid_edge_sub_type' => 'You must upload a valid custom edge subtype file',
-        ]);
+        $this->validate(
+            $request,
+            [
+                'organism'             => 'required|exists:organisms,accession',
+                'simulation-input'     => 'required|file|validParameters',
+                'enrich-db'            => 'sometimes|file|validDb',
+                'nonexp-nodes'         => 'sometimes|file',
+                'custom-node-types'    => 'sometimes|file|validNodeType',
+                'custom-edge-types'    => 'sometimes|file|validEdgeType',
+                'custom-edge-subtypes' => 'sometimes|file|validEdgeSubType',
+                'epsilon'              => 'sometimes|numeric',
+            ],
+            [
+                'valid_db'            => 'You must upload a valid enrichment database file',
+                'valid_parameters'    => 'You must upload a valid simulation parameters file',
+                'valid_node_type'     => 'You must upload a valid custom node type file',
+                'valid_edge_type'     => 'You must upload a valid custom edge type file',
+                'valid_edge_sub_type' => 'You must upload a valid custom edge subtype file',
+            ]
+        );
         $nonExp = [];
-        if (($file = $request->file('nonexp-nodes')) !== null) {
-            if ($file->isValid()) {
-                $nonExp = array_filter(array_unique($this->readSimpleNodesFile($file->path())));
-            }
+        if ((($file = $request->file('nonexp-nodes')) !== null) && $file->isValid()) {
+            $nonExp = array_filter(array_unique($this->readSimpleNodesFile($file->path())));
         }
         $name = trim($request->get('job_name', ''));
-        $job = Job::buildJob(Constants::SIMULATION_JOB, [
-            'organism'             => $request->get('organism', 'hsa'),
-            'simulationParameters' => Utils::readInputFile($request->file('simulation-input')->path()),
-            'nonExpressed'         => $nonExp,
-            'dbFilter'             => $request->get('db-filter'),
-            'epsilon'              => doubleval($request->get('epsilon', 0.001)),
-            'seed'                 => $request->get('random-seed'),
-            'enrichMirs'           => in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON']),
-        ], [], $name);
-        $job->addParameters([
-            'enrichDb'     => $this->prepareUploadedFile($request, $job, 'enrich-db'),
-            'nodeTypes'    => $this->prepareUploadedFile($request, $job, 'custom-node-types'),
-            'edgeTypes'    => $this->prepareUploadedFile($request, $job, 'custom-edge-types'),
-            'edgeSubTypes' => $this->prepareUploadedFile($request, $job, 'custom-edge-subtypes'),
-        ]);
+        $job = Job::buildJob(
+            Constants::SIMULATION_JOB,
+            [
+                'organism'             => $request->get('organism', 'hsa'),
+                'simulationParameters' => Utils::readInputFile($request->file('simulation-input')->path()),
+                'nonExpressed'         => $nonExp,
+                'dbFilter'             => $request->get('db-filter'),
+                'epsilon'              => (float)$request->get('epsilon', 0.001),
+                'seed'                 => $request->get('random-seed'),
+                'enrichMirs'           => in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON'], false),
+            ],
+            [],
+            $name
+        );
+        $job->addParameters(
+            [
+                'enrichDb'     => $this->prepareUploadedFile($request, $job, 'enrich-db'),
+                'nodeTypes'    => $this->prepareUploadedFile($request, $job, 'custom-node-types'),
+                'edgeTypes'    => $this->prepareUploadedFile($request, $job, 'custom-edge-types'),
+                'edgeSubTypes' => $this->prepareUploadedFile($request, $job, 'custom-edge-subtypes'),
+            ]
+        );
         $job->save();
         $this->dispatch(new DispatcherJob($job->id));
+
         return redirect()->route('user-home');
     }
 
@@ -288,13 +356,17 @@ class SubmitController extends Controller
         $perPage = (int)$request->get('perPage', 30);
         if ($organism !== null && $organism->exists) {
             $q = $request->get('q');
-            $query = Node::whereOrganismId($organism->id)->where(function (Builder $query) use ($q) {
-                $query->where('nodes.accession', 'like', '%' . $q . '%')
-                      ->orWhere('nodes.name', 'like', '%' . $q . '%')
-                      ->orWhere('nodes.aliases', 'like', '%' . $q . '%');
-            })->orderBy('nodes.accession');
+            $query = Node::whereOrganismId($organism->id)->where(
+                static function (Builder $query) use ($q) {
+                    $query->where('nodes.accession', 'like', '%' . $q . '%')
+                          ->orWhere('nodes.name', 'like', '%' . $q . '%')
+                          ->orWhere('nodes.aliases', 'like', '%' . $q . '%');
+                }
+            )->orderBy('nodes.accession');
+
             return $query->paginate($perPage, ['accession', 'name']);
         }
+
         return new LengthAwarePaginator([], 0, $perPage);
     }
 

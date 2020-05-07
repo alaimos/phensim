@@ -5,37 +5,43 @@ namespace App\PHENSIM;
 use App\Exceptions\CommandException;
 use App\Models\Job;
 use App\PHENSIM\Exception\LauncherException;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 
 final class Launcher
 {
-    const MITHRIL_JAR                        = 'bin/MITHrIL2.jar';
-    const MITHRIL_EXEC                       = '/opt/jdk/bin/java -jar %1$s %2$s %3$s';
-    const SIMPATHY                           = 'phensim -m';
-    const SIMPATHY_ENRICHERS                 = '-e %s';
-    const SIMPATHY_ENRICHER_PARAMETER        = '-p %s=%s';
-    const SIMPATHY_EPSILON                   = '-epsilon %.10f';
-    const SIMPATHY_INPUT                     = '-i %s';
-    const SIMPATHY_ITERATIONS                = '-number-of-iterations %d';
-    const SIMPATHY_MIRNA_ENRICHMENT_EVIDENCE = '-enrichment-evidence-type %s';
-    const SIMPATHY_NON_EXPRESSED             = '-non-expressed-file %s';
-    const SIMPATHY_ORGANISM                  = '-organism %s';
-    const SIMPATHY_OUTPUT                    = '-o %s';
-    const SIMPATHY_SEED                      = '-seed %d';
-    const SIMPATHY_VERBOSE                   = '-verbose';
-    const SIMPATHY_SUPPORTED_EVIDENCES       = ['STRONG', 'WEAK', 'PREDICTION'];
-    const OVEREXPRESSION                     = 'OVEREXPRESSION';
-    const UNDEREXPRESSION                    = 'UNDEREXPRESSION';
-    const BOTH                               = 'BOTH';
+    /**
+     * @var array
+     */
+    private $mithrilCommandBase;
 
-    private $enrichers               = [];
-    private $enricherParameters      = [];
-    private $epsilon                 = 0.001;
-    private $simulationParameters    = [];
-    private $simulationIterations    = 2001;
+    private const  ENRICHER                  = '-e';
+    private const  ENRICHER_PARAM            = '-p';
+    private const  ENRICHER_PARAM_VALUE      = '%s=%s';
+    private const  EPSILON                   = '-epsilon';
+    private const  EPSILON_VALUE             = '%.10f';
+    private const  INPUT_FILE                = '-i';
+    private const  ITERATIONS                = '-number-of-iterations';
+    private const  MIRNA_ENRICHMENT_EVIDENCE = '-enrichment-evidence-type';
+    private const  NON_EXPRESSED_FILE        = '-non-expressed-file';
+    private const  ORGANISM                  = '-organism';
+    private const  OUTPUT_FILE               = '-o';
+    private const  SEED                      = '-seed';
+    private const  VERBOSE                   = '-verbose';
+
+    public const SUPPORTED_EVIDENCES = ['STRONG', 'WEAK', 'PREDICTION'];
+    public const OVEREXPRESSION      = 'OVEREXPRESSION';
+    public const UNDEREXPRESSION     = 'UNDEREXPRESSION';
+    public const BOTH                = 'BOTH';
+
+    private $enrichers = [];
+    private $enricherParameters = [];
+    private $epsilon = 0.001;
+    private $simulationParameters = [];
+    private $simulationIterations = 2001;
     private $miRNAEnrichmentEvidence = 'STRONG';
-    private $nonExpressedNodes       = [];
-    private $organism                = 'hsa';
-    private $seed                    = null;
+    private $nonExpressedNodes = [];
+    private $organism = 'hsa';
+    private $seed = null;
 
     /**
      * The working directory of this job
@@ -58,7 +64,6 @@ final class Launcher
      */
     private $inputFiles = [];
 
-
     /**
      * Launcher constructor.
      *
@@ -69,6 +74,12 @@ final class Launcher
         if ($directory !== null) {
             $this->setWorkingDirectory($directory);
         }
+        $this->mithrilCommandBase = [
+            env('JAVA_PATH') . '/java',
+            '-jar',
+            resource_path('bin/MITHrIL2.jar'),
+            'phensim -m',
+        ];
     }
 
     /**
@@ -76,7 +87,7 @@ final class Launcher
      *
      * @return array
      */
-    public function getEnrichers()
+    public function getEnrichers(): array
     {
         return $this->enrichers;
     }
@@ -88,17 +99,16 @@ final class Launcher
      *
      * @return $this
      */
-    public function addEnricher($enricher)
+    public function addEnricher($enricher): self
     {
         if (is_array($enricher)) {
             foreach ($enricher as $e) {
                 $this->addEnricher($e);
             }
-        } else {
-            if (!in_array($enricher, $this->enrichers)) {
-                $this->enrichers[] = $enricher;
-            }
+        } elseif (!in_array($enricher, $this->enrichers, true)) {
+            $this->enrichers[] = $enricher;
         }
+
         return $this;
     }
 
@@ -109,9 +119,10 @@ final class Launcher
      *
      * @return $this
      */
-    public function setEnrichers($enrichers = [])
+    public function setEnrichers($enrichers = []): self
     {
         $this->enrichers = $enrichers;
+
         return $this;
     }
 
@@ -120,7 +131,7 @@ final class Launcher
      *
      * @return array
      */
-    public function getEnricherParameters()
+    public function getEnricherParameters(): array
     {
         return $this->enricherParameters;
     }
@@ -133,15 +144,16 @@ final class Launcher
      *
      * @return $this
      */
-    public function addEnricherParameters($param, $value = null)
+    public function addEnricherParameters($param, $value = null): self
     {
         if (is_array($param)) {
-            foreach ($this->enricherParameters as $key => $value) {
-                $this->enricherParameters[$key] = $value;
+            foreach ($this->enricherParameters as $key => $val) {
+                $this->enricherParameters[$key] = $val;
             }
         } else {
             $this->enricherParameters[$param] = $value;
         }
+
         return $this;
     }
 
@@ -152,9 +164,10 @@ final class Launcher
      *
      * @return $this
      */
-    public function setEnricherParameters($enricherParameters = [])
+    public function setEnricherParameters($enricherParameters = []): self
     {
         $this->enricherParameters = $enricherParameters;
+
         return $this;
     }
 
@@ -163,21 +176,22 @@ final class Launcher
      *
      * @return float
      */
-    public function getEpsilon()
+    public function getEpsilon(): float
     {
         return $this->epsilon;
     }
 
     /**
-     * Set the value of the epsilon parameter for SIMPATHY
+     * Set the value of the epsilon parameter for PHENSIM
      *
      * @param float $epsilon
      *
      * @return $this
      */
-    public function setEpsilon($epsilon = 0.001)
+    public function setEpsilon($epsilon = 0.001): self
     {
         $this->epsilon = $epsilon;
+
         return $this;
     }
 
@@ -186,7 +200,7 @@ final class Launcher
      *
      * @return array
      */
-    public function getSimulationParameters()
+    public function getSimulationParameters(): array
     {
         return $this->simulationParameters;
     }
@@ -199,7 +213,7 @@ final class Launcher
      *
      * @return $this
      */
-    public function addSimulationParameter($parameter, $expressionChange = self::BOTH)
+    public function addSimulationParameter($parameter, $expressionChange = self::BOTH): self
     {
         if (is_array($parameter)) {
             foreach ($parameter as $key => $change) {
@@ -212,6 +226,7 @@ final class Launcher
             }
             $this->simulationParameters[$parameter] = $expressionChange;
         }
+
         return $this;
     }
 
@@ -222,10 +237,11 @@ final class Launcher
      *
      * @return $this
      */
-    public function setSimulationParameters($simulationParameters)
+    public function setSimulationParameters($simulationParameters): self
     {
         $this->simulationParameters = [];
         $this->addSimulationParameter($simulationParameters);
+
         return $this;
     }
 
@@ -234,7 +250,7 @@ final class Launcher
      *
      * @return int
      */
-    public function getSimulationIterations()
+    public function getSimulationIterations(): int
     {
         return $this->simulationIterations;
     }
@@ -246,9 +262,10 @@ final class Launcher
      *
      * @return $this
      */
-    public function setSimulationIterations($simulationIterations = 2001)
+    public function setSimulationIterations($simulationIterations = 2001): self
     {
         $this->simulationIterations = $simulationIterations;
+
         return $this;
     }
 
@@ -257,7 +274,7 @@ final class Launcher
      *
      * @return string
      */
-    public function getMiRNAEnrichmentEvidence()
+    public function getMiRNAEnrichmentEvidence(): string
     {
         return $this->miRNAEnrichmentEvidence;
     }
@@ -270,13 +287,14 @@ final class Launcher
      *
      * @return $this
      */
-    public function setMiRNAEnrichmentEvidence($miRNAEnrichmentEvidence = 'STRONG')
+    public function setMiRNAEnrichmentEvidence($miRNAEnrichmentEvidence = 'STRONG'): self
     {
         $miRNAEnrichmentEvidence = strtoupper($miRNAEnrichmentEvidence);
-        if (!in_array($miRNAEnrichmentEvidence, self::SIMPATHY_SUPPORTED_EVIDENCES)) {
+        if (!in_array($miRNAEnrichmentEvidence, self::SUPPORTED_EVIDENCES)) {
             throw new LauncherException("Unsupported evidence type.");
         }
         $this->miRNAEnrichmentEvidence = $miRNAEnrichmentEvidence;
+
         return $this;
     }
 
@@ -285,7 +303,7 @@ final class Launcher
      *
      * @return array
      */
-    public function getNonExpressedNodes()
+    public function getNonExpressedNodes(): array
     {
         return $this->nonExpressedNodes;
     }
@@ -297,9 +315,10 @@ final class Launcher
      *
      * @return $this
      */
-    public function setNonExpressedNodes($nonExpressedNodes = [])
+    public function setNonExpressedNodes($nonExpressedNodes = []): self
     {
         $this->nonExpressedNodes = $nonExpressedNodes;
+
         return $this;
     }
 
@@ -308,7 +327,7 @@ final class Launcher
      *
      * @return string
      */
-    public function getOrganism()
+    public function getOrganism(): string
     {
         return $this->organism;
     }
@@ -320,9 +339,10 @@ final class Launcher
      *
      * @return $this
      */
-    public function setOrganism($organism = 'hsa')
+    public function setOrganism($organism = 'hsa'): self
     {
         $this->organism = $organism;
+
         return $this;
     }
 
@@ -331,7 +351,7 @@ final class Launcher
      *
      * @return null|integer
      */
-    public function getSeed()
+    public function getSeed(): ?int
     {
         return $this->seed;
     }
@@ -343,9 +363,10 @@ final class Launcher
      *
      * @return $this
      */
-    public function setSeed($seed = null)
+    public function setSeed($seed = null): self
     {
         $this->seed = $seed;
+
         return $this;
     }
 
@@ -354,7 +375,7 @@ final class Launcher
      *
      * @return string
      */
-    public function getWorkingDirectory()
+    public function getWorkingDirectory(): string
     {
         return $this->workingDirectory;
     }
@@ -366,13 +387,14 @@ final class Launcher
      *
      * @return $this
      */
-    public function setWorkingDirectory($workingDirectory)
+    public function setWorkingDirectory($workingDirectory): self
     {
         if ($workingDirectory instanceof Job) {
             $workingDirectory = $workingDirectory->getJobDirectory();
         }
         $workingDirectory = rtrim($workingDirectory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
         $this->workingDirectory = $workingDirectory;
+
         return $this;
     }
 
@@ -381,33 +403,33 @@ final class Launcher
      *
      * @return string
      */
-    public function getOutputFilename()
+    public function getOutputFilename(): string
     {
         return $this->outputFilename;
     }
 
     /**
-     * Build the input file for SIMPATHY, the command line argument, and returns its name
+     * Build the input file for PHENSIM, the command line argument, and returns its name
      *
      * @param array $resultArray
      *
      * @return void
      */
-    private function buildInputFile(array &$resultArray)
+    private function buildInputFile(array &$resultArray): void
     {
         if (empty($this->simulationParameters)) {
             throw new LauncherException('You must specify at least one simulation parameter');
         }
         $inputFile = $this->workingDirectory . Utils::tempFilename('phensim_input', 'tsv');
-        $fp = @fopen($inputFile, 'w');
+        $fp = @fopen($inputFile, 'wb');
         if (!$fp) {
-            throw new LauncherException('Unable to create SIMPATHY input file');
+            throw new LauncherException('Unable to create PHENSIM input file');
         }
         foreach ($this->simulationParameters as $parameter => $type) {
             @fwrite($fp, $parameter . "\t" . $type . PHP_EOL);
         }
         @fclose($fp);
-        $this->buildParameter($inputFile, self::SIMPATHY_INPUT, $resultArray);
+        $this->buildParameter($inputFile, self::INPUT_FILE, $resultArray);
         $this->inputFiles[] = $inputFile;
     }
 
@@ -418,19 +440,21 @@ final class Launcher
      *
      * @return void
      */
-    private function buildNonExpressedFile(array &$resultArray)
+    private function buildNonExpressedFile(array &$resultArray): void
     {
-        if (empty($this->nonExpressedNodes)) return;
+        if (empty($this->nonExpressedNodes)) {
+            return;
+        }
         $nonExpFile = $this->workingDirectory . Utils::tempFilename('phensim_nonexp', 'txt');
-        $fp = @fopen($nonExpFile, 'w');
+        $fp = @fopen($nonExpFile, 'wb');
         if (!$fp) {
-            throw new LauncherException('Unable to create SIMPATHY non-expressed nodes file');
+            throw new LauncherException('Unable to create PHENSIM non-expressed nodes file');
         }
         foreach ($this->nonExpressedNodes as $node) {
             @fwrite($fp, $node . PHP_EOL);
         }
         @fclose($fp);
-        $this->buildParameter($nonExpFile, self::SIMPATHY_NON_EXPRESSED, $resultArray);
+        $this->buildParameter($nonExpFile, self::NON_EXPRESSED_FILE, $resultArray);
         $this->inputFiles[] = $nonExpFile;
     }
 
@@ -441,26 +465,27 @@ final class Launcher
      *
      * @return void
      */
-    private function buildOutputFile(array &$resultArray)
+    private function buildOutputFile(array &$resultArray): void
     {
         $outputFile = $this->workingDirectory . Utils::tempFilename('phensim_output', 'tsv');
-        $this->buildParameter($outputFile, self::SIMPATHY_OUTPUT, $resultArray);
+        $this->buildParameter($outputFile, self::OUTPUT_FILE, $resultArray);
         $this->outputFilename = $outputFile;
     }
 
     /**
      * Build a list parameter in the command line
      *
-     * @param array  $parameter
-     * @param string $pattern
+     * @param array  $value
+     * @param string $parameter
      * @param array  $resultArray
      *
      * @return void
      */
-    private function buildListParameter(array $parameter, $pattern, array &$resultArray)
+    private function buildListParameter(array $value, $parameter, array &$resultArray): void
     {
-        if (!empty($parameter)) {
-            $resultArray[] = sprintf($pattern, escapeshellarg(implode(',', $parameter)));
+        if (!empty($value)) {
+            $resultArray[] = $parameter;
+            $resultArray[] = implode(',', $value);
         }
     }
 
@@ -468,15 +493,16 @@ final class Launcher
      * Build a parameter in the command line
      *
      * @param mixed  $value
-     * @param string $pattern
+     * @param string $parameter
      * @param array  $resultArray
      *
      * @return void
      */
-    private function buildParameter($value, $pattern, array &$resultArray)
+    private function buildParameter($value, $parameter, array &$resultArray): void
     {
         if (!empty($value)) {
-            $resultArray[] = sprintf($pattern, (is_numeric($value)) ? $value : escapeshellarg($value));
+            $resultArray[] = $parameter;
+            $resultArray[] = $value;
         }
     }
 
@@ -487,84 +513,87 @@ final class Launcher
      *
      * @return void
      */
-    private function buildEnricherParameters(array &$resultArray)
+    private function buildEnricherParameters(array &$resultArray): void
     {
         if (!empty($this->enricherParameters)) {
-            $parameters = [];
             foreach ($this->enricherParameters as $param => $value) {
-                $parameters[] = sprintf(self::SIMPATHY_ENRICHER_PARAMETER, $param, escapeshellarg($value));
+                $resultArray[] = self::ENRICHER_PARAM;
+                $resultArray[] = sprintf(self::ENRICHER_PARAM_VALUE, $param, $value);
             }
-            $resultArray[] = implode(' ', $parameters);
         }
     }
 
     /**
      * Build the command to run phensim using parameters provided by the user
      *
-     * @return string
+     * @return array
      */
-    private function buildCommandLine()
+    private function buildCommandLine(): array
     {
-        $algorithm = self::SIMPATHY;
-        $parameters = [];
+        $parameters = $this->mithrilCommandBase;
         $this->buildInputFile($parameters);
         $this->buildNonExpressedFile($parameters);
         $this->buildOutputFile($parameters);
-        $this->buildListParameter($this->enrichers, self::SIMPATHY_ENRICHERS, $parameters);
+        $this->buildListParameter($this->enrichers, self::ENRICHER, $parameters);
         $this->buildEnricherParameters($parameters);
-        $this->buildParameter($this->epsilon, self::SIMPATHY_EPSILON, $parameters);
-        $this->buildParameter($this->simulationIterations, self::SIMPATHY_ITERATIONS, $parameters);
-        $this->buildParameter($this->miRNAEnrichmentEvidence, self::SIMPATHY_MIRNA_ENRICHMENT_EVIDENCE, $parameters);
-        $this->buildParameter($this->organism, self::SIMPATHY_ORGANISM, $parameters);
-        $this->buildParameter($this->seed, self::SIMPATHY_SEED, $parameters);
-        $parameters[] = self::SIMPATHY_VERBOSE;
-        return sprintf(self::MITHRIL_EXEC, resource_path(self::MITHRIL_JAR), $algorithm, implode(' ', $parameters));
+        $this->buildParameter(sprintf(self::EPSILON_VALUE, $this->epsilon), self::EPSILON, $parameters);
+        $this->buildParameter($this->simulationIterations, self::ITERATIONS, $parameters);
+        $this->buildParameter($this->miRNAEnrichmentEvidence, self::MIRNA_ENRICHMENT_EVIDENCE, $parameters);
+        $this->buildParameter($this->organism, self::ORGANISM, $parameters);
+        $this->buildParameter($this->seed, self::SEED, $parameters);
+        $parameters[] = self::VERBOSE;
+
+        return $parameters;
     }
 
     /**
-     * Run SIMPATHY.
+     * Run PHENSIM.
      *
-     * @return array|bool
+     * @param callable|null $callback
+     *
+     * @return void
      * @throws CommandException
      * @throws LauncherException
      */
-    public function run()
+    public function run(?callable $callback = null): void
     {
         $command = $this->buildCommandLine();
         $commandOutput = null;
         $result = null;
         try {
-            $result = Utils::runCommand($command, $commandOutput);
-        } catch (CommandException $e) {
-            Utils::mapCommandException('phensim', $e, [
-                101 => 'Invalid input file: file does not exist.',
-                102 => 'Invalid species: species not found.',
-                103 => (is_array($commandOutput)) ? array_pop($commandOutput) : 'Unknown error',
-            ]);
+            Utils::runCommand($command, $this->getWorkingDirectory(), null, $callback);
+        } catch (ProcessFailedException $e) {
+            Utils::mapCommandException(
+                $e,
+                [
+                    101 => 'Invalid input file: file does not exist.',
+                    102 => 'Invalid species: species not found.',
+                    103 => 'Unknown error',
+                ]
+            );
         }
         if (!file_exists($this->outputFilename)) {
             throw new LauncherException('Unable to create output file');
         }
-        return ($result) ? $commandOutput : false;
     }
 
     /**
-     * Returns the command line used to run SIMPATHY
+     * Returns the command line used to run PHENSIM
      *
-     * @return string
+     * @return array
      */
-    public function getCommandLine()
+    public function getCommandLine(): array
     {
         return $this->buildCommandLine();
     }
 
 
     /**
-     * Delete all temporary input files for SIMPATHY
+     * Delete all temporary input files for PHENSIM
      *
      * @return bool
      */
-    public function deleteInputFiles()
+    public function deleteInputFiles(): bool
     {
         if (!empty($this->inputFiles) && is_array($this->inputFiles)) {
             $success = true;
@@ -572,8 +601,10 @@ final class Launcher
                 $success = $success && @unlink($file);
             }
             $this->inputFiles = null;
+
             return $success;
         }
+
         return false;
     }
 

@@ -23,21 +23,13 @@ class ResubmitOne extends Command
     protected $description = 'Resubmit one simulation';
 
     /**
-     * Create a new command instance.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
      * @return mixed
      */
     public function handle()
     {
-        $id = intval($this->argument('job'));
+        $id = (int)$this->argument('job');
         $job = Job::whereId($id)->first();
         if ($job !== null) {
             $this->info("Dispatching job \"" . $job->getJobName() . "\" (" . $job->id . ") of " . $job->user->name);

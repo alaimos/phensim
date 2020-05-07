@@ -1,14 +1,14 @@
 {
-  "name":         "alaimos/simpathy",
-  "description":  "SIMPATHY",
-  "keywords":     [
+  "name": "alaimos/phensim",
+  "description": "PHENSIM",
+  "keywords": [
     "framework",
     "laravel"
   ],
-  "license":      "GPL-3.0",
-  "type":         "project",
-  "require":      {
-    "php": ">=7.0.0",
+  "license": "GPL-3.0",
+  "type": "project",
+  "require": {
+    "php": ">=7.1",
     "barryvdh/laravel-ide-helper": "^2.3",
     "doctrine/dbal": "^2.5",
     "guzzlehttp/guzzle": "^6.2",
@@ -19,19 +19,20 @@
     "league/fractal": "^0.17.0",
     "pda/pheanstalk": "^3.1",
     "santigarcor/laratrust": "^3.2",
-    "yajra/laravel-datatables-oracle": "^7.3"
+    "yajra/laravel-datatables-oracle": "^7.3",
+    "ext-zlib": "*"
   },
-  "require-dev":  {
+  "require-dev": {
     "barryvdh/laravel-debugbar": "^2.3",
-    "fzaninotto/faker":          "~1.4",
-    "mockery/mockery":           "0.9.*",
-    "phpunit/phpunit":           "~5.7"
+    "fzaninotto/faker": "~1.4",
+    "mockery/mockery": "0.9.*",
+    "phpunit/phpunit": "~5.7"
   },
-  "autoload":     {
+  "autoload": {
     "classmap": [
       "database"
     ],
-    "psr-4":    {
+    "psr-4": {
       "App\\": "app/"
     }
   },
@@ -40,21 +41,21 @@
       "Tests\\": "tests/"
     }
   },
-  "scripts":      {
+  "scripts": {
     "post-root-package-install": [
       "php -r \"file_exists('.env') || copy('.env.example', '.env');\""
     ],
-    "post-create-project-cmd":   [
+    "post-create-project-cmd": [
       "php artisan key:generate"
     ],
-    "post-install-cmd":          [
+    "post-install-cmd": [
       "Illuminate\\Foundation\\ComposerScripts::postInstall",
       "php artisan ide-helper:generate",
       "php artisan ide-helper:meta",
       "php artisan ide-helper:models -W",
       "php artisan optimize"
     ],
-    "post-update-cmd":           [
+    "post-update-cmd": [
       "Illuminate\\Foundation\\ComposerScripts::postUpdate",
       "php artisan ide-helper:generate",
       "php artisan ide-helper:meta",
@@ -62,8 +63,8 @@
       "php artisan optimize"
     ]
   },
-  "config":       {
+  "config": {
     "preferred-install": "dist",
-    "sort-packages":     true
+    "sort-packages": true
   }
 }

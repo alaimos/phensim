@@ -4,10 +4,19 @@ namespace App\PHENSIM;
 
 
 use App\Exceptions\CommandException;
+use App\Exceptions\IgnoredException;
+use App\Exceptions\ProcessingJobException;
 use App\Models\Organism;
+use RuntimeException;
+use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Process\Process;
+use Throwable;
 
 final class Utils
 {
+
+    public const IGNORED_ERROR_CODE = '===IGNORED===';
+
     /**
      * Delete a file or a directory
      *
@@ -22,13 +31,16 @@ final class Utils
         }
         if (is_file($path)) {
             return unlink($path);
-        } elseif (is_dir($path)) {
+        }
+        if (is_dir($path)) {
             $files = array_diff(scandir($path), ['.', '..']);
             foreach ($files as $file) {
                 static::delete($path . DIRECTORY_SEPARATOR . $file);
             }
+
             return rmdir($path);
         }
+
         return false;
     }
 
@@ -39,10 +51,12 @@ final class Utils
      *
      * @return void
      */
-    public static function createDirectory(string $directory)
+    public static function createDirectory(string $directory): void
     {
         if (!file_exists($directory)) {
-            @mkdir($directory, 0777, true);
+            if (!mkdir($directory, 0777, true) && !is_dir($directory)) {
+                throw new RuntimeException(sprintf('Directory "%s" was not created', $directory));
+            }
             @chmod($directory, 0777);
         }
     }
@@ -60,6 +74,7 @@ final class Utils
         if (!file_exists($path)) {
             static::createDirectory($path);
         }
+
         return $path;
     }
 
@@ -72,7 +87,7 @@ final class Utils
      */
     public static function storageFile(string $type): string
     {
-        return self::getStorageDirectory($type) . DIRECTORY_SEPARATOR . self::makeKey(rand(), microtime(true));
+        return self::getStorageDirectory($type) . DIRECTORY_SEPARATOR . self::makeKey(mt_rand(), microtime(true));
     }
 
     /**
@@ -86,6 +101,7 @@ final class Utils
         if (!file_exists($dirName)) {
             static::createDirectory($dirName);
         }
+
         return $dirName;
     }
 
@@ -103,6 +119,7 @@ final class Utils
         if (!empty($extension)) {
             $filename .= '.' . ltrim($extension, '.');
         }
+
         return $filename;
     }
 
@@ -122,19 +139,45 @@ final class Utils
     /**
      * Runs a shell command and checks for successful completion of execution
      *
-     * @param string     $command
-     * @param array|null $output
+     * @param array         $command
+     * @param string|null   $cwd
+     * @param int|null      $timeout
+     * @param callable|null $callback
      *
-     * @return boolean
+     * @return string|null
+     * @throws \Symfony\Component\Process\Exception\ProcessFailedException
      */
-    public static function runCommand(string $command, array &$output = null): bool
+    public static function runCommand(array $command, ?string $cwd = null, ?int $timeout = null, ?callable $callback = null): ?string
     {
-        $returnCode = -1;
-        exec($command, $output, $returnCode);
-        if ($returnCode != 0) {
-            throw new CommandException($returnCode);
+        $process = new Process($command, $cwd, null, null, $timeout);
+        $process->run($callback);
+        if (!$process->isSuccessful()) {
+            throw new ProcessFailedException($process);
         }
-        return true;
+
+        return $process->getOutput();
+    }
+
+    /**
+     * Map command exception to message
+     *
+     * @param \Symfony\Component\Process\Exception\ProcessFailedException $e
+     * @param array                                                       $errorCodeMap
+     *
+     * @return \App\Exceptions\CommandException|\App\Exceptions\IgnoredException
+     */
+    public static function mapCommandException(ProcessFailedException $e, array $errorCodeMap = []): Throwable
+    {
+        $code = $e->getProcess()->getExitCode();
+        if (isset($errorCodeMap[$code])) {
+            if ($errorCodeMap[$code] === self::IGNORED_ERROR_CODE) {
+                return new IgnoredException($code, $code);
+            }
+
+            return new CommandException($errorCodeMap[$code], $code, $e);
+        }
+
+        return new CommandException($e->getMessage(), $code, $e);
     }
 
     private static function recursiveFilter($objects): string
@@ -142,18 +185,29 @@ final class Utils
         if (is_object($objects)) {
             if (method_exists($objects, 'getKey')) {
                 return $objects->getKey();
-            } else {
-                return (string)$objects;
             }
-        } elseif (is_array($objects)) {
-            return '[' . implode(',', array_map(function ($k, $v) {
-                    return $k . '=>' . self::recursiveFilter($v);
-                }, array_keys($objects), $objects)) . ']';
-        } elseif (is_resource($objects)) {
-            return '';
-        } else {
-            return $objects;
+
+            return (string)$objects;
         }
+
+        if (is_array($objects)) {
+            return '[' . implode(
+                    ',',
+                    array_map(
+                        static function ($k, $v) {
+                            return $k . '=>' . Utils::recursiveFilter($v);
+                        },
+                        array_keys($objects),
+                        $objects
+                    )
+                ) . ']';
+        }
+
+        if (is_resource($objects)) {
+            return '';
+        }
+
+        return $objects;
     }
 
     /**
@@ -169,7 +223,7 @@ final class Utils
     }
 
     /**
-     * Compress and encode a big array for storing in the database
+     * Compress and encode a big array for storage in the database
      *
      * @param array $array
      *
@@ -189,6 +243,7 @@ final class Utils
      */
     public static function uncompressArray(string $string): array
     {
+        /** @noinspection UnserializeExploitsInspection */
         return (array)unserialize(gzuncompress(base64_decode($string)));
     }
 
@@ -203,31 +258,11 @@ final class Utils
      */
     public static function formatDouble(float $number, int $decimals = 4, bool $scientific = true): string
     {
-        if ($scientific && $number != 0 && abs($number) < pow(10, -$decimals)) {
+        if ($scientific && $number !== 0 && abs($number) < (10 ** -$decimals)) {
             return sprintf('%.4e', $number);
-        } else {
-            return number_format($number, $decimals);
         }
-    }
 
-    /**
-     * Map command exception to message
-     *
-     * @param string           $command
-     * @param CommandException $e
-     * @param array            $errorCodeMap
-     *
-     * @return boolean
-     * @throws CommandException
-     */
-    public static function mapCommandException(string $command, CommandException $e, array $errorCodeMap = []): bool
-    {
-        $code = intval($e->getMessage());
-        if (isset($errorCodeMap[$code])) {
-            throw new CommandException($errorCodeMap[$code]);
-        } else {
-            throw new CommandException('Execution of command "' . $command . '" returned error code ' . $code . '.');
-        }
+        return number_format($number, $decimals);
     }
 
     /**
@@ -239,7 +274,11 @@ final class Utils
      */
     public static function countLines(string $file): int
     {
-        return intval(exec('wc -l ' . escapeshellarg($file)));
+        try {
+            return (int)self::runCommand(['wc', '-l', $file]);
+        } catch (CommandException $e) {
+            return -1;
+        }
     }
 
     /**
@@ -251,18 +290,31 @@ final class Utils
      */
     public static function checkNodeTypeFile(string $file): bool
     {
-        if (!file_exists($file)) return false;
-        $fp = @fopen($file, 'r');
-        if (!$fp) return false;
+        if (!file_exists($file)) {
+            return false;
+        }
+        $fp = @fopen($file, 'rb');
+        if (!$fp) {
+            return false;
+        }
         while (($line = fgets($fp)) !== false) {
-            if (empty($line) || $line{0} == '#') continue;
+            if (empty($line) || strpos($line, '#') === 0) {
+                continue;
+            }
             $fields = explode("\t", trim($line));
             $c = count($fields);
-            if ($c == 1) continue;
-            if ($c == 2 && !is_numeric($fields[1])) return false;
-            if ($c > 2) return false;
+            if ($c === 1) {
+                continue;
+            }
+            if ($c === 2 && !is_numeric($fields[1])) {
+                return false;
+            }
+            if ($c > 2) {
+                return false;
+            }
         }
         @fclose($fp);
+
         return true;
     }
 
@@ -275,16 +327,25 @@ final class Utils
      */
     public static function checkEdgeTypeFile(string $file): bool
     {
-        if (!file_exists($file)) return false;
-        $fp = @fopen($file, 'r');
-        if (!$fp) return false;
+        if (!file_exists($file)) {
+            return false;
+        }
+        $fp = @fopen($file, 'rb');
+        if (!$fp) {
+            return false;
+        }
         while (($line = fgets($fp)) !== false) {
-            if (empty($line) || $line{0} == '#') continue;
+            if (empty($line) || strpos($line, '#') === 0) {
+                continue;
+            }
             $fields = explode("\t", trim($line));
             $c = count($fields);
-            if ($c > 1) return false;
+            if ($c > 1) {
+                return false;
+            }
         }
         @fclose($fp);
+
         return true;
     }
 
@@ -297,19 +358,34 @@ final class Utils
      */
     public static function checkEdgeSubTypeFile(string $file): bool
     {
-        if (!file_exists($file)) return false;
-        $fp = @fopen($file, 'r');
-        if (!$fp) return false;
+        if (!file_exists($file)) {
+            return false;
+        }
+        $fp = @fopen($file, 'rb');
+        if (!$fp) {
+            return false;
+        }
         while (($line = fgets($fp)) !== false) {
-            if (empty($line) || $line{0} == '#') continue;
+            if (empty($line) || strpos($line, '#') === 0) {
+                continue;
+            }
             $fields = explode("\t", trim($line));
             $c = count($fields);
-            if ($c == 1) continue;
-            if ($c >= 2 && !is_numeric($fields[1])) return false;
-            if ($c >= 3 && !is_numeric($fields[2])) return false;
-            if ($c > 4) return false;
+            if ($c === 1) {
+                continue;
+            }
+            if ($c >= 2 && !is_numeric($fields[1])) {
+                return false;
+            }
+            if ($c >= 3 && !is_numeric($fields[2])) {
+                return false;
+            }
+            if ($c > 4) {
+                return false;
+            }
         }
         @fclose($fp);
+
         return true;
     }
 
@@ -322,16 +398,25 @@ final class Utils
      */
     public static function checkDbFile(string $file): bool
     {
-        if (!file_exists($file)) return false;
-        $fp = @fopen($file, 'r');
-        if (!$fp) return false;
+        if (!file_exists($file)) {
+            return false;
+        }
+        $fp = @fopen($file, 'rb');
+        if (!$fp) {
+            return false;
+        }
         while (($line = fgets($fp)) !== false) {
-            if (empty($line) || $line{0} == '#') continue;
+            if (empty($line) || strpos($line, '#') === 0) {
+                continue;
+            }
             $fields = explode("\t", trim($line));
             $c = count($fields);
-            if ($c != 9) return false;
+            if ($c !== 9) {
+                return false;
+            }
         }
         @fclose($fp);
+
         return true;
     }
 
@@ -345,26 +430,37 @@ final class Utils
      */
     public static function checkInputFile(string $file, callable $callback = null): bool
     {
-        if (!file_exists($file)) return false;
-        $fp = @fopen($file, 'r');
-        if (!$fp) return false;
+        if (!file_exists($file)) {
+            return false;
+        }
+        $fp = @fopen($file, 'rb');
+        if (!$fp) {
+            return false;
+        }
         $aType = [
             Launcher::OVEREXPRESSION  => true,
             Launcher::UNDEREXPRESSION => true,
             Launcher::BOTH            => true,
         ];
         while (($line = fgets($fp)) !== false) {
-            if (empty($line) || $line{0} == '#') continue;
+            if (empty($line) || strpos($line, '#') === 0) {
+                continue;
+            }
             $fields = explode("\t", trim($line));
             $c = count($fields);
-            if ($c != 2) return false;
+            if ($c !== 2) {
+                return false;
+            }
             $fields[1] = strtoupper($fields[1]);
-            if (!isset($aType[$fields[1]])) return false;
+            if (!isset($aType[$fields[1]])) {
+                return false;
+            }
             if ($callback !== null && is_callable($callback)) {
-                call_user_func($callback, $fields);
+                $callback($fields);
             }
         }
         @fclose($fp);
+
         return true;
     }
 
@@ -373,15 +469,21 @@ final class Utils
      *
      * @param string $file
      *
-     * @return array
+     * @return array|null
      */
-    public static function readInputFile(string $file): array
+    public static function readInputFile(string $file): ?array
     {
         $inputArray = [];
-        $check = self::checkInputFile($file, function ($fields) use (&$inputArray) {
-            $inputArray[$fields[0]] = $fields[1];
-        });
-        if (!$check) return null;
+        $check = self::checkInputFile(
+            $file,
+            static function ($fields) use (&$inputArray) {
+                $inputArray[$fields[0]] = $fields[1];
+            }
+        );
+        if (!$check) {
+            return null;
+        }
+
         return $inputArray;
     }
 
@@ -394,15 +496,20 @@ final class Utils
      */
     public static function checkSimulationParameters(array $data): bool
     {
-        if (empty($data)) return false;
+        if (empty($data)) {
+            return false;
+        }
         $aType = [
             Launcher::OVEREXPRESSION  => true,
             Launcher::UNDEREXPRESSION => true,
             Launcher::BOTH            => true,
         ];
         foreach ($data as $gene => $type) {
-            if (!isset($aType[$type])) return false;
+            if (!isset($aType[$type])) {
+                return false;
+            }
         }
+
         return true;
     }
 

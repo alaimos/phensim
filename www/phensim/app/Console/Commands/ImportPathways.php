@@ -8,6 +8,8 @@ use App\Models\Organism;
 use App\Models\Pathway;
 use App\PHENSIM\Utils;
 use Illuminate\Console\Command;
+use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Process\Process;
 
 class ImportPathways extends Command
 {
@@ -52,8 +54,7 @@ class ImportPathways extends Command
     protected function exportOrganisms(): array
     {
         $this->info("Exporting MITHrIL 2 organisms");
-        $m2 = resource_path('bin/MITHrIL2.jar');
-        $command = '/opt/jdk/bin/java -jar ' . escapeshellarg($m2) . ' exporg';
+        $command = env('JAVA_PATH') . '/java -jar ' . escapeshellarg($this->m2) . ' exporg';
         //$output = null;
         //$return = null;
         //exec($command, $output, $return);
@@ -63,24 +64,28 @@ class ImportPathways extends Command
             "hsa\tHomo sapiens (human)",
             "rno\tRattus norvegicus (rat)",
         ];
-        if ($return == 0) {
+        if ($return === 0) {
             $organisms = [];
             foreach ($output as $line) {
-                if (!empty($line) && $line{0} != '#') {
+                if (!empty($line) && $line{0} !== '#') {
                     $data = explode("\t", $line);
                     if (count($data) >= 2) {
-                        $organisms[$data[0]] = Organism::create([
-                            'accession' => $data[0],
-                            'name'      => $data[1],
-                        ]);
+                        $organisms[$data[0]] = Organism::create(
+                            [
+                                'accession' => $data[0],
+                                'name'      => $data[1],
+                            ]
+                        );
                     }
                 }
             }
             $this->info("Done!");
+
             return $organisms;
-        } else {
-            $this->error("An error occurred!");
         }
+
+        $this->error("An error occurred!");
+
         return [];
     }
 
@@ -94,19 +99,45 @@ class ImportPathways extends Command
     protected function exportPathways(string $organism): bool
     {
         $this->info("Exporting MITHrIL 2 pathways for organism " . $organism);
-        $m2 = resource_path('bin/MITHrIL2.jar');
-        $command = '/opt/jdk/bin/java -jar ' . escapeshellarg($m2) . ' exportgraph -verbose -organism ' . escapeshellarg($organism) .
-                   ' -enrichment-evidence-type STRONG -disable-priority -no ' . escapeshellarg($this->nodesFile) .
-                   ' -eo ' . escapeshellarg($this->edgesFile) . ' -mo ' . escapeshellarg($this->mapFile);
-	echo $command;
-        $return = null;
-        passthru($command, $return);
-        if ($return == 0) {
+        $command = [
+            env('JAVA_PATH') . '/java',
+            '-jar',
+            $this->m2,
+            'exportgraph',
+            '-verbose',
+            '-organism',
+            $organism,
+            '-enrichment-evidence-type',
+            'STRONG',
+            '-disable-priority',
+            '-no',
+            $this->nodesFile,
+            '-eo',
+            $this->edgesFile,
+            '-mo',
+            $this->mapFile,
+        ];
+        try {
+            Utils::runCommand(
+                $command,
+                null,
+                null,
+                function ($type, $buffer) {
+                    if ($type === Process::OUT) {
+                        $this->info($buffer);
+                    } else {
+                        $this->error($buffer);
+                    }
+                }
+            );
             $this->info("Done!");
-        } else {
+
+            return true;
+        } catch (ProcessFailedException $e) {
             $this->error("An error occurred!");
+
+            return false;
         }
-        return ($return == 0);
     }
 
     /**
@@ -120,35 +151,39 @@ class ImportPathways extends Command
     {
         $this->info("Importing nodes");
         $count = Utils::countLines($this->nodesFile);
-        $fp = fopen($this->nodesFile, 'r');
+        $fp = fopen($this->nodesFile, 'rb');
         if (!$fp) {
             $this->error("Unable to read nodes file.");
+
             return false;
         }
         $bar = $this->output->createProgressBar($count);
         while (($line = fgets($fp)) !== false) {
             $bar->advance();
             $line = str_replace(["\r", "\n"], "", $line);
-            if (strlen($line) == 0 || $line{0} == '#') {
+            if ($line === '' || strpos($line, '#') === 0) {
                 continue;
             }
             $fields = explode("\t", $line);
-            if (count($fields) == 4) {
+            if (count($fields) === 4) {
                 $accession = $fields[0];
                 if (!isset($this->nodesMap[$accession])) {
-                    $node = Node::create([
-                        'accession'   => $fields[0],
-                        'name'        => $fields[1],
-                        'type'        => strtolower($fields[2]),
-                        'aliases'     => (array)array_filter(array_map('trim', explode(',', $fields[3]))),
-                        'organism_id' => $organism->id,
-                    ]);
+                    $node = Node::create(
+                        [
+                            'accession'   => $fields[0],
+                            'name'        => $fields[1],
+                            'type'        => strtolower($fields[2]),
+                            'aliases'     => (array)array_filter(array_map('trim', explode(',', $fields[3]))),
+                            'organism_id' => $organism->id,
+                        ]
+                    );
                     $this->nodesMap[(string)$node->accession] = $node->id;
                 }
             }
         }
         $bar->finish();
         $this->info("\nDone!");
+
         return true;
     }
 
@@ -165,28 +200,31 @@ class ImportPathways extends Command
         $tmpMap = [];
         $this->info("Importing edges");
         $count = Utils::countLines($this->edgesFile);
-        $fp = fopen($this->edgesFile, 'r');
+        $fp = fopen($this->edgesFile, 'rb');
         if (!$fp) {
             $this->error("Unable to read edges file.");
+
             return false;
         }
         $bar = $this->output->createProgressBar($count);
         while (($line = fgets($fp)) !== false) {
             $bar->advance();
             $line = str_replace(["\r", "\n"], "", $line);
-            if (strlen($line) == 0 || $line{0} == '#') {
+            if ($line === '' || strpos($line, '#') === 0) {
                 continue;
             }
             $fields = explode("\t", $line);
-            if (count($fields) == 4) {
+            if (count($fields) === 4) {
                 $edgeId = Edge::computeId((string)$fields[0], (string)$fields[1], $organism->id);
                 if (!isset($tmpMap[$edgeId])) {
-                    $tmpMap[$edgeId] = $edge = Edge::create([
-                        'start_id'    => $this->nodesMap[(string)$fields[0]],
-                        'end_id'      => $this->nodesMap[(string)$fields[1]],
-                        'types'       => [],
-                        'organism_id' => $organism->id,
-                    ]);
+                    $tmpMap[$edgeId] = Edge::create(
+                        [
+                            'start_id'    => $this->nodesMap[(string)$fields[0]],
+                            'end_id'      => $this->nodesMap[(string)$fields[1]],
+                            'types'       => [],
+                            'organism_id' => $organism->id,
+                        ]
+                    );
                 }
                 $types = $tmpMap[$edgeId]->types;
                 $types[] = [$fields[2], $fields[3]];
@@ -196,6 +234,7 @@ class ImportPathways extends Command
         }
         $bar->finish();
         $this->info("\nDone!");
+
         return true;
     }
 
@@ -212,44 +251,48 @@ class ImportPathways extends Command
         $tmpMap = [];
         $this->info("Importing pathways");
         $count = Utils::countLines($this->mapFile);
-        $fp = fopen($this->mapFile, 'r');
+        $fp = fopen($this->mapFile, 'rb');
         if (!$fp) {
             $this->error("Unable to read pathways file.");
+
             return false;
         }
         $bar = $this->output->createProgressBar($count);
         while (($line = fgets($fp)) !== false) {
             $bar->advance();
             $line = str_replace(["\r", "\n"], "", $line);
-            if (strlen($line) == 0 || $line{0} == '#') {
+            if ($line === '' || strpos($line, '#') === 0) {
                 continue;
             }
             $fields = explode("\t", $line);
-            if (count($fields) == 4) {
+            if (count($fields) === 4) {
                 $pId = (string)$fields[0];
                 if (!isset($tmpMap[$pId])) {
-                    $tmpMap[$pId] = Pathway::create([
-                        'accession'   => $fields[0],
-                        'name'        => str_replace(" - Enriched", "", $fields[1]),
-                        'organism_id' => $organism->id,
-                    ]);
+                    $tmpMap[$pId] = Pathway::create(
+                        [
+                            'accession'   => $fields[0],
+                            'name'        => str_replace(" - Enriched", "", $fields[1]),
+                            'organism_id' => $organism->id,
+                        ]
+                    );
                 }
                 $startId = $this->nodesMap[(string)$fields[2]];
                 $endId = $this->nodesMap[(string)$fields[3]];
                 $edgeId = Edge::computeId($startId, $endId, $organism->id);
-                if ($tmpMap[$pId]->edges()->find($edgeId) == null) {
+                if ($tmpMap[$pId]->edges()->find($edgeId) === null) {
                     $tmpMap[$pId]->edges()->attach($edgeId);
                 }
-                if ($tmpMap[$pId]->nodes()->find($startId) == null) {
+                if ($tmpMap[$pId]->nodes()->find($startId) === null) {
                     $tmpMap[$pId]->nodes()->attach($startId);
                 }
-                if ($tmpMap[$pId]->nodes()->find($endId) == null) {
+                if ($tmpMap[$pId]->nodes()->find($endId) === null) {
                     $tmpMap[$pId]->nodes()->attach($endId);
                 }
             }
         }
         $bar->finish();
         $this->info("\nDone!");
+
         return true;
     }
 
@@ -279,6 +322,7 @@ class ImportPathways extends Command
                 return 101;
             }
         }
+
         return 0;
     }
 }

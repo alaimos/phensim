@@ -10,10 +10,23 @@ use Illuminate\Support\Collection;
 final class Reader
 {
 
-    const FIELDS_ALL          = ['pathwayId', 'pathwayName', 'nodeId', 'nodeName', 'isEndpoint', 'isDirectTarget',
-                                 'activityScore', 'pValue', 'll', 'pathwayActivityScore', 'pathwayPValue',
-                                 'pathwayll', 'targetedBy', 'probabilities'];
-    const FIELDS_CAST         = [
+    public const FIELDS_ALL          = [
+        'pathwayId',
+        'pathwayName',
+        'nodeId',
+        'nodeName',
+        'isEndpoint',
+        'isDirectTarget',
+        'activityScore',
+        'pValue',
+        'll',
+        'pathwayActivityScore',
+        'pathwayPValue',
+        'pathwayll',
+        'targetedBy',
+        'probabilities',
+    ];
+    public const FIELDS_CAST         = [
         'pathwayId'            => null,
         'pathwayName'          => 'pathway',
         'nodeId'               => null,
@@ -27,32 +40,39 @@ final class Reader
         'pathwayPValue'        => 'double',
         'pathwayll'            => 'll',
         'targetedBy'           => 'array',
-	'probabilities'        => 'll',
+        'probabilities'        => 'll_prob',
     ];
-    const LL                  = ['activation', 'inhibition', 'other'];
-    const ACTIVATION_COLORING = '%s red,black';
-    const INHIBITION_COLORING = '%s blue,yellow';
-    const GID_RXP             = '/^[0-9]+$/';
+    public const LL                  = ['activation', 'inhibition', 'other'];
+    public const ACTIVATION_COLORING = '%s red,black';
+    public const INHIBITION_COLORING = '%s blue,yellow';
+    public const GID_RXP             = '/^[0-9]+$/';
 
     /**
-     * @var \App\Models\Job
+     * @var string
      */
-    private $job;
+    private $outputFile;
 
     /**
      * Reader Constructor
      *
-     * @param \App\Models\Job $job
+     * @param \App\Models\Job|string $job
      *
      * @throws \App\PHENSIM\Exception\ReaderException
      */
-    public function __construct(Job $job)
+    public function __construct($job)
     {
-        if ($job->job_type != Constants::SIMULATION_JOB) {
-            throw new ReaderException('Unsupported job type. Only simulation jobs are supported.');
+        if ($job instanceof Job) {
+            if ($job->job_type !== Constants::SIMULATION_JOB) {
+                throw new ReaderException('Unsupported job type. Only simulation jobs are supported.');
+            }
+            $this->outputFile = $job->getData('outputFile');
+        } elseif (file_exists($job)) {
+            $this->outputFile = $job;
+        } else {
+            throw new ReaderException('Unsupported input.');
         }
-        $this->job = $job;
     }
+
 
     /**
      * Modifies a file to use its data for subsequent analysis
@@ -64,42 +84,81 @@ final class Reader
      */
     private function cast(string $field, string $value)
     {
-        if (self::FIELDS_CAST[$field] == 'boolean') {
-            return (strtolower($value) == 'yes');
-        } elseif (self::FIELDS_CAST[$field] == 'double') {
-            return doubleval($value);
-        } elseif (self::FIELDS_CAST[$field] == 'll') {
+        if (self::FIELDS_CAST[$field] === 'boolean') {
+            return (strtolower($value) === 'yes');
+        }
+        if (self::FIELDS_CAST[$field] === 'double') {
+            return (float)$value;
+        }
+        if (self::FIELDS_CAST[$field] === 'll') {
             $tmp = array_map('doubleval', explode(",", $value));
             $tmp = array_slice($tmp, 0, 3);
-            if (count($tmp) < 3) $tmp = [null, null, null];
+            if (count($tmp) < 3) {
+                $tmp = [null, null, null];
+            }
+
             return array_combine(self::LL, $tmp);
-        } elseif (self::FIELDS_CAST[$field] == 'array') {
-            return (empty($value)) ? [] : explode(",", $value);
-        } elseif (self::FIELDS_CAST[$field] == 'pathway') {
-            return preg_replace('/\s+\-\s+enriched/i', '', $value);
         }
+        if (self::FIELDS_CAST[$field] === 'll_prob') {
+            $tmp = array_map('doubleval', explode(",", $value));
+            if (count($tmp) === 4) {
+                $act = $tmp[3];
+            } else {
+                $act = null;
+            }
+            $tmp = array_slice($tmp, 0, 3);
+            if (count($tmp) < 3) {
+                $tmp = [null, null, null];
+            }
+            $ll = array_combine(self::LL, $tmp);
+            if ($act === null && $ll['activation'] !== null && $ll['inhibition'] !== null) {
+                if ($ll['activation'] > $ll['inhibition']) {
+                    $act = abs($ll['activation'] - $ll['inhibition']);
+                } elseif ($ll['activation'] < $ll['inhibition']) {
+                    $act = -abs($ll['inhibition'] - $ll['activation']);
+                } else {
+                    $act = 0.0;
+                }
+            }
+            $ll['activity'] = $act;
+
+            return $ll;
+        }
+        if (self::FIELDS_CAST[$field] === 'array') {
+            return (empty($value)) ? [] : explode(",", $value);
+        }
+        if (self::FIELDS_CAST[$field] === 'pathway') {
+            return preg_replace('/\s+-\s+enriched/i', '', $value);
+        }
+
         return $value;
     }
 
     /**
-     * Prepares all fields in a line of SIMPATHY output file
+     * Prepares all fields in a line of PHENSIM output file
      *
      * @param array $fields
      *
      * @return array
      */
-    private function prepare(array $fields)
+    private function prepare(array $fields): array
     {
         $n = count($fields);
-	if ($n == 12) {
+        if ($n === 12) {
             $fields[] = '';
             $n++;
         }
-        if ($n == 13) $fields[] = '';
+        if ($n === 13) {
+            $fields[] = '';
+        }
         $fields = array_combine(self::FIELDS_ALL, $fields);
-        array_walk($fields, function (&$value, $key) {
-            $value = $this->cast($key, $value);
-        });
+        array_walk(
+            $fields,
+            function (&$value, $key) {
+                $value = $this->cast($key, $value);
+            }
+        );
+
         return $fields;
     }
 
@@ -108,20 +167,23 @@ final class Reader
      *
      * @param callable $action
      *
+     * @return void
      * @throws \App\PHENSIM\Exception\ReaderException
      *
-     * @return void
      */
-    private function reader(callable $action)
+    private function reader(callable $action): void
     {
-        $fp = @fopen($this->job->getData('outputFile'), 'r');
-        if (!$fp) throw new ReaderException('Unable to open phensim output file');
+        $fp = @fopen($this->outputFile, 'rb');
+        if (!$fp) {
+            throw new ReaderException('Unable to open phensim output file');
+        }
         while (($line = fgets($fp)) !== false) {
             $line = trim($line);
-            if (!empty($line) && $line{0} != '#') {
+            if (!empty($line) && $line{0} !== '#') {
                 $fields = explode("\t", $line);
-                if (count($fields) == 12 || count($fields) == 13 || count($fields) == 14) {
-                    call_user_func($action, $this->prepare($fields));
+                $n = count($fields);
+                if ($n >= 12 && $n <= 14) {
+                    $action($this->prepare($fields));
                 }
             }
         }
@@ -129,13 +191,13 @@ final class Reader
     }
 
     /**
-     * Returns the filename of SIMPATHY output file
+     * Returns the filename of PHENSIM output file
      *
      * @return string
      */
     public function getOutputFilename(): string
     {
-        return (string)$this->job->getData('outputFile');
+        return (string)$this->outputFile;
     }
 
     /**
@@ -146,18 +208,21 @@ final class Reader
     public function readPathwaysList(): Collection
     {
         $results = [];
-        $this->reader(function ($fields) use (&$results) {
-            $pid = $fields['pathwayId'];
-            if (!isset($results[$pid])) {
-                $results[$pid] = [
-                    'id'            => $pid,
-                    'name'          => $fields['pathwayName'],
-                    'activityScore' => $fields['pathwayActivityScore'],
-                    'pValue'        => $fields['pathwayPValue'],
-                    'll'            => $fields['pathwayll'],
-                ];
+        $this->reader(
+            static function ($fields) use (&$results) {
+                $pid = $fields['pathwayId'];
+                if (!isset($results[$pid])) {
+                    $results[$pid] = [
+                        'id'            => $pid,
+                        'name'          => $fields['pathwayName'],
+                        'activityScore' => $fields['pathwayActivityScore'],
+                        'pValue'        => $fields['pathwayPValue'],
+                        'll'            => $fields['pathwayll'],
+                    ];
+                }
             }
-        });
+        );
+
         return collect(array_values($results));
     }
 
@@ -169,21 +234,28 @@ final class Reader
      *
      * @return \Illuminate\Support\Collection
      */
-    public function readPathway(string $pathway, callable $callback = null): Collection
+    public function readPathway(string $pathway, ?callable $callback = null): Collection
     {
         $results = [];
-        $this->reader(function ($fields) use (&$results, $pathway, $callback) {
-            if ($fields['pathwayId'] == $pathway && $fields['activityScore'] != 0.0) {
-                if ($callback !== null) {
-                    $tmp = call_user_func($callback, $fields);
-                    if ($tmp !== null) {
-                        $results[] = $tmp;
+        $this->reader(
+            static function ($fields) use (&$results, $pathway, $callback) {
+                if ($fields['pathwayId'] === $pathway && $fields['activityScore'] !== 0.0) {
+                    if ($fields['probabilities'] !== null && $fields['probabilities']['activity'] !== null) {
+                        $fields['activityScore2'] = $fields['probabilities']['activity'];
+                        unset($fields['probabilities']['activity']);
                     }
-                } else {
-                    $results[] = $fields;
+                    if ($callback !== null) {
+                        $tmp = $callback($fields);
+                        if ($tmp !== null) {
+                            $results[] = $tmp;
+                        }
+                    } else {
+                        $results[] = $fields;
+                    }
                 }
             }
-        });
+        );
+
         return collect($results);
     }
 
@@ -191,24 +263,42 @@ final class Reader
      * Returns parameters for pathway coloring kegg link
      *
      * @param string $pathway
+     * @param bool   $new
      *
      * @return array
      */
-    public function makePathwayColoring(string $pathway): array
+    public function makePathwayColoring(string $pathway, bool $new = false): array
     {
         $mapId = str_ireplace('path:', '', $pathway);
-        $coloringData = $this->readPathway($pathway, function (array $data) {
-            /** @var Node $node */
-            $node = Node::whereAccession($data['nodeId'])->first();
-            if ($node !== null && $node->type != 'mirna') {
-                if ($data['activityScore'] > 0) {
-                    return sprintf(self::ACTIVATION_COLORING, $node->accession);
-                } elseif ($data['activityScore'] < 0) {
-                    return sprintf(self::INHIBITION_COLORING, $node->accession);
+        $coloringData = $this->readPathway(
+            $pathway,
+            static function (array $data) use ($new) {
+                /** @var Node $node */
+                $node = Node::whereAccession($data['nodeId'])->first();
+                if ($node !== null && $node->type !== 'mirna') {
+                    if ($new) {
+                        if ($data['activityScore2'] > 0) {
+                            return sprintf(self::ACTIVATION_COLORING, $node->accession);
+                        }
+
+                        if ($data['activityScore2'] < 0) {
+                            return sprintf(self::INHIBITION_COLORING, $node->accession);
+                        }
+                    } else {
+                        if ($data['activityScore'] > 0) {
+                            return sprintf(self::ACTIVATION_COLORING, $node->accession);
+                        }
+
+                        if ($data['activityScore'] < 0) {
+                            return sprintf(self::INHIBITION_COLORING, $node->accession);
+                        }
+                    }
                 }
+
+                return null;
             }
-            return null;
-        });
+        );
+
         return [
             'mapId'    => $mapId,
             'coloring' => $coloringData->implode(PHP_EOL),

@@ -10,6 +10,7 @@
                     <th class="text-center">Is Endpoint?</th>
                     <th class="text-center">Is Direct Target?</th>
                     <th>Activity Score</th>
+                    <th>Activity Score v2</th>
                     <th>p-Value</th>
                     <th>Targeted By</th>
                 </tr>
@@ -20,74 +21,76 @@
 </template>
 
 <script>
-    export default {
-        /*
-         * The component's data.
-         */
-        props: ['list_url'],
-        data() {
-            return {};
-        },
+  export default {
+    /*
+     * The component's data.
+     */
+    props: ['list_url'],
+    data () {
+      return {};
+    },
 
-        /**
-         * Prepare the component (Vue 1.x).
-         */
-        ready() {
-            this.prepareComponent();
-        },
+    /**
+     * Prepare the component (Vue 1.x).
+     */
+    ready () {
+      this.prepareComponent();
+    },
 
-        /**
-         * Prepare the component (Vue 2.x).
-         */
-        mounted() {
-            this.prepareComponent();
-        },
+    /**
+     * Prepare the component (Vue 2.x).
+     */
+    mounted () {
+      this.prepareComponent();
+    },
 
-        methods: {
-            prepareTable() {
-                let $ = window.$, tbl = $('#nodes-list-table'), self = this;
-                tbl.dataTable({
-                    autoWidth: false,
-                    processing: true,
-                    serverSide: true,
-                    ajax:       {
-                        url:        self.list_url,
-                        method:     'POST',
-                        beforeSend: request => {
-                            request.setRequestHeader('X-CSRF-TOKEN', window.Laravel.csrfToken);
-                        }
-                    },
-                    columns:    [
-                        {data: 'nodeId', name: 'nodeId'},
-                        {data: 'nodeName', name: 'nodeName'},
-                        {data: 'isEndpoint', name: 'isEndpoint'},
-                        {data: 'isDirectTarget', name: 'isDirectTarget'},
-                        {data: 'activityScore', name: 'activityScore'},
-                        {data: 'pValue', name: 'pValue'},
-                        {data: 'targetedBy', name: 'targetedBy'}
-                    ],
-                    order:      [[5, 'asc']],
-                    columnDefs: [
-                        {targets: 0},
-                        {targets: 1},
-                        {targets: 2, className: 'text-center'},
-                        {targets: 3, className: 'text-center'},
-                        {targets: 4},
-                        {targets: 5},
-                        {targets: 6}
-                    ],
-                    language:   {
-                        processing: '<i class="fa fa-spinner fa-spin fa-2x fa-fw"></i><span class="sr-only">Loading...</span>'
-
-                    }
-                });
+    methods: {
+      prepareTable () {
+        let $ = window.$, tbl = $('#nodes-list-table'), self = this;
+        tbl.dataTable({
+          autoWidth: false,
+          processing: true,
+          serverSide: true,
+          ajax: {
+            url: self.list_url,
+            method: 'POST',
+            beforeSend: request => {
+              request.setRequestHeader('X-CSRF-TOKEN', window.Laravel.csrfToken);
             },
-            /**
-             * Prepare the component.
-             */
-            prepareComponent() {
-                this.prepareTable();
-            }
-        }
-    }
+          },
+          columns: [
+            { data: 'nodeId', name: 'nodeId' },
+            { data: 'nodeName', name: 'nodeName' },
+            { data: 'isEndpoint', name: 'isEndpoint' },
+            { data: 'isDirectTarget', name: 'isDirectTarget' },
+            { data: 'activityScore', name: 'activityScore' },
+            { data: 'activityScore2', name: 'activityScore2' },
+            { data: 'pValue', name: 'pValue' },
+            { data: 'targetedBy', name: 'targetedBy' },
+          ],
+          order: [[5, 'asc']],
+          columnDefs: [
+            { targets: 0 },
+            { targets: 1 },
+            { targets: 2, className: 'text-center' },
+            { targets: 3, className: 'text-center' },
+            { targets: 4 },
+            { targets: 5 },
+            { targets: 6 },
+            { targets: 7 },
+          ],
+          language: {
+            processing: '<i class="fa fa-spinner fa-spin fa-2x fa-fw"></i><span class="sr-only">Loading...</span>',
+
+          },
+        });
+      },
+      /**
+       * Prepare the component.
+       */
+      prepareComponent () {
+        this.prepareTable();
+      },
+    },
+  };
 </script>

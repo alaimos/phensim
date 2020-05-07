@@ -34,13 +34,17 @@ class SimulationController extends Controller
                 'others' => ['SimulationController@unsupportedMethod'],
             ],
             '/simulations/{job}/results/pathways'           => [
-                'get'    => ['SimulationController@getSimulationResultsPathways',
-                             'api-get-simulation-results-pathways'],
+                'get'    => [
+                    'SimulationController@getSimulationResultsPathways',
+                    'api-get-simulation-results-pathways',
+                ],
                 'others' => ['SimulationController@unsupportedMethod'],
             ],
             '/simulations/{job}/results/pathways/{pathway}' => [
-                'get'    => ['SimulationController@getSimulationResultsOnePathway',
-                             'api-get-simulation-results-one-pathway'],
+                'get'    => [
+                    'SimulationController@getSimulationResultsOnePathway',
+                    'api-get-simulation-results-one-pathway',
+                ],
                 'others' => ['SimulationController@unsupportedMethod'],
             ],
         ];
@@ -58,15 +62,16 @@ class SimulationController extends Controller
     {
         Job::setRoute('api-get-simulation');
         $job = Job::find($job);
-        if (!$job || !$job->exists || $job->job_type != Constants::SIMULATION_JOB) {
+        if (!$job || !$job->exists || $job->job_type !== Constants::SIMULATION_JOB) {
             abort(404, 'An invalid simulation identifier has been provided');
         }
         if (!$job->canBeRead()) {
             abort(403, 'You are not allowed to view this simulation job');
         }
-        if ($checkCompleted && $job->job_status != Job::COMPLETED) {
+        if ($checkCompleted && $job->job_status !== Job::COMPLETED) {
             abort(500, 'Simulation job not completed. Please retry when status of the job is COMPLETED.');
         }
+
         return $job;
     }
 
@@ -80,6 +85,7 @@ class SimulationController extends Controller
     public function listSimulations(Request $request): JsonResponse
     {
         Job::setRoute('api-get-simulation');
+
         return response()->json(Job::listJobs($request->get('status'), Constants::SIMULATION_JOB)->get());
     }
 
@@ -93,9 +99,10 @@ class SimulationController extends Controller
         if (file_put_contents($filename, $content) === false) {
             abort(500, 'Unable to write file "' . $field . '"');
         }
-        if (!call_user_func($callback, $filename)) {
+        if (!$callback($filename)) {
             abort(422, 'Invalid content of the "' . $field . '" field.');
         }
+
         return $filename;
     }
 
@@ -111,44 +118,76 @@ class SimulationController extends Controller
         if (!Job::canBeCreated()) {
             abort(403, 'You are not allowed to run a new simulation');
         }
-        $this->validate($request, [
-            'organism'         => 'required|exists:organisms,accession',
-            'simulation-input' => 'required',
-            'epsilon'          => 'sometimes|numeric',
-        ]);
+        $this->validate(
+            $request,
+            [
+                'organism'         => 'required|exists:organisms,accession',
+                'simulation-input' => 'required',
+                'epsilon'          => 'sometimes|numeric',
+            ]
+        );
         $name = trim($request->get('name', ''));
         $nonExp = (array)$request->get('nonexp-nodes', []);
         $job = null;
         try {
-            $job = Job::buildJob(Constants::SIMULATION_JOB, [
-                'organism'     => $request->get('organism', 'hsa'),
-                'nonExpressed' => $nonExp,
-                'dbFilter'     => $request->get('db-filter'),
-                'epsilon'      => doubleval($request->get('epsilon', 0.001)),
-                'seed'         => $request->get('random-seed'),
-                'enrichMirs'   => in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON']),
-            ], [], $name);
-            $simulationInputFile = $this->prepareUploadedFile($request, $job, 'simulation-input', function ($f) {
-                return Utils::checkInputFile($f);
-            });
-            $job->addParameters([
-                'simulationParameters' => Utils::readInputFile($simulationInputFile),
-                'enrichDb'             => $this->prepareUploadedFile($request, $job, 'enrich-db', function ($f) {
-                    return Utils::checkDbFile($f);
-                }),
-                'nodeTypes'            => $this->prepareUploadedFile($request, $job, 'custom-node-types',
-                    function ($f) {
-                        return Utils::checkNodeTypeFile($f);
-                    }),
-                'edgeTypes'            => $this->prepareUploadedFile($request, $job, 'custom-edge-types',
-                    function ($f) {
-                        return Utils::checkEdgeTypeFile($f);
-                    }),
-                'edgeSubTypes'         => $this->prepareUploadedFile($request, $job, 'custom-edge-subtypes',
-                    function ($f) {
-                        return Utils::checkEdgeSubTypeFile($f);
-                    }),
-            ]);
+            $job = Job::buildJob(
+                Constants::SIMULATION_JOB,
+                [
+                    'organism'     => $request->get('organism', 'hsa'),
+                    'nonExpressed' => $nonExp,
+                    'dbFilter'     => $request->get('db-filter'),
+                    'epsilon'      => (float)$request->get('epsilon', 0.001),
+                    'seed'         => $request->get('random-seed'),
+                    'enrichMirs'   => in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON'], false),
+                ],
+                [],
+                $name
+            );
+            $simulationInputFile = $this->prepareUploadedFile(
+                $request,
+                $job,
+                'simulation-input',
+                static function ($f) {
+                    return Utils::checkInputFile($f);
+                }
+            );
+            $job->addParameters(
+                [
+                    'simulationParameters' => Utils::readInputFile($simulationInputFile),
+                    'enrichDb'             => $this->prepareUploadedFile(
+                        $request,
+                        $job,
+                        'enrich-db',
+                        static function ($f) {
+                            return Utils::checkDbFile($f);
+                        }
+                    ),
+                    'nodeTypes'            => $this->prepareUploadedFile(
+                        $request,
+                        $job,
+                        'custom-node-types',
+                        static function ($f) {
+                            return Utils::checkNodeTypeFile($f);
+                        }
+                    ),
+                    'edgeTypes'            => $this->prepareUploadedFile(
+                        $request,
+                        $job,
+                        'custom-edge-types',
+                        static function ($f) {
+                            return Utils::checkEdgeTypeFile($f);
+                        }
+                    ),
+                    'edgeSubTypes'         => $this->prepareUploadedFile(
+                        $request,
+                        $job,
+                        'custom-edge-subtypes',
+                        static function ($f) {
+                            return Utils::checkEdgeSubTypeFile($f);
+                        }
+                    ),
+                ]
+            );
             @unlink($simulationInputFile);
             $job->save();
             $this->dispatch(new DispatcherJob($job->id));
@@ -158,6 +197,7 @@ class SimulationController extends Controller
             }
             throw $e;
         }
+
         return response()->json($job);
     }
 
@@ -175,6 +215,7 @@ class SimulationController extends Controller
         $arr['parametersUri'] = route('api-get-simulation-parameters', ['job' => $job]);
         $arr['rawResultsUri'] = route('api-get-simulation-results-raw', ['job' => $job]);
         $arr['pathwayResultsUri'] = route('api-get-simulation-results-pathways', ['job' => $job]);
+
         return response()->json($arr);
     }
 
@@ -201,6 +242,7 @@ class SimulationController extends Controller
         if ($params['edgeSubTypes'] !== null && file_exists($params['edgeSubTypes'])) {
             $params['edgeSubTypes'] = file_get_contents($params['edgeSubTypes']);
         }
+
         return response()->json($params);
     }
 
@@ -215,9 +257,12 @@ class SimulationController extends Controller
     {
         $job = $this->getJob($job);
         $reader = new Reader($job);
-        return response()->json([
-            'output' => file_get_contents($reader->getOutputFilename()),
-        ]);
+
+        return response()->json(
+            [
+                'output' => file_get_contents($reader->getOutputFilename()),
+            ]
+        );
     }
 
     /**
@@ -232,13 +277,20 @@ class SimulationController extends Controller
         $job = $this->getJob($job);
         $reader = new Reader($job);
         $pathways = $reader->readPathwaysList();
-        $pathways = $pathways->map(function ($item) use ($job) {
-            $item['uri'] = route('api-get-simulation-results-one-pathway', [
-                'job'     => $job,
-                'pathway' => $item['id'],
-            ]);
-            return $item;
-        });
+        $pathways = $pathways->map(
+            static function ($item) use ($job) {
+                $item['uri'] = route(
+                    'api-get-simulation-results-one-pathway',
+                    [
+                        'job'     => $job,
+                        'pathway' => $item['id'],
+                    ]
+                );
+
+                return $item;
+            }
+        );
+
         return response()->json($pathways);
     }
 
@@ -254,6 +306,7 @@ class SimulationController extends Controller
     {
         $job = $this->getJob($job);
         $reader = new Reader($job);
+
         return response()->json($reader->readPathway($pathway));
     }
 

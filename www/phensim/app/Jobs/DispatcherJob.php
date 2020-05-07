@@ -42,7 +42,7 @@ class DispatcherJob implements ShouldQueue
         try {
             /** @var JobData $jobData */
             $jobData = JobData::whereId($this->jobDataId)->first();
-            if (in_array($jobData->job_status, [JobData::PROCESSING, JobData::COMPLETED])) {
+            if (in_array($jobData->job_status, [JobData::PROCESSING, JobData::COMPLETED], true)) {
                 // job is being processed (or has been processed) by another job.
                 return;
             }

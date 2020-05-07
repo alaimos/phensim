@@ -24,45 +24,48 @@ class SimulationController extends Controller
 
     private function makeComparator(array $intFields = [], array $doubleFields = []): callable
     {
-        return function (ExtendedCollectionEngine $table, $getColumnName) use ($intFields, $doubleFields) {
+        return static function (ExtendedCollectionEngine $table, $getColumnName) use ($intFields, $doubleFields) {
             $crit = $table->request->orderableColumns();
             $caseSens = $table->isCaseInsensitive();
             if ($crit) {
-                $comparator = function ($a, $b) use ($caseSens, $crit, $getColumnName, $intFields, $doubleFields) {
+                $comparator = static function ($a, $b) use ($caseSens, $crit, $getColumnName, $intFields, $doubleFields) {
                     foreach ($crit as $ord) {
                         $column = $getColumnName($ord['column']);
-                        list($first, $second) = (strtolower($ord['direction']) === 'desc') ? [$b, $a] : [$a, $b];
-                        if (in_array($column, $intFields)) {
-                            $f = intval($first[$column]);
-                            $s = intval($second[$column]);
-                            $cmp = ($f == $s) ? 0 : (($f < $s) ? -1 : 1);
-                        } elseif (in_array($column, $doubleFields)) {
-                            $f = doubleval($first[$column]);
-                            $s = doubleval($second[$column]);
-                            $cmp = ($f == $s) ? 0 : (($f < $s) ? -1 : 1);
+                        [$first, $second] = (strtolower($ord['direction']) === 'desc') ? [$b, $a] : [$a, $b];
+                        if (in_array($column, $intFields, true)) {
+                            $f = (int)$first[$column];
+                            $s = (int)$second[$column];
+                            $cmp = $f <=> $s;
+                        } elseif (in_array($column, $doubleFields, true)) {
+                            $f = (float)$first[$column];
+                            $s = (float)$second[$column];
+                            $cmp = $f <=> $s;
+                        } elseif ($caseSens) {
+                            $cmp = strnatcasecmp($first[$column], $second[$column]);
                         } else {
-                            if ($caseSens) {
-                                $cmp = strnatcasecmp($first[$column], $second[$column]);
-                            } else {
-                                $cmp = strnatcmp($first[$column], $second[$column]);
-                            }
+                            $cmp = strnatcmp($first[$column], $second[$column]);
                         }
-                        if ($cmp != 0) {
+                        if ($cmp !== 0) {
                             return $cmp;
                         }
                     }
+
                     return 0;
                 };
-                $table->collection = $table->collection
-                    ->map(function ($data) {
+                $table->collection = $table->collection->map(
+                    static function ($data) {
                         return array_dot($data);
-                    })->sort($comparator)->map(function ($data) {
+                    }
+                )->sort($comparator)->map(
+                    static function ($data) {
                         foreach ($data as $key => $value) {
                             unset($data[$key]);
                             array_set($data, $key, $value);
                         }
+
                         return $data;
-                    });
+                    }
+                );
             }
         };
     }
@@ -83,9 +86,13 @@ class SimulationController extends Controller
         if (!$job->canBeRead()) {
             abort(403, 'You are not allowed to view this job');
         }
-        return view('jobs.simulation_job.pathway_list', [
-            'job' => $job,
-        ]);
+
+        return view(
+            'jobs.simulation_job.pathway_list',
+            [
+                'job' => $job,
+            ]
+        );
     }
 
     /**
@@ -106,25 +113,43 @@ class SimulationController extends Controller
         }
         /** @var \Yajra\Datatables\Engines\CollectionEngine $table */
         $table = Datatables::of((new Reader($job))->readPathwaysList());
-        $table->addColumn('action', function (array $data) use ($job) {
-            return view('jobs.simulation_job.pathway_list_action_column', [
-                'job'  => $job,
-                'data' => $data,
-            ])->render();
-        })->editColumn('activityScore', function (array $data) {
-            return number_format($data['activityScore'], 4);
-        })->editColumn('pValue', function (array $data) {
-            if ($data['pValue'] < 0.0001) {
-                return '< 0.0001';
-            } else {
+        $table->addColumn(
+            'action',
+            static function (array $data) use ($job) {
+                return view(
+                    'jobs.simulation_job.pathway_list_action_column',
+                    [
+                        'job'  => $job,
+                        'data' => $data,
+                    ]
+                )->render();
+            }
+        )->editColumn(
+            'activityScore',
+            static function (array $data) {
+                return number_format($data['activityScore'], 4);
+            }
+        )->editColumn(
+            'activityScore2',
+            static function (array $data) {
+                return number_format($data['activityScore'], 4);
+            }
+        )->editColumn(
+            'pValue',
+            static function (array $data) {
+                if ($data['pValue'] < 0.0001) {
+                    return '< 0.0001';
+                }
+
                 return number_format($data['pValue'], 4);
             }
-        })->rawColumns(['action'])->order($this->makeComparator([], ['activityScore', 'pValue']))->removeColumn('ll');
+        )->rawColumns(['action'])->order($this->makeComparator([], ['activityScore', 'pValue']))->removeColumn('ll');
+
         return $table->make(true);
     }
 
     /**
-     * Download data generated by a SIMPATHY simulation
+     * Download data generated by a PHENSIM simulation
      *
      * @param \App\Models\Job $job
      *
@@ -139,6 +164,7 @@ class SimulationController extends Controller
             abort(403, 'You are not allowed to view this job');
         }
         $fileName = (new Reader($job))->getOutputFilename();
+
         return response()->download($fileName, 'phensim-output-' . $job->id . '.tsv');
     }
 
@@ -152,17 +178,27 @@ class SimulationController extends Controller
      */
     public function viewPathway(Job $job, string $pid): View
     {
-        if (!$job || !$job->exists) abort(404, 'Unable to find the job.');
-        if (!$job->canBeRead()) abort(403, 'You are not allowed to view this job');
+        if (!$job || !$job->exists) {
+            abort(404, 'Unable to find the job.');
+        }
+        if (!$job->canBeRead()) {
+            abort(403, 'You are not allowed to view this job');
+        }
         /** @var Pathway $pathway */
         $pathway = Pathway::whereAccession($pid)->first();
-        if (!$pathway || !$pathway->exists) abort(404, 'Unable to find the pathway.');
-        return view('jobs.simulation_job.pathway_view', [
-            'job'      => $job,
-            'pid'      => $pid,
-            'pathway'  => $pathway,
-            'coloring' => (new Reader($job))->makePathwayColoring($pid),
-        ]);
+        if (!$pathway || !$pathway->exists) {
+            abort(404, 'Unable to find the pathway.');
+        }
+
+        return view(
+            'jobs.simulation_job.pathway_view',
+            [
+                'job'      => $job,
+                'pid'      => $pid,
+                'pathway'  => $pathway,
+                'coloring' => (new Reader($job))->makePathwayColoring($pid),
+            ]
+        );
     }
 
     /**
@@ -184,24 +220,48 @@ class SimulationController extends Controller
         }
         /** @var \Yajra\Datatables\Engines\CollectionEngine $table */
         $table = Datatables::of((new Reader($job))->readPathway($pid));
-        $table->editColumn('targetedBy', function (array $data) {
-            return $data['isDirectTarget'] ? '' : $this->parseNode((array)$data['targetedBy']);
-        })->editColumn('activityScore', function (array $data) {
-            return number_format($data['activityScore'], 4);
-        })->editColumn('pValue', function (array $data) {
-            if ($data['pValue'] < 0.0001) {
-                return '< 0.0001';
-            } else {
-                return number_format($data['pValue'], 4);
+        $table->editColumn(
+            'targetedBy',
+            function (array $data) {
+                return $data['isDirectTarget'] ? '' : $this->parseNode((array)$data['targetedBy']);
             }
-        })->editColumn('nodeId', function (array $data) {
-            return $this->parseNode($data['nodeId']);
-        })->editColumn('isEndpoint', function (array $data) {
-            return ($data['isEndpoint'] ? 'Yes' : 'No');
-        })->editColumn('isDirectTarget', function (array $data) {
-            return ($data['isDirectTarget'] ? 'Yes' : 'No');
-        })->rawColumns(['nodeId'])->removeColumn('ll', 'pathwayId', 'pathwayName')
+        )->editColumn(
+            'activityScore',
+            static function (array $data) {
+                return number_format($data['activityScore'], 4);
+            }
+        )->editColumn(
+            'activityScore2',
+            static function (array $data) {
+                return number_format($data['activityScore'], 4);
+            }
+        )->editColumn(
+            'pValue',
+            static function (array $data) {
+                if ($data['pValue'] < 0.0001) {
+                    return '< 0.0001';
+                } else {
+                    return number_format($data['pValue'], 4);
+                }
+            }
+        )->editColumn(
+            'nodeId',
+            function (array $data) {
+                return $this->parseNode($data['nodeId']);
+            }
+        )->editColumn(
+            'isEndpoint',
+            static function (array $data) {
+                return ($data['isEndpoint'] ? 'Yes' : 'No');
+            }
+        )->editColumn(
+            'isDirectTarget',
+            static function (array $data) {
+                return ($data['isDirectTarget'] ? 'Yes' : 'No');
+            }
+        )->rawColumns(['nodeId'])->removeColumn('ll', 'pathwayId', 'pathwayName')
               ->order($this->makeComparator([], ['activityScore']));
+
         return $table->make(true);
     }
 

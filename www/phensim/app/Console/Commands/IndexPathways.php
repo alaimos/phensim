@@ -3,7 +3,10 @@
 namespace App\Console\Commands;
 
 use App\Models\Organism;
+use App\PHENSIM\Utils;
 use Illuminate\Console\Command;
+use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Process\Process;
 
 class IndexPathways extends Command
 {
@@ -22,35 +25,47 @@ class IndexPathways extends Command
     protected $description = 'Indexes pathways for a faster execution of other commands';
 
     /**
-     * Create a new command instance.
-     *
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
-     * @return int
+     * @return mixed
      */
     public function handle()
     {
-        $m2 = resource_path('bin/MITHrIL2.jar');
-        $command = '/opt/jdk/bin/java -jar ' . escapeshellarg($m2) . ' index -verbose -organism %s -enrichment-evidence-type STRONG';
+        $command = [
+            env('JAVA_PATH') . '/java',
+            '-jar',
+            resource_path('bin/MITHrIL2.jar'),
+            'index',
+            '-verbose',
+            '-organism',
+            '',
+            '-enrichment-evidence-type',
+            'STRONG',
+        ];
         foreach (Organism::all() as $organism) {
-            $cmd = sprintf($command, escapeshellarg($organism->accession));
-            $this->info("Indexing " . $organism->name . " pathways.");
-            $return = null;
-            passthru($cmd, $return);
-            if ($return == 0) {
+            $cmd[6] = $organism->accession;
+            $this->info("Indexing " . $cmd[6] . " pathways.");
+            try {
+                Utils::runCommand(
+                    $command,
+                    null,
+                    null,
+                    function ($type, $buffer) {
+                        if ($type === Process::OUT) {
+                            $this->info($buffer);
+                        } else {
+                            $this->error($buffer);
+                        }
+                    }
+                );
                 $this->info("Done!");
-            } else {
+            } catch (ProcessFailedException $e) {
                 $this->error("An error occurred!");
+
                 return 105;
             }
         }
+
         return 0;
     }
 }

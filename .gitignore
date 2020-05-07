@@ -41,3 +41,4 @@ $RECYCLE.BIN/
 *.lnk
 www/phensim/test.txt
 www/phensim/storage/logs/*
+www/phensim/phensim-output-204.tsv

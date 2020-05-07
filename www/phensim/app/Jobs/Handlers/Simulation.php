@@ -8,6 +8,7 @@ use App\Models\Job as JobData;
 use App\Models\Organism;
 use App\PHENSIM\Launcher;
 use App\PHENSIM\Utils;
+use Symfony\Component\Process\Process;
 
 class Simulation extends AbstractHandler
 {
@@ -19,18 +20,18 @@ class Simulation extends AbstractHandler
      *
      * @return boolean
      */
-    public function canHandleJob(JobData $jobData)
+    public function canHandleJob(JobData $jobData): bool
     {
-        return strtolower($jobData->job_type) == 'simulation';
+        return strtolower($jobData->job_type) === 'simulation';
     }
 
     /**
      * Execute the job.
      *
-     * @throws \App\Exceptions\JobException
      * @return void
+     * @throws \App\Exceptions\JobException
      */
-    public function handle()
+    public function handle(): void
     {
         $this->log('Checking parameters...', false);
         /** @var Organism $organism */
@@ -59,7 +60,7 @@ class Simulation extends AbstractHandler
             throw new JobException('Invalid edge subtype file.');
         }
         $this->log('OK!');
-        $this->log('Running SIMPATHY Simulation...', false);
+        $this->log('Running PHENSIM Simulation...');
         $launcher = new Launcher($this->jobData);
         $launcher
             ->setOrganism($organism->accession)
@@ -89,15 +90,19 @@ class Simulation extends AbstractHandler
             }
         }
         try {
-            $result = $launcher->run();
-            $this->log('OK!');
-            $this->log(implode(PHP_EOL, $result));
+            $launcher->run(
+                function ($type, $buffer) {
+                    $this->log($buffer, false);
+                }
+            );
         } catch (\Exception $e) {
             throw new JobException($e->getMessage(), 0, $e);
         }
-        $this->jobData->setData([
-            'outputFile' => $launcher->getOutputFilename(),
-        ]);
+        $this->jobData->setData(
+            [
+                'outputFile' => $launcher->getOutputFilename(),
+            ]
+        );
         $this->log('Completed!');
     }
 }
