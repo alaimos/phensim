@@ -184,14 +184,20 @@ class SimulationController extends Controller
         if (!$pathway || !$pathway->exists) {
             abort(404, 'Unable to find the pathway.');
         }
+        $old = (new Reader($job))->makePathwayColoring($pid);
+        $new = (new Reader($job))->makePathwayColoring($pid, true);
+        $header = '#' . $job->getData('organism') . "\tPhensim\n";
+        $old['coloring'] = $header . $old['coloring'];
+        $new['coloring'] = $header . $new['coloring'];
 
         return view(
             'jobs.simulation_job.pathway_view',
             [
-                'job'      => $job,
-                'pid'      => $pid,
-                'pathway'  => $pathway,
-                'coloring' => (new Reader($job))->makePathwayColoring($pid),
+                'job'         => $job,
+                'pid'         => $pid,
+                'pathway'     => $pathway,
+                'coloringOld' => $old,
+                'coloringNew' => $new,
             ]
         );
     }
