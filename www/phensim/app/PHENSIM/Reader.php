@@ -277,21 +277,23 @@ final class Reader
                 $node = Node::whereAccession($data['nodeId'])->first();
                 if ($node !== null && $node->type !== 'mirna') {
                     if ($new) {
-                        if ($data['activityScore2'] > 0) {
+                        return $node->accession."\t".$data['activityScore2'];
+                        /*if ($data['activityScore2'] > 0) {
                             return sprintf(self::ACTIVATION_COLORING, $node->accession);
                         }
 
                         if ($data['activityScore2'] < 0) {
                             return sprintf(self::INHIBITION_COLORING, $node->accession);
-                        }
+                        }*/
                     } else {
-                        if ($data['activityScore'] > 0) {
+                        return $node->accession."\t".$data['activityScore'];
+                        /*if ($data['activityScore'] > 0) {
                             return sprintf(self::ACTIVATION_COLORING, $node->accession);
                         }
 
                         if ($data['activityScore'] < 0) {
                             return sprintf(self::INHIBITION_COLORING, $node->accession);
-                        }
+                        }*/
                     }
                 }
 
