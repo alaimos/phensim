@@ -9,7 +9,7 @@ use App\PHENSIM\Exception\LauncherException;
 final class Launcher
 {
     const MITHRIL_JAR                        = 'bin/MITHrIL2.jar';
-    const MITHRIL_EXEC                       = 'java -jar %1$s %2$s %3$s';
+    const MITHRIL_EXEC                       = '/opt/jdk/bin/java -jar %1$s %2$s %3$s';
     const SIMPATHY                           = 'phensim -m';
     const SIMPATHY_ENRICHERS                 = '-e %s';
     const SIMPATHY_ENRICHER_PARAMETER        = '-p %s=%s';

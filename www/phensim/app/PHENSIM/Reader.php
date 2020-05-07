@@ -12,7 +12,7 @@ final class Reader
 
     const FIELDS_ALL          = ['pathwayId', 'pathwayName', 'nodeId', 'nodeName', 'isEndpoint', 'isDirectTarget',
                                  'activityScore', 'pValue', 'll', 'pathwayActivityScore', 'pathwayPValue',
-                                 'pathwayll', 'targetedBy'];
+                                 'pathwayll', 'targetedBy', 'probabilities'];
     const FIELDS_CAST         = [
         'pathwayId'            => null,
         'pathwayName'          => 'pathway',
@@ -27,6 +27,7 @@ final class Reader
         'pathwayPValue'        => 'double',
         'pathwayll'            => 'll',
         'targetedBy'           => 'array',
+	'probabilities'        => 'll',
     ];
     const LL                  = ['activation', 'inhibition', 'other'];
     const ACTIVATION_COLORING = '%s red,black';
@@ -69,7 +70,9 @@ final class Reader
             return doubleval($value);
         } elseif (self::FIELDS_CAST[$field] == 'll') {
             $tmp = array_map('doubleval', explode(",", $value));
-            return array_combine(self::LL, array_slice($tmp, 0, 3));
+            $tmp = array_slice($tmp, 0, 3);
+            if (count($tmp) < 3) $tmp = [null, null, null];
+            return array_combine(self::LL, $tmp);
         } elseif (self::FIELDS_CAST[$field] == 'array') {
             return (empty($value)) ? [] : explode(",", $value);
         } elseif (self::FIELDS_CAST[$field] == 'pathway') {
@@ -88,7 +91,11 @@ final class Reader
     private function prepare(array $fields)
     {
         $n = count($fields);
-        if ($n == 12) $fields[] = '';
+	if ($n == 12) {
+            $fields[] = '';
+            $n++;
+        }
+        if ($n == 13) $fields[] = '';
         $fields = array_combine(self::FIELDS_ALL, $fields);
         array_walk($fields, function (&$value, $key) {
             $value = $this->cast($key, $value);
@@ -113,7 +120,7 @@ final class Reader
             $line = trim($line);
             if (!empty($line) && $line{0} != '#') {
                 $fields = explode("\t", $line);
-                if (count($fields) == 12 || count($fields) == 13) {
+                if (count($fields) == 12 || count($fields) == 13 || count($fields) == 14) {
                     call_user_func($action, $this->prepare($fields));
                 }
             }

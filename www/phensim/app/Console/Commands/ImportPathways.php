@@ -53,7 +53,7 @@ class ImportPathways extends Command
     {
         $this->info("Exporting MITHrIL 2 organisms");
         $m2 = resource_path('bin/MITHrIL2.jar');
-        $command = 'java -jar ' . escapeshellarg($m2) . ' exporg';
+        $command = '/opt/jdk/bin/java -jar ' . escapeshellarg($m2) . ' exporg';
         //$output = null;
         //$return = null;
         //exec($command, $output, $return);
@@ -95,9 +95,10 @@ class ImportPathways extends Command
     {
         $this->info("Exporting MITHrIL 2 pathways for organism " . $organism);
         $m2 = resource_path('bin/MITHrIL2.jar');
-        $command = 'java -jar ' . escapeshellarg($m2) . ' exportgraph -verbose -organism ' . escapeshellarg($organism) .
+        $command = '/opt/jdk/bin/java -jar ' . escapeshellarg($m2) . ' exportgraph -verbose -organism ' . escapeshellarg($organism) .
                    ' -enrichment-evidence-type STRONG -disable-priority -no ' . escapeshellarg($this->nodesFile) .
                    ' -eo ' . escapeshellarg($this->edgesFile) . ' -mo ' . escapeshellarg($this->mapFile);
+	echo $command;
         $return = null;
         passthru($command, $return);
         if ($return == 0) {

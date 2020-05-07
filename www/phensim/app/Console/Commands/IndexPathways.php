@@ -38,7 +38,7 @@ class IndexPathways extends Command
     public function handle()
     {
         $m2 = resource_path('bin/MITHrIL2.jar');
-        $command = 'java -jar ' . escapeshellarg($m2) . ' index -verbose -organism %s -enrichment-evidence-type STRONG';
+        $command = '/opt/jdk/bin/java -jar ' . escapeshellarg($m2) . ' index -verbose -organism %s -enrichment-evidence-type STRONG';
         foreach (Organism::all() as $organism) {
             $cmd = sprintf($command, escapeshellarg($organism->accession));
             $this->info("Indexing " . $organism->name . " pathways.");
