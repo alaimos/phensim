@@ -78,7 +78,8 @@ final class Launcher
             env('JAVA_PATH') . '/java',
             '-jar',
             resource_path('bin/MITHrIL2.jar'),
-            'phensim -m',
+            'phensim',
+            '-m',
         ];
     }
 
