@@ -130,11 +130,6 @@ class SimulationController extends Controller
                 return number_format($data['activityScore'], 4);
             }
         )->editColumn(
-            'activityScore2',
-            static function (array $data) {
-                return number_format($data['activityScore'], 4);
-            }
-        )->editColumn(
             'pValue',
             static function (array $data) {
                 if ($data['pValue'] < 0.0001) {
@@ -233,7 +228,7 @@ class SimulationController extends Controller
         )->editColumn(
             'activityScore2',
             static function (array $data) {
-                return number_format($data['activityScore'], 4);
+                return number_format($data['activityScore2'], 4);
             }
         )->editColumn(
             'pValue',
