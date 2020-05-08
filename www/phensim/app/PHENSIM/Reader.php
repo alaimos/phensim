@@ -270,34 +270,32 @@ final class Reader
     public function makePathwayColoring(string $pathway, bool $new = false): array
     {
         $mapId = str_ireplace('path:', '', $pathway);
+        $minActivity = INF;
+        $maxActivity = -INF;
         $coloringData = $this->readPathway(
             $pathway,
-            static function (array $data) use ($new) {
+            static function (array $data) use ($new, &$maxActivity, &$minActivity) {
                 /** @var Node $node */
                 $node = Node::whereAccession($data['nodeId'])->first();
                 if ($node !== null && $node->type !== 'mirna') {
-                    if ($new) {
-                        return $node->accession."\t".$data['activityScore2'];
-                        /*if ($data['activityScore2'] > 0) {
-                            return sprintf(self::ACTIVATION_COLORING, $node->accession);
-                        }
+                    $act = $new ? 'activityScore2' : 'activityScore';
+                    $val = $data[$act];
+                    $maxActivity = max($val, $maxActivity);
+                    $minActivity = min($val, $minActivity);
 
-                        if ($data['activityScore2'] < 0) {
-                            return sprintf(self::INHIBITION_COLORING, $node->accession);
-                        }*/
-                    } else {
-                        return $node->accession."\t".$data['activityScore'];
-                        /*if ($data['activityScore'] > 0) {
-                            return sprintf(self::ACTIVATION_COLORING, $node->accession);
-                        }
-
-                        if ($data['activityScore'] < 0) {
-                            return sprintf(self::INHIBITION_COLORING, $node->accession);
-                        }*/
-                    }
+                    return [$node->accession, $val];
                 }
 
                 return null;
+            }
+        )->filter();
+        $maxActivity = max($maxActivity, abs($minActivity));
+        $coloringData = $coloringData->map(
+            static function ($row) use ($maxActivity) {
+                [$nodeId, $activity] = $row;
+                $activity = ($activity / $maxActivity) * 10; //For KEGG normalizes everything in the [-10; 10] range
+
+                return $nodeId . "\t" . number_format($activity, 6);
             }
         );
 
