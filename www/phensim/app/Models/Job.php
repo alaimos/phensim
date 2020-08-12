@@ -388,7 +388,7 @@ class Job extends Model implements Ownable
      *
      * @param string $value
      */
-    public function setLogAttribute($value): void
+    public function setJobLogAttribute($value): void
     {
         $aLines = explode("\n", $value);
         $value = implode(
