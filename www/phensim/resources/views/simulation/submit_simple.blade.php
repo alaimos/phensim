@@ -57,10 +57,10 @@
                                 <a href="#simple-sim-sub-step4" data-toggle="tab">4. Non-Expressed Nodes</a>
                             </li>
                             <li>
-                                <a href="#simple-sim-sub-step4" data-toggle="tab">5. Knocked-out Nodes</a>
+                                <a href="#simple-sim-sub-step5" data-toggle="tab">5. Knocked-out Nodes</a>
                             </li>
                             <li>
-                                <a href="#simple-sim-sub-step5" data-toggle="tab">6. Submit Simulation</a>
+                                <a href="#simple-sim-sub-step6" data-toggle="tab">6. Submit Simulation</a>
                             </li>
                         </ul>
                         <!-- END Step Tabs -->
@@ -139,7 +139,7 @@
                             <!-- END Step 4 -->
 
                             <!-- Step 5 -->
-                            <div class="tab-pane push-30-t push-50" id="simple-sim-sub-step4">
+                            <div class="tab-pane push-30-t push-50" id="simple-sim-sub-step5">
                                 <div class="form-group{{ $errors->has('remove-nodes') ? ' has-error' : '' }}">
                                     <nodes-selector id="remove-nodes" name="remove-nodes[]"
                                                     label="Select knocked-out nodes"
@@ -156,7 +156,7 @@
                             <!-- END Step 5 -->
 
                             <!-- Step 6 -->
-                            <div class="tab-pane push-30-t" id="simple-sim-sub-step5">
+                            <div class="tab-pane push-30-t" id="simple-sim-sub-step6">
                                 <div class="form-group"{{ $errors->has('fdr') ? ' has-error' : '' }}>
                                     <div class="col-sm-8 col-sm-offset-2">
                                         {!! Form::label('fdr', 'FDR method', ['class' => 'control-label']) !!}

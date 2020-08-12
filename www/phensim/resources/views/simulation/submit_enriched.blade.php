@@ -125,13 +125,11 @@
                                 </div>
                             </div>
                             <div class="form-group"{{ $errors->has('fdr') ? ' has-error' : '' }}>
-                                <div class="col-sm-8 col-sm-offset-2">
-                                    {!! Form::label('fdr', 'FDR method', ['class' => 'control-label']) !!}
-                                    {!! Form::select('fdr', ['BH' => 'Benjamini & Hochberg', 'QV' => 'Q-value (Storey et al.)', 'LOC' => 'Local FDR (Efron et al.)'], 'QV', ['class' => 'form-control']) !!}
-                                    @if($errors->has('fdr'))
-                                        <div class="help-block">{{ $errors->first('fdr') }}</div>
-                                    @endif
-                                </div>
+                                {!! Form::label('fdr', 'FDR method', ['class' => 'col-md-3 control-label']) !!}
+                                {!! Form::select('fdr', ['BH' => 'Benjamini & Hochberg', 'QV' => 'Q-value (Storey et al.)', 'LOC' => 'Local FDR (Efron et al.)'], 'QV', ['class' => 'form-control']) !!}
+                                @if($errors->has('fdr'))
+                                    <div class="help-block">{{ $errors->first('fdr') }}</div>
+                                @endif
                             </div>
                             <div class="form-group"{{ $errors->has('epsilon') ? ' has-error' : '' }}>
                                 {!! Form::label('epsilon', 'Epsilon value', ['class' => 'col-md-3 control-label']) !!}
