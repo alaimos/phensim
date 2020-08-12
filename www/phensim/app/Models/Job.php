@@ -410,7 +410,7 @@ class Job extends Model implements Ownable
                 $aLines
             )
         );
-        $this->attributes['log'] = $value;
+        $this->attributes['job_log'] = $value;
     }
 
     /**
