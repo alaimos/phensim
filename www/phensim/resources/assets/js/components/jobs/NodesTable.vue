@@ -10,8 +10,8 @@
                     <th class="text-center">Is Endpoint?</th>
                     <th class="text-center">Is Direct Target?</th>
                     <th>Activity Score</th>
-                    <th>Activity Score v2</th>
                     <th>p-Value</th>
+                    <th>FDR</th>
                     <th>Targeted By</th>
                 </tr>
                 </thead>
@@ -64,8 +64,8 @@
             { data: 'isEndpoint', name: 'isEndpoint' },
             { data: 'isDirectTarget', name: 'isDirectTarget' },
             { data: 'activityScore', name: 'activityScore' },
-            { data: 'activityScore2', name: 'activityScore2' },
             { data: 'pValue', name: 'pValue' },
+            { data: 'FDR', name: 'FDR' },
             { data: 'targetedBy', name: 'targetedBy' },
           ],
           order: [[5, 'asc']],

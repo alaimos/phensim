@@ -9,6 +9,7 @@
                     <th>Name</th>
                     <th>Activity Score</th>
                     <th>p-Value</th>
+                    <th>FDR</th>
                     <th>Action</th>
                 </tr>
                 </thead>
@@ -60,6 +61,7 @@
                         {data: 'name', name: 'name'},
                         {data: 'activityScore', name: 'activityScore'},
                         {data: 'pValue', name: 'pValue'},
+                        {data: 'FDR', name: 'FDR'},
                         {data: 'action', name: 'action', orderable: false, searchable: false}
                     ],
                     order:      [[3, 'asc'], [2, 'desc']],
