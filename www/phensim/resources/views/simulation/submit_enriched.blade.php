@@ -88,6 +88,15 @@
                                     @endif
                                 </div>
                             </div>
+                            <div class="form-group{{ $errors->has('remove-nodes') ? ' has-error' : '' }}">
+                                {!! Form::label('remove-nodes', 'Knocked-out nodes', ['class' => 'col-md-3 control-label']) !!}
+                                <div class="col-md-9">
+                                    {!! Form::file('remove-nodes', ['class' => 'form-control']) !!}
+                                    @if($errors->has('remove-nodes'))
+                                        <div class="help-block">{{ $errors->first('remove-nodes') }}</div>
+                                    @endif
+                                </div>
+                            </div>
                             <div class="form-group{{ $errors->has('custom-node-types') ? ' has-error' : '' }}">
                                 {!! Form::label('custom-node-types', 'Custom Node Type File', ['class' => 'col-md-3 control-label']) !!}
                                 <div class="col-md-9">
@@ -115,10 +124,19 @@
                                     @endif
                                 </div>
                             </div>
+                            <div class="form-group"{{ $errors->has('fdr') ? ' has-error' : '' }}>
+                                <div class="col-sm-8 col-sm-offset-2">
+                                    {!! Form::label('fdr', 'FDR method', ['class' => 'control-label']) !!}
+                                    {!! Form::select('fdr', ['BH' => 'Benjamini & Hochberg', 'QV' => 'Q-value (Storey et al.)', 'LOC' => 'Local FDR (Efron et al.)'], 'BH', ['class' => 'form-control']) !!}
+                                    @if($errors->has('fdr'))
+                                        <div class="help-block">{{ $errors->first('fdr') }}</div>
+                                    @endif
+                                </div>
+                            </div>
                             <div class="form-group"{{ $errors->has('epsilon') ? ' has-error' : '' }}>
                                 {!! Form::label('epsilon', 'Epsilon value', ['class' => 'col-md-3 control-label']) !!}
                                 <div class="col-md-9">
-                                    {!! Form::number('epsilon', 0.001, ['class' => 'form-control', 'step' => 'any']) !!}
+                                    {!! Form::number('epsilon', 0.00001, ['class' => 'form-control', 'step' => 'any']) !!}
                                     @if($errors->has('epsilon'))
                                         <div class="help-block">{{ $errors->first('epsilon') }}</div>
                                     @endif
@@ -158,7 +176,7 @@
 @endsection
 @push('inline-scripts')
     <script>
-        $(function () {
-        });
+      $(function () {
+      });
     </script>
 @endpush

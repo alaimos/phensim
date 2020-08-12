@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use App\Exceptions\SecurityException;
+use Auth;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laratrust\Contracts\Ownable;
@@ -12,46 +15,31 @@ use Laravel\Passport\HasApiTokens;
 /**
  * App\Models\User
  *
- * @property int
- *               $id
- * @property string
- *               $name
- * @property string
- *               $email
- * @property string
- *               $password
- * @property string
- *               $affiliation
- * @property string
- *               $secret
- * @property string
- *               $remember_token
- * @property \Carbon\Carbon
- *               $created_at
- * @property \Carbon\Carbon
- *               $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection|\Laravel\Passport\Client[]
- *                    $clients
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Job[]
- *                    $jobs
- * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\Illuminate\Notifications\DatabaseNotification[]
- *                $notifications
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Permission[]
- *                    $permissions
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Role[]
- *                    $roles
- * @property-read \Illuminate\Database\Eloquent\Collection|\Laravel\Passport\Token[]
- *                    $tokens
- * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereAffiliation($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereCreatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereEmail($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereId($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereName($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\User wherePassword($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereRememberToken($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereRoleIs($role = '')
- * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereSecret($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\User whereUpdatedAt($value)
+ * @property int                                                                                                            $id
+ * @property string                                                                                                         $name
+ * @property string                                                                                                         $email
+ * @property string                                                                                                         $password
+ * @property string                                                                                                         $affiliation
+ * @property string                                                                                                         $secret
+ * @property string                                                                                                         $remember_token
+ * @property \Carbon\Carbon                                                                                                 $created_at
+ * @property \Carbon\Carbon                                                                                                 $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\Laravel\Passport\Client[]                                       $clients
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Job[]                                                $jobs
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\Illuminate\Notifications\DatabaseNotification[] $notifications
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Permission[]                                         $permissions
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Role[]                                               $roles
+ * @property-read \Illuminate\Database\Eloquent\Collection|\Laravel\Passport\Token[]                                        $tokens
+ * @method static Builder|User whereAffiliation($value)
+ * @method static Builder|User whereCreatedAt($value)
+ * @method static Builder|User whereEmail($value)
+ * @method static Builder|User whereId($value)
+ * @method static Builder|User whereName($value)
+ * @method static Builder|User wherePassword($value)
+ * @method static Builder|User whereRememberToken($value)
+ * @method static Builder|User whereRoleIs($role = '')
+ * @method static Builder|User whereSecret($value)
+ * @method static Builder|User whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class User extends Authenticatable implements Ownable
@@ -64,7 +52,11 @@ class User extends Authenticatable implements Ownable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password', 'remember_token', 'secret',
+        'name',
+        'email',
+        'password',
+        'remember_token',
+        'secret',
     ];
 
     /**
@@ -73,7 +65,9 @@ class User extends Authenticatable implements Ownable
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token', 'secret',
+        'password',
+        'remember_token',
+        'secret',
     ];
 
     /**
@@ -81,9 +75,9 @@ class User extends Authenticatable implements Ownable
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function jobs()
+    public function jobs(): HasMany
     {
-        return $this->hasMany('\App\Models\Job', 'user_id', 'id');
+        return $this->hasMany(Job::class, 'user_id', 'id');
     }
 
     /**
@@ -91,7 +85,7 @@ class User extends Authenticatable implements Ownable
      *
      * @return bool
      */
-    public function isAdmin()
+    public function isAdmin(): bool
     {
         return $this->hasRole('administrator');
     }
@@ -103,10 +97,15 @@ class User extends Authenticatable implements Ownable
      *
      * @return bool
      */
-    public static function canBeCreated(User $user = null)
+    public static function canBeCreated(User $user = null): bool
     {
-        if ($user === null) $user = \Auth::user();
-        if ($user === null) return false;
+        if ($user === null) {
+            $user = Auth::user();
+        }
+        if ($user === null) {
+            return false;
+        }
+
         return $user->hasRole('administrator') || $user->can('create-users');
     }
 
@@ -117,10 +116,15 @@ class User extends Authenticatable implements Ownable
      *
      * @return bool
      */
-    public function canBeUpdated(User $user = null)
+    public function canBeUpdated(User $user = null): bool
     {
-        if ($user === null) $user = \Auth::user();
-        if ($user === null) return false;
+        if ($user === null) {
+            $user = Auth::user();
+        }
+        if ($user === null) {
+            return false;
+        }
+
         return $user->hasRole('administrator') || $user->canAndOwns('update-users', $this);
     }
 
@@ -131,10 +135,15 @@ class User extends Authenticatable implements Ownable
      *
      * @return bool
      */
-    public function canBeDeleted(User $user = null)
+    public function canBeDeleted(User $user = null): bool
     {
-        if ($user === null) $user = \Auth::user();
-        if ($user === null) return false;
+        if ($user === null) {
+            $user = Auth::user();
+        }
+        if ($user === null) {
+            return false;
+        }
+
         return $user->hasRole('administrator') || $user->canAndOwns('delete-users', $this);
     }
 
@@ -151,9 +160,9 @@ class User extends Authenticatable implements Ownable
     /**
      * Save the model to the database.
      *
-     * @param  array $options
+     * @param array $options
      *
-     * @return bool
+     * @return mixed
      */
     public function save(array $options = [])
     {
@@ -161,13 +170,14 @@ class User extends Authenticatable implements Ownable
             $this->remember_token = null;
             $this->secret = bcrypt(str_random(32));
         }
+
         return parent::save($options);
     }
 
     /**
      * Delete the model from the database.
      *
-     * @return bool|null
+     * @return mixed
      *
      * @throws \Exception
      */
@@ -176,6 +186,7 @@ class User extends Authenticatable implements Ownable
         if (!$this->canBeDeleted()) {
             throw new SecurityException('The current user is not allowed to delete this object');
         }
+
         return parent::delete();
     }
 

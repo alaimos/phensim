@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator as RealValidator;
 use Illuminate\View\View;
 use Validator;
@@ -116,7 +117,7 @@ class SubmitController extends Controller
     {
         Validator::extendImplicit(
             'hasNodes',
-            function ($attribute, $value, $parameters, RealValidator $validator) {
+            static function ($attribute, $value, $parameters, RealValidator $validator) {
                 $allFields = ['overexp-nodes', 'underexp-nodes'];
                 $allFiles = ['overexp-file', 'underexp-file'];
                 $data = $validator->getData();
@@ -136,7 +137,7 @@ class SubmitController extends Controller
                 if (!$ok && in_array($attribute, $allFields, true) && !empty($value) && is_array($value)) {
                     $ok = true;
                 }
-                if (!$ok && in_array($attribute, $allFiles) && !empty($value) && $value instanceof UploadedFile) {
+                if (!$ok && in_array($attribute, $allFiles, true) && !empty($value) && $value instanceof UploadedFile) {
                     $ok = true;
                 }
 
@@ -151,6 +152,7 @@ class SubmitController extends Controller
                 'overexp-file'   => 'hasNodes',
                 'underexp-nodes' => 'hasNodes',
                 'underexp-file'  => 'hasNodes',
+                'fdr-method'     => ['sometimes', Rule::in(Launcher::SUPPORTED_FDRS)],
             ],
             [
                 'has_nodes' => 'You must specify overexpressed or underexpressed nodes.',
@@ -160,7 +162,9 @@ class SubmitController extends Controller
         $organism = $request->get('organism', 'hsa');
         $nodes = $this->prepareSimpleSimulationList($request);
         $nonExp = $this->prepareSimpleNodesList($request, 'nonexp-nodes', 'nonexp-file');
-        $epsilon = (float)$request->get('epsilon', 0.001);
+        $remove = $this->prepareSimpleNodesList($request, 'remove-nodes', 'remove-file');
+        $epsilon = (float)$request->get('epsilon', 0.00001);
+        $fdr = $request->get('fdr-method', 'BH');
         $seed = $request->get('random-seed');
         $enrich = in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON'], false);
         $job = Job::buildJob(
@@ -169,8 +173,10 @@ class SubmitController extends Controller
                 'organism'             => $organism,
                 'simulationParameters' => $nodes,
                 'nonExpressed'         => $nonExp,
+                'remove'               => $remove,
                 'dbFilter'             => null,
                 'epsilon'              => $epsilon,
+                'fdr'                  => $fdr,
                 'seed'                 => $seed,
                 'enrichMirs'           => $enrich,
                 'enrichDb'             => null,
@@ -204,7 +210,7 @@ class SubmitController extends Controller
     /**
      * Extends validators
      */
-    private static function extendValidatorsEnriched()
+    private static function extendValidatorsEnriched(): void
     {
         Validator::extendImplicit(
             'validDb',
@@ -296,6 +302,8 @@ class SubmitController extends Controller
                 'simulation-input'     => 'required|file|validParameters',
                 'enrich-db'            => 'sometimes|file|validDb',
                 'nonexp-nodes'         => 'sometimes|file',
+                'remove-nodes'         => 'sometimes|file',
+                'fdr-method'           => ['sometimes', Rule::in(Launcher::SUPPORTED_FDRS)],
                 'custom-node-types'    => 'sometimes|file|validNodeType',
                 'custom-edge-types'    => 'sometimes|file|validEdgeType',
                 'custom-edge-subtypes' => 'sometimes|file|validEdgeSubType',
@@ -313,6 +321,10 @@ class SubmitController extends Controller
         if ((($file = $request->file('nonexp-nodes')) !== null) && $file->isValid()) {
             $nonExp = array_filter(array_unique($this->readSimpleNodesFile($file->path())));
         }
+        $remove = [];
+        if ((($file = $request->file('remove-nodes')) !== null) && $file->isValid()) {
+            $remove = array_filter(array_unique($this->readSimpleNodesFile($file->path())));
+        }
         $name = trim($request->get('job_name', ''));
         $job = Job::buildJob(
             Constants::SIMULATION_JOB,
@@ -320,8 +332,10 @@ class SubmitController extends Controller
                 'organism'             => $request->get('organism', 'hsa'),
                 'simulationParameters' => Utils::readInputFile($request->file('simulation-input')->path()),
                 'nonExpressed'         => $nonExp,
+                'remove'               => $remove,
+                'fdr'                  => $request->get('fdr-method', 'BH'),
                 'dbFilter'             => $request->get('db-filter'),
-                'epsilon'              => (float)$request->get('epsilon', 0.001),
+                'epsilon'              => (float)$request->get('epsilon', 0.00001),
                 'seed'                 => $request->get('random-seed'),
                 'enrichMirs'           => in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON'], false),
             ],

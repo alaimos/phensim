@@ -19,12 +19,13 @@ final class Reader
         'isDirectTarget',
         'activityScore',
         'pValue',
-        'll',
+        'FDR',
+        'LL',
         'pathwayActivityScore',
         'pathwayPValue',
-        'pathwayll',
+        'pathwayFDR',
+        'pathwayLL',
         'targetedBy',
-        'probabilities',
     ];
     public const FIELDS_CAST         = [
         'pathwayId'            => null,
@@ -35,12 +36,13 @@ final class Reader
         'isDirectTarget'       => 'boolean',
         'activityScore'        => 'double',
         'pValue'               => 'double',
-        'll'                   => 'll',
+        'FDR'                  => 'double',
+        'LL'                   => 'll',
         'pathwayActivityScore' => 'double',
         'pathwayPValue'        => 'double',
-        'pathwayll'            => 'll',
+        'pathwayFDR'           => 'double',
+        'pathwayLL'            => 'll',
         'targetedBy'           => 'array',
-        'probabilities'        => 'll_prob',
     ];
     public const LL                  = ['activation', 'inhibition', 'other'];
     public const ACTIVATION_COLORING = '%s red,black';
@@ -51,6 +53,16 @@ final class Reader
      * @var string
      */
     private $outputFile;
+
+    /**
+     * @var string
+     */
+    private $pathwayMatrixOutputFilename;
+
+    /**
+     * @var string
+     */
+    private $nodesMatrixOutputFilename;
 
     /**
      * Reader Constructor
@@ -66,6 +78,8 @@ final class Reader
                 throw new ReaderException('Unsupported job type. Only simulation jobs are supported.');
             }
             $this->outputFile = $job->getData('outputFile');
+            $this->pathwayMatrixOutputFilename = $job->getData('pathwayOutputFile');
+            $this->nodesMatrixOutputFilename = $job->getData('nodesOutputFile');
         } elseif (file_exists($job)) {
             $this->outputFile = $job;
         } else {
@@ -98,31 +112,6 @@ final class Reader
             }
 
             return array_combine(self::LL, $tmp);
-        }
-        if (self::FIELDS_CAST[$field] === 'll_prob') {
-            $tmp = array_map('doubleval', explode(",", $value));
-            if (count($tmp) === 4) {
-                $act = $tmp[3];
-            } else {
-                $act = null;
-            }
-            $tmp = array_slice($tmp, 0, 3);
-            if (count($tmp) < 3) {
-                $tmp = [null, null, null];
-            }
-            $ll = array_combine(self::LL, $tmp);
-            if ($act === null && $ll['activation'] !== null && $ll['inhibition'] !== null) {
-                if ($ll['activation'] > $ll['inhibition']) {
-                    $act = abs($ll['activation'] - $ll['inhibition']);
-                } elseif ($ll['activation'] < $ll['inhibition']) {
-                    $act = -abs($ll['inhibition'] - $ll['activation']);
-                } else {
-                    $act = 0.0;
-                }
-            }
-            $ll['activity'] = $act;
-
-            return $ll;
         }
         if (self::FIELDS_CAST[$field] === 'array') {
             return (empty($value)) ? [] : explode(",", $value);
@@ -191,7 +180,7 @@ final class Reader
     }
 
     /**
-     * Returns the filename of PHENSIM output file
+     * Returns the filename of PHENSIM output
      *
      * @return string
      */
@@ -199,6 +188,27 @@ final class Reader
     {
         return (string)$this->outputFile;
     }
+
+    /**
+     * Returns the filename of PHENSIM pathway matrix
+     *
+     * @return string
+     */
+    public function getPathwayMatrixOutputFilename(): string
+    {
+        return $this->pathwayMatrixOutputFilename;
+    }
+
+    /**
+     * Returns the filename of PHENSIM nodes matrix
+     *
+     * @return string
+     */
+    public function getNodesMatrixOutputFilename(): string
+    {
+        return $this->nodesMatrixOutputFilename;
+    }
+
 
     /**
      * Read list of pathways contained in the simulation
@@ -217,7 +227,8 @@ final class Reader
                         'name'          => $fields['pathwayName'],
                         'activityScore' => $fields['pathwayActivityScore'],
                         'pValue'        => $fields['pathwayPValue'],
-                        'll'            => $fields['pathwayll'],
+                        'FDR'           => $fields['pathwayFDR'],
+                        'LL'            => $fields['pathwayLL'],
                     ];
                 }
             }
@@ -240,10 +251,6 @@ final class Reader
         $this->reader(
             static function ($fields) use (&$results, $pathway, $callback) {
                 if ($fields['pathwayId'] === $pathway && $fields['activityScore'] !== 0.0) {
-                    if ($fields['probabilities'] !== null && $fields['probabilities']['activity'] !== null) {
-                        $fields['activityScore2'] = $fields['probabilities']['activity'];
-                        unset($fields['probabilities']['activity']);
-                    }
                     if ($callback !== null) {
                         $tmp = $callback($fields);
                         if ($tmp !== null) {
@@ -263,23 +270,21 @@ final class Reader
      * Returns parameters for pathway coloring kegg link
      *
      * @param string $pathway
-     * @param bool   $new
      *
      * @return array
      */
-    public function makePathwayColoring(string $pathway, bool $new = false): array
+    public function makePathwayColoring(string $pathway): array
     {
         $mapId = str_ireplace('path:', '', $pathway);
         $minActivity = INF;
         $maxActivity = -INF;
         $coloringData = $this->readPathway(
             $pathway,
-            static function (array $data) use ($new, &$maxActivity, &$minActivity) {
+            static function (array $data) use (&$maxActivity, &$minActivity) {
                 /** @var Node $node */
                 $node = Node::whereAccession($data['nodeId'])->first();
                 if ($node !== null && $node->type !== 'mirna') {
-                    $act = $new ? 'activityScore2' : 'activityScore';
-                    $val = $data[$act];
+                    $val = $data['activityScore'];
                     $maxActivity = max($val, $maxActivity);
                     $minActivity = min($val, $minActivity);
 

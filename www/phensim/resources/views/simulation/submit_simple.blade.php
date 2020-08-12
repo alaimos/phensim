@@ -57,7 +57,10 @@
                                 <a href="#simple-sim-sub-step4" data-toggle="tab">4. Non-Expressed Nodes</a>
                             </li>
                             <li>
-                                <a href="#simple-sim-sub-step5" data-toggle="tab">5. Submit Simulation</a>
+                                <a href="#simple-sim-sub-step4" data-toggle="tab">5. Knocked-out Nodes</a>
+                            </li>
+                            <li>
+                                <a href="#simple-sim-sub-step5" data-toggle="tab">6. Submit Simulation</a>
                             </li>
                         </ul>
                         <!-- END Step Tabs -->
@@ -136,11 +139,34 @@
                             <!-- END Step 4 -->
 
                             <!-- Step 5 -->
+                            <div class="tab-pane push-30-t push-50" id="simple-sim-sub-step4">
+                                <div class="form-group{{ $errors->has('remove-nodes') ? ' has-error' : '' }}">
+                                    <nodes-selector id="remove-nodes" name="remove-nodes[]"
+                                                    label="Select knocked-out nodes"
+                                                    data_url="{{ route('list-nodes') }}"
+                                                    org_field="organism"></nodes-selector>
+                                </div>
+                                <div class="form-group{{ $errors->has('remove-file') ? ' has-error' : '' }}">
+                                    <div class="col-sm-8 col-sm-offset-2">
+                                        {!! Form::label('remove-file', 'or upload a text file:', ['class' => 'control-label']) !!}
+                                        {!! Form::file('remove-file', ['class' => 'form-control']) !!}
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- END Step 5 -->
+
+                            <!-- Step 6 -->
                             <div class="tab-pane push-30-t" id="simple-sim-sub-step5">
+                                <div class="form-group"{{ $errors->has('fdr') ? ' has-error' : '' }}>
+                                    <div class="col-sm-8 col-sm-offset-2">
+                                        {!! Form::label('fdr', 'FDR method', ['class' => 'control-label']) !!}
+                                        {!! Form::select('fdr', ['BH' => 'Benjamini & Hochberg', 'QV' => 'Q-value (Storey et al.)', 'LOC' => 'Local FDR (Efron et al.)'], 'BH', ['class' => 'form-control']) !!}
+                                    </div>
+                                </div>
                                 <div class="form-group"{{ $errors->has('epsilon') ? ' has-error' : '' }}>
                                     <div class="col-sm-8 col-sm-offset-2">
                                         {!! Form::label('epsilon', 'Epsilon value', ['class' => 'control-label']) !!}
-                                        {!! Form::number('epsilon', 0.001, ['class' => 'form-control', 'step' => 'any']) !!}
+                                        {!! Form::number('epsilon', 0.00001, ['class' => 'form-control', 'step' => 'any']) !!}
                                     </div>
                                 </div>
                                 <div class="form-group"{{ $errors->has('random-seed') ? ' has-error' : '' }}>
@@ -159,7 +185,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <!-- END Step 5 -->
+                            <!-- END Step 6 -->
                         </div>
                         <!-- END Steps Content -->
 
@@ -195,55 +221,58 @@
 @endsection
 @push('inline-scripts')
     <script>
-        $(function () {
-            $('.js-wizard-simple').bootstrapWizard({
-                'tabClass':         '',
-                'firstSelector':    '.wizard-first',
-                'previousSelector': '.wizard-prev',
-                'nextSelector':     '.wizard-next',
-                'lastSelector':     '.wizard-last',
-                'onTabShow':        function ($tab, $navigation, $index) {
-                    var $total = $navigation.find('li').length;
-                    var $current = $index + 1;
-                    var $percent = ($current / $total) * 100;
+      $(function () {
+        $('.js-wizard-simple').bootstrapWizard({
+          'tabClass': '',
+          'firstSelector': '.wizard-first',
+          'previousSelector': '.wizard-prev',
+          'nextSelector': '.wizard-next',
+          'lastSelector': '.wizard-last',
+          'onTabShow': function ($tab, $navigation, $index) {
+            var $total = $navigation.find('li').length;
+            var $current = $index + 1;
+            var $percent = ($current / $total) * 100;
 
-                    // Get vital wizard elements
-                    var $wizard = $navigation.parents('.block');
-                    var $progress = $wizard.find('.wizard-progress > .progress-bar');
-                    var $btnPrev = $wizard.find('.wizard-prev');
-                    var $btnNext = $wizard.find('.wizard-next');
-                    var $btnFinish = $wizard.find('.wizard-finish');
+            // Get vital wizard elements
+            var $wizard = $navigation.parents('.block');
+            var $progress = $wizard.find('.wizard-progress > .progress-bar');
+            var $btnPrev = $wizard.find('.wizard-prev');
+            var $btnNext = $wizard.find('.wizard-next');
+            var $btnFinish = $wizard.find('.wizard-finish');
 
-                    // Update progress bar if there is one
-                    if ($progress) {
-                        $progress.css({width: $percent + '%'});
-                    }
-                    if ($current == 2) {
-                        VueBus.$emit('prepareSelect', 'overexp-nodes');
-                    }
-                    if ($current == 3) {
-                        VueBus.$emit('prepareSelect', 'underexp-nodes');
-                    }
-                    if ($current == 4) {
-                        VueBus.$emit('prepareSelect', 'nonexp-nodes');
-                    }
-                    // If it's the last tab then hide the last button and show the finish instead
-                    if ($current >= $total) {
-                        $btnNext.hide();
-                        $btnFinish.show();
-                    } else {
-                        $btnNext.show();
-                        $btnFinish.hide();
-                    }
-                }
-            });
-            $('.js-wizard-simple ul.nav').find('li > a').each(function () {
-                var $this = $(this), $url = $this.attr('href'), $obj = $($url);
-                if ($obj.find('.has-error').length > 0) {
-                    $this.addClass('text-danger');
-                }
-            });
-
+            // Update progress bar if there is one
+            if ($progress) {
+              $progress.css({ width: $percent + '%' });
+            }
+            if ($current == 2) {
+              VueBus.$emit('prepareSelect', 'overexp-nodes');
+            }
+            if ($current == 3) {
+              VueBus.$emit('prepareSelect', 'underexp-nodes');
+            }
+            if ($current == 4) {
+              VueBus.$emit('prepareSelect', 'nonexp-nodes');
+            }
+            if ($current == 5) {
+              VueBus.$emit('prepareSelect', 'remove-nodes');
+            }
+            // If it's the last tab then hide the last button and show the finish instead
+            if ($current >= $total) {
+              $btnNext.hide();
+              $btnFinish.show();
+            } else {
+              $btnNext.show();
+              $btnFinish.hide();
+            }
+          },
         });
+        $('.js-wizard-simple ul.nav').find('li > a').each(function () {
+          var $this = $(this), $url = $this.attr('href'), $obj = $($url);
+          if ($obj.find('.has-error').length > 0) {
+            $this.addClass('text-danger');
+          }
+        });
+
+      });
     </script>
 @endpush

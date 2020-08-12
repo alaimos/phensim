@@ -65,9 +65,11 @@ class Simulation extends AbstractHandler
         $launcher
             ->setOrganism($organism->accession)
             ->setSeed($this->jobData->getTypedParameter('seed', 'int'))
-            ->setEpsilon($this->jobData->getTypedParameter('epsilon', 'float', 0.001, false))
+            ->setEpsilon($this->jobData->getTypedParameter('epsilon', 'float', 0.00001, false))
             ->setSimulationParameters($simulationParameters)
-            ->setNonExpressedNodes($this->jobData->getTypedParameter('nonExpressed', 'array', [], false));
+            ->setNonExpressedNodes($this->jobData->getTypedParameter('nonExpressed', 'array', [], false))
+            ->setRemoveNodes($this->jobData->getTypedParameter('remove', 'array', [], false))
+            ->setFdrMethod($this->jobData->getParameter('fdr', 'BH'));
         $mirs = $this->jobData->getTypedParameter('enrichMirs', 'bool', true, false);
         if ($mirs) {
             $launcher->addEnricher('mirna');
@@ -100,7 +102,9 @@ class Simulation extends AbstractHandler
         }
         $this->jobData->setData(
             [
-                'outputFile' => $launcher->getOutputFilename(),
+                'outputFile'        => $launcher->getOutputFilename(),
+                'pathwayOutputFile' => $launcher->getPathwayMatrixOutputFilename(),
+                'nodesOutputFile'   => $launcher->getNodesMatrixOutputFilename(),
             ]
         );
         $this->log('Completed!');

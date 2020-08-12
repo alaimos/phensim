@@ -38,14 +38,14 @@ return [
             'driver'      => 'database',
             'table'       => 'jobs',
             'queue'       => env('QUEUE_NAME', 'default'),
-            'retry_after' => 86400,
+            'retry_after' => 3 * 86400,
         ],
 
         'beanstalkd' => [
             'driver'      => 'beanstalkd',
             'host'        => 'localhost',
             'queue'       => env('QUEUE_NAME', 'default'),
-            'retry_after' => 86400,
+            'retry_after' => 3 * 86400,
         ],
 
         'sqs' => [
@@ -61,7 +61,7 @@ return [
             'driver'      => 'redis',
             'connection'  => 'default',
             'queue'       => env('QUEUE_NAME', 'default'),
-            'retry_after' => 86400,
+            'retry_after' => 3 * 86400,
         ],
 
     ],

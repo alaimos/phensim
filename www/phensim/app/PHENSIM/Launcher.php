@@ -20,27 +20,35 @@ final class Launcher
     private const  EPSILON                   = '-epsilon';
     private const  EPSILON_VALUE             = '%.10f';
     private const  INPUT_FILE                = '-i';
-    private const  ITERATIONS                = '-number-of-iterations';
+    private const  SIMULATION_ITERATIONS     = '-number-of-iterations-simulation';
+    private const  BOOTSTRAP_ITERATIONS      = '-number-of-iterations';
     private const  MIRNA_ENRICHMENT_EVIDENCE = '-enrichment-evidence-type';
     private const  NON_EXPRESSED_FILE        = '-non-expressed-file';
     private const  ORGANISM                  = '-organism';
     private const  OUTPUT_FILE               = '-o';
     private const  SEED                      = '-seed';
     private const  VERBOSE                   = '-verbose';
+    private const  REMOVE_NODES_FILE         = '-remove-nodes-file';
+    private const  PATHWAY_MATRIX_OUTPUT     = '-output-pathway-matrix';
+    private const  NODES_MATRIX_OUTPUT       = '-output-nodes-matrix';
 
     public const SUPPORTED_EVIDENCES = ['STRONG', 'WEAK', 'PREDICTION'];
     public const OVEREXPRESSION      = 'OVEREXPRESSION';
     public const UNDEREXPRESSION     = 'UNDEREXPRESSION';
     public const BOTH                = 'BOTH';
+    public const SUPPORTED_FDRS      = ['BH', 'QV', 'LOC'];
 
     private $enrichers = [];
     private $enricherParameters = [];
-    private $epsilon = 0.001;
+    private $epsilon = 0.00001;
     private $simulationParameters = [];
-    private $simulationIterations = 2001;
+    private $simulationIterations = 100;
+    private $bootstrapIterations = 1000;
     private $miRNAEnrichmentEvidence = 'STRONG';
     private $nonExpressedNodes = [];
+    private $removeNodes = [];
     private $organism = 'hsa';
+    private $fdrMethod = 'BH';
     private $seed = null;
 
     /**
@@ -56,6 +64,20 @@ final class Launcher
      * @var string
      */
     private $outputFilename;
+
+    /**
+     * The output filename for the pathway matrix that will be generated after the analysis is performed
+     *
+     * @var string
+     */
+    private $pathwayMatrixOutputFilename;
+
+    /**
+     * The output filename for the nodes matrix that will be generated after the analysis is performed
+     *
+     * @var string
+     */
+    private $nodesMatrixOutputFilename;
 
     /**
      * A list of input files to delete before destruction of this object
@@ -79,7 +101,8 @@ final class Launcher
             '-jar',
             resource_path('bin/MITHrIL2.jar'),
             'phensim',
-            '-m',
+            '-threads',
+            env('PHENSIM_THREADS', 2),
         ];
     }
 
@@ -189,7 +212,7 @@ final class Launcher
      *
      * @return $this
      */
-    public function setEpsilon($epsilon = 0.001): self
+    public function setEpsilon($epsilon = 0.00001): self
     {
         $this->epsilon = $epsilon;
 
@@ -263,12 +286,37 @@ final class Launcher
      *
      * @return $this
      */
-    public function setSimulationIterations($simulationIterations = 2001): self
+    public function setSimulationIterations($simulationIterations = 100): self
     {
         $this->simulationIterations = $simulationIterations;
 
         return $this;
     }
+
+    /**
+     * Get the number of iterations used for the bootstrapping procedure
+     *
+     * @return int
+     */
+    public function getBootstrapIterations(): int
+    {
+        return $this->bootstrapIterations;
+    }
+
+    /**
+     * Set the number of iterations used for the bootstrapping procedure
+     *
+     * @param int $bootstrapIterations
+     *
+     * @return $this
+     */
+    public function setBootstrapIterations(int $bootstrapIterations = 1000): self
+    {
+        $this->bootstrapIterations = $bootstrapIterations;
+
+        return $this;
+    }
+
 
     /**
      * Returns the type of evidence used for the enrichment with microRNAs (if enabled)
@@ -322,6 +370,31 @@ final class Launcher
 
         return $this;
     }
+
+    /**
+     * Get the list of nodes that will be removed to simulate a gene knockout
+     *
+     * @return array
+     */
+    public function getRemoveNodes(): array
+    {
+        return $this->removeNodes;
+    }
+
+    /**
+     * Set the list of nodes that will be removed to simulate a knockout
+     *
+     * @param array $removeNodes
+     *
+     * @return $this
+     */
+    public function setRemoveNodes(array $removeNodes = []): self
+    {
+        $this->removeNodes = $removeNodes;
+
+        return $this;
+    }
+
 
     /**
      * Get the organism used for the current analysis
@@ -400,6 +473,34 @@ final class Launcher
     }
 
     /**
+     * Get the method used for FDR computation
+     *
+     * @return string
+     */
+    public function getFdrMethod(): string
+    {
+        return $this->fdrMethod;
+    }
+
+    /**
+     * Set the method used for FDR computation
+     *
+     * @param string $fdrMethod
+     *
+     * @return $this
+     */
+    public function setFdrMethod(string $fdrMethod = 'BH'): self
+    {
+        if (!in_array($fdrMethod, self::SUPPORTED_FDRS)) {
+            $fdrMethod = 'BH';
+        }
+        $this->fdrMethod = $fdrMethod;
+
+        return $this;
+    }
+
+
+    /**
      * Get the output filename after the analysis was performed
      *
      * @return string
@@ -408,6 +509,27 @@ final class Launcher
     {
         return $this->outputFilename;
     }
+
+    /**
+     * Get the output filename of the pathway matrix
+     *
+     * @return string
+     */
+    public function getPathwayMatrixOutputFilename(): string
+    {
+        return $this->pathwayMatrixOutputFilename;
+    }
+
+    /**
+     * Get the output filename of the nodes matrix
+     *
+     * @return string
+     */
+    public function getNodesMatrixOutputFilename(): string
+    {
+        return $this->nodesMatrixOutputFilename;
+    }
+
 
     /**
      * Build the input file for PHENSIM, the command line argument, and returns its name
@@ -460,6 +582,31 @@ final class Launcher
     }
 
     /**
+     * Build the file containing nodes to be removed.
+     *
+     * @param array $resultArray
+     *
+     * @return void
+     */
+    private function buildRemoveNodesFile(array &$resultArray): void
+    {
+        if (empty($this->removeNodes)) {
+            return;
+        }
+        $removeNodesFile = $this->workingDirectory . Utils::tempFilename('phensim_removed', 'txt');
+        $fp = @fopen($removeNodesFile, 'wb');
+        if (!$fp) {
+            throw new LauncherException('Unable to create PHENSIM non-expressed nodes file');
+        }
+        foreach ($this->removeNodes as $node) {
+            @fwrite($fp, $node . PHP_EOL);
+        }
+        @fclose($fp);
+        $this->buildParameter($removeNodesFile, self::REMOVE_NODES_FILE, $resultArray);
+        $this->inputFiles[] = $removeNodesFile;
+    }
+
+    /**
      * Build the output file name and command line argument
      *
      * @param array $resultArray
@@ -471,6 +618,12 @@ final class Launcher
         $outputFile = $this->workingDirectory . Utils::tempFilename('phensim_output', 'tsv');
         $this->buildParameter($outputFile, self::OUTPUT_FILE, $resultArray);
         $this->outputFilename = $outputFile;
+        $outputPathwayMatrix = $this->workingDirectory . Utils::tempFilename('phensim_output_pathway_matrix', 'tsv');
+        $this->buildParameter($outputPathwayMatrix, self::PATHWAY_MATRIX_OUTPUT, $resultArray);
+        $this->pathwayMatrixOutputFilename = $outputPathwayMatrix;
+        $outputNodesMatrix = $this->workingDirectory . Utils::tempFilename('phensim_output_nodes_matrix', 'tsv');
+        $this->buildParameter($outputNodesMatrix, self::NODES_MATRIX_OUTPUT, $resultArray);
+        $this->nodesMatrixOutputFilename = $outputNodesMatrix;
     }
 
     /**
@@ -534,11 +687,13 @@ final class Launcher
         $parameters = $this->mithrilCommandBase;
         $this->buildInputFile($parameters);
         $this->buildNonExpressedFile($parameters);
+        $this->buildRemoveNodesFile($parameters);
         $this->buildOutputFile($parameters);
         $this->buildListParameter($this->enrichers, self::ENRICHER, $parameters);
         $this->buildEnricherParameters($parameters);
         $this->buildParameter(sprintf(self::EPSILON_VALUE, $this->epsilon), self::EPSILON, $parameters);
-        $this->buildParameter($this->simulationIterations, self::ITERATIONS, $parameters);
+        $this->buildParameter($this->simulationIterations, self::SIMULATION_ITERATIONS, $parameters);
+        $this->buildParameter($this->bootstrapIterations, self::BOOTSTRAP_ITERATIONS, $parameters);
         $this->buildParameter($this->miRNAEnrichmentEvidence, self::MIRNA_ENRICHMENT_EVIDENCE, $parameters);
         $this->buildParameter($this->organism, self::ORGANISM, $parameters);
         $this->buildParameter($this->seed, self::SEED, $parameters);
@@ -563,6 +718,20 @@ final class Launcher
         $result = null;
         try {
             Utils::runCommand($command, $this->getWorkingDirectory(), null, $callback);
+            if ($this->fdrMethod !== 'BH') {
+                $fdrCommand = [
+                    'Rscript',
+                    resource_path('bin/compute_fdrs.R'),
+                    '-i',
+                    $this->outputFilename,
+                    '-o',
+                    $this->outputFilename,
+                ];
+                if ($this->fdrMethod === 'LOC') {
+                    $fdrCommand[] = '-l';
+                }
+                Utils::runCommand($fdrCommand, $this->getWorkingDirectory(), null, $callback);
+            }
         } catch (ProcessFailedException $e) {
             Utils::mapCommandException(
                 $e,
@@ -575,6 +744,12 @@ final class Launcher
         }
         if (!file_exists($this->outputFilename)) {
             throw new LauncherException('Unable to create output file');
+        }
+        if (!file_exists($this->pathwayMatrixOutputFilename)) {
+            throw new LauncherException('Unable to create pathway matrix output file');
+        }
+        if (!file_exists($this->nodesMatrixOutputFilename)) {
+            throw new LauncherException('Unable to create nodes matrix output file');
         }
     }
 
