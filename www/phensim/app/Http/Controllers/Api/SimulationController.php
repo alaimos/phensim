@@ -110,7 +110,6 @@ class SimulationController extends Controller
      * @param \Illuminate\Http\Request $request
      *
      * @return \Illuminate\Http\JsonResponse
-     * @throws \Error
      * @throws \Exception
      */
     public function submitSimulation(Request $request): JsonResponse
@@ -128,6 +127,7 @@ class SimulationController extends Controller
         );
         $name = trim($request->get('name', ''));
         $nonExp = (array)$request->get('nonexp-nodes', []);
+        $remove = (array)$request->get('remove-nodes', []);
         $job = null;
         try {
             $job = Job::buildJob(
@@ -135,6 +135,8 @@ class SimulationController extends Controller
                 [
                     'organism'     => $request->get('organism', 'hsa'),
                     'nonExpressed' => $nonExp,
+                    'remove'       => $remove,
+                    'fdr'          => $request->get('fdr-method', 'QV'),
                     'dbFilter'     => $request->get('db-filter'),
                     'epsilon'      => (float)$request->get('epsilon', 0.001),
                     'seed'         => $request->get('random-seed'),

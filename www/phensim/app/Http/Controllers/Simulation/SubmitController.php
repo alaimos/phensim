@@ -164,7 +164,7 @@ class SubmitController extends Controller
         $nonExp = $this->prepareSimpleNodesList($request, 'nonexp-nodes', 'nonexp-file');
         $remove = $this->prepareSimpleNodesList($request, 'remove-nodes', 'remove-file');
         $epsilon = (float)$request->get('epsilon', 0.00001);
-        $fdr = $request->get('fdr-method', 'BH');
+        $fdr = $request->get('fdr-method', 'QV');
         $seed = $request->get('random-seed');
         $enrich = in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON'], false);
         $job = Job::buildJob(
@@ -333,7 +333,7 @@ class SubmitController extends Controller
                 'simulationParameters' => Utils::readInputFile($request->file('simulation-input')->path()),
                 'nonExpressed'         => $nonExp,
                 'remove'               => $remove,
-                'fdr'                  => $request->get('fdr-method', 'BH'),
+                'fdr'                  => $request->get('fdr-method', 'QV'),
                 'dbFilter'             => $request->get('db-filter'),
                 'epsilon'              => (float)$request->get('epsilon', 0.00001),
                 'seed'                 => $request->get('random-seed'),
