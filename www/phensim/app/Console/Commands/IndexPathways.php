@@ -43,8 +43,8 @@ class IndexPathways extends Command
             'STRONG',
         ];
         foreach (Organism::all() as $organism) {
-            $cmd[6] = $organism->accession;
-            $this->info("Indexing " . $cmd[6] . " pathways.");
+            $command[6] = $organism->accession;
+            $this->info("Indexing " . $command[6] . " pathways.");
             try {
                 Utils::runCommand(
                     $command,
