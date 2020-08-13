@@ -72,8 +72,8 @@
                             <div class="push-15 text-center">
                                 <form enctype="multipart/form-data" method="POST"
                                       action="https://www.kegg.jp/kegg-bin/mcolor_pathway" target="_blank">
-                                    <input type="hidden" name="map" value="{{ $coloringOld['mapId'] }}">
-                                    <textarea name="unclassified" style="display: none;">{{ $coloringOld['coloring'] }}</textarea>
+                                    <input type="hidden" name="map" value="{{ $coloring['mapId'] }}">
+                                    <textarea name="unclassified" style="display: none;">{{ $coloring['coloring'] }}</textarea>
                                     <input type="hidden" name="s_sample" value="">
                                     <input type="file" name="mapping_list" style="display: none;">
                                     <input type="hidden" name="mode" value="number">
@@ -85,27 +85,9 @@
                                     <input type="hidden" name="positiveColor" size="10" value="#ff0000">
                                     <input type="hidden" name="reference" value="white"/>
                                     <button type="submit" class="btn btn-success">
-                                        View simulation results on KEGG (Old Activity Score)
+                                        View simulation results on KEGG
                                     </button>
                                 </form><br>
-                                <form enctype="multipart/form-data" method="POST"
-                                      action="https://www.kegg.jp/kegg-bin/mcolor_pathway" target="_blank">
-                                    <input type="hidden" name="map" value="{{ $coloringNew['mapId'] }}">
-                                    <textarea name="unclassified" style="display: none;">{{ $coloringNew['coloring'] }}</textarea>
-                                    <input type="hidden" name="s_sample" value="">
-                                    <input type="file" name="mapping_list" style="display: none;">
-                                    <input type="hidden" name="mode" value="number">
-                                    <input type="hidden" name="numericalType" value="nzp">
-                                    <input type="hidden" name="minColor" size="10" value="#0000ff">
-                                    <input type="hidden" name="maxColor" size="10" value="#ff0000">
-                                    <input type="hidden" name="negativeColor" size="10" value="#0000ff">
-                                    <input type="hidden" name="zeroColor" size="10" value="#ffffff">
-                                    <input type="hidden" name="positiveColor" size="10" value="#ff0000">
-                                    <input type="hidden" name="reference" value="white"/>
-                                    <button type="submit" class="btn btn-success">
-                                        View simulation results on KEGG (New Activity Score)
-                                    </button>
-                                </form>
                             </div>
                         </div>
                     </div>
