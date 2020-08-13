@@ -133,12 +133,9 @@ final class Reader
     private function prepare(array $fields): array
     {
         $n = count($fields);
-        if ($n === 12) {
+        while ($n < count(self::FIELDS_ALL)) {
             $fields[] = '';
-            $n++;
-        }
-        if ($n === 13) {
-            $fields[] = '';
+            $n = count($fields);
         }
         $fields = array_combine(self::FIELDS_ALL, $fields);
         array_walk(
