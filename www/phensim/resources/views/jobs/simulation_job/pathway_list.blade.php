@@ -62,12 +62,16 @@
                                         <i class="fa fa-download"></i> Download Simulation Data
                                     </a>
                                 </div>
+                            </div>
+                            <div class="row push-30 push-10-t">
                                 <div class="col-sm-12 text-center">
                                     <a href="{{ route('download-simulation-pathway-data', ['job' => $job]) }}"
                                        class="btn btn-success">
                                         <i class="fa fa-download"></i> Download Pathway Matrix
                                     </a>
                                 </div>
+                            </div>
+                            <div class="row push-30 push-10-t">
                                 <div class="col-sm-12 text-center">
                                     <a href="{{ route('download-simulation-nodes-data', ['job' => $job]) }}"
                                        class="btn btn-success">
