@@ -110,6 +110,7 @@ class ExportSimulations extends Command
         }
 
         $result = [];
+        $bar = $this->output->createProgressBar(count($list));
         foreach ($list as $id) {
             $job = Job::whereId($id)->first();
             if ($job === null) {
@@ -117,7 +118,9 @@ class ExportSimulations extends Command
             } else {
                 $result[] = base64_encode(gzcompress(json_encode($this->buildSimulationArray($job)), 9));
             }
+            $bar->advance();
         }
+        $bar->finish();
 
         @file_put_contents($outputFile, json_encode($result));
 
