@@ -133,7 +133,7 @@ class ImportSimulations extends Command
             if (!is_array($simulationArray) || empty($simulationArray)) {
                 $this->warn('A corrupted record has been found!');
             } else {
-                $this->importSimulationsArray($d, $defaultOwner);
+                $this->importSimulationsArray($simulationArray, $defaultOwner);
             }
             $bar->advance();
         }
