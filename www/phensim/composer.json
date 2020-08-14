@@ -20,7 +20,8 @@
     "pda/pheanstalk": "^3.1",
     "santigarcor/laratrust": "^3.2",
     "yajra/laravel-datatables-oracle": "^7.3",
-    "ext-zlib": "*"
+    "ext-zlib": "*",
+    "ext-json": "*"
   },
   "require-dev": {
     "barryvdh/laravel-debugbar": "^2.3",
