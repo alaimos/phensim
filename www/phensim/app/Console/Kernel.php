@@ -14,6 +14,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         Commands\ExportSimulations::class,
+        Commands\ImportSimulations::class,
         Commands\ImportPathways::class,
         Commands\IndexPathways::class,
         Commands\ImportAll::class,

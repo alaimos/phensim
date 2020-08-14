@@ -1,8 +1,9 @@
-<?php
+<?php /** @noinspection DisconnectedForeachInstructionInspection */
 
 namespace App\Console\Commands;
 
 use App\Models\Job;
+use App\Models\User;
 use Illuminate\Console\Command;
 
 class ExportSimulations extends Command
@@ -26,12 +27,17 @@ class ExportSimulations extends Command
      *
      * @param \App\Models\Job $job
      * @param string          $parameter
+     * @param bool            $data
      *
      * @return array|null
      */
-    public function getOptionalFile(Job $job, string $parameter): ?array
+    public function getOptionalFile(Job $job, string $parameter, bool $data = false): ?array
     {
-        $file = $job->getParameter($parameter);
+        if ($data) {
+            $file = $job->getData($parameter);
+        } else {
+            $file = $job->getParameter($parameter);
+        }
         if (empty($file) || !file_exists($file)) {
             return null;
         }
@@ -65,16 +71,20 @@ class ExportSimulations extends Command
         $parameters['nodeTypes'] = $this->getOptionalFile($simulation, 'nodeTypes');
         $parameters['edgeTypes'] = $this->getOptionalFile($simulation, 'edgeTypes');
         $parameters['edgeSubTypes'] = $this->getOptionalFile($simulation, 'edgeSubTypes');
-        $parameters['outputFile'] = $this->getOptionalFile($simulation, 'outputFile');
-        $parameters['pathwayMatrixOutputFilename'] = $this->getOptionalFile($simulation, 'pathwayOutputFile');
-        $parameters['nodesMatrixOutputFilename'] = $this->getOptionalFile($simulation, 'nodesOutputFile');
+        $data = array_merge([], $simulation->job_data);
+        $data['outputFile'] = $this->getOptionalFile($simulation, 'outputFile', true);
+        $data['pathwayMatrixOutputFilename'] = $this->getOptionalFile($simulation, 'pathwayOutputFile', true);
+        $data['nodesMatrixOutputFilename'] = $this->getOptionalFile($simulation, 'nodesOutputFile', true);
 
         return [
             'id'         => $simulation->id,
             'name'       => $simulation->job_name,
             'key'        => $simulation->job_key,
             'status'     => $simulation->job_status,
+            'log'        => $simulation->job_log,
+            'owner'      => $simulation->user->email,
             'parameters' => $parameters,
+            'data'       => $data,
         ];
     }
 
@@ -109,20 +119,20 @@ class ExportSimulations extends Command
             return 103;
         }
 
-        $result = [];
+        $jobs = [];
         $bar = $this->output->createProgressBar(count($list));
         foreach ($list as $id) {
             $job = Job::whereId($id)->first();
             if ($job === null) {
                 $this->warn('Invalid identifier "' . $id . '".');
             } else {
-                $result[] = base64_encode(gzcompress(json_encode($this->buildSimulationArray($job)), 9));
+                $jobs[] = base64_encode(gzcompress(json_encode($this->buildSimulationArray($job)), 9));
             }
             $bar->advance();
         }
         $bar->finish();
 
-        @file_put_contents($outputFile, json_encode($result));
+        @file_put_contents($outputFile, json_encode($jobs));
 
         if (!file_exists($outputFile)) {
             $this->error('Unable to write output file!');
