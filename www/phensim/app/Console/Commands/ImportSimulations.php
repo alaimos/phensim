@@ -90,8 +90,8 @@ class ImportSimulations extends Command
         $this->importOptionalFile($job, 'edgeSubTypes', $parameters['edgeSubTypes']);
 
         $this->importOptionalFile($job, 'outputFile', $parameters['outputFile'], true);
-        $this->importOptionalFile($job, 'pathwayMatrixOutputFilename', $parameters['pathwayMatrixOutputFilename'], true);
-        $this->importOptionalFile($job, 'nodesMatrixOutputFilename', $parameters['nodesMatrixOutputFilename'], true);
+        $this->importOptionalFile($job, 'pathwayOutputFile', $parameters['pathwayOutputFile'], true);
+        $this->importOptionalFile($job, 'nodesOutputFile', $parameters['nodesOutputFile'], true);
         $job->save();
         if ($simulation['status'] === Job::QUEUED) {
             dispatch(new DispatcherJob($job->id));

@@ -73,8 +73,8 @@ class ExportSimulations extends Command
         $parameters['edgeSubTypes'] = $this->getOptionalFile($simulation, 'edgeSubTypes');
         $data = array_merge([], $simulation->job_data);
         $data['outputFile'] = $this->getOptionalFile($simulation, 'outputFile', true);
-        $data['pathwayMatrixOutputFilename'] = $this->getOptionalFile($simulation, 'pathwayOutputFile', true);
-        $data['nodesMatrixOutputFilename'] = $this->getOptionalFile($simulation, 'nodesOutputFile', true);
+        $data['pathwayOutputFile'] = $this->getOptionalFile($simulation, 'pathwayOutputFile', true);
+        $data['nodesOutputFile'] = $this->getOptionalFile($simulation, 'nodesOutputFile', true);
 
         return [
             'id'         => $simulation->id,
