@@ -129,6 +129,7 @@ class ExportSimulations extends Command
 
             return 104;
         }
+        $this->info("\nSimulations exported!");
 
         return 0;
     }
