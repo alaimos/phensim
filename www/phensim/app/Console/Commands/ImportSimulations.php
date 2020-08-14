@@ -92,7 +92,9 @@ class ImportSimulations extends Command
         $this->importOptionalFile($job, 'outputFile', $data['outputFile'], true);
         $this->importOptionalFile($job, 'pathwayOutputFile', $data['pathwayOutputFile'], true);
         $this->importOptionalFile($job, 'nodesOutputFile', $data['nodesOutputFile'], true);
+        \Auth::login(User::whereId($job->user_id)->first(), false);
         $job->save();
+        \Auth::logout();
         if ($simulation['status'] === Job::QUEUED) {
             dispatch(new DispatcherJob($job->id));
         }
