@@ -136,7 +136,7 @@ class SimulationController extends Controller
                     'organism'     => $request->get('organism', 'hsa'),
                     'nonExpressed' => $nonExp,
                     'remove'       => $remove,
-                    'fdr'          => $request->get('fdr-method', 'QV'),
+                    'fdr'          => $request->get('fdr-method', 'BH'),
                     'dbFilter'     => $request->get('db-filter'),
                     'epsilon'      => (float)$request->get('epsilon', 0.001),
                     'seed'         => $request->get('random-seed'),

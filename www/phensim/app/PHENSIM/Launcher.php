@@ -48,7 +48,7 @@ final class Launcher
     private $nonExpressedNodes = [];
     private $removeNodes = [];
     private $organism = 'hsa';
-    private $fdrMethod = 'QV';
+    private $fdrMethod = 'BH';
     private $seed = null;
 
     /**
@@ -489,10 +489,10 @@ final class Launcher
      *
      * @return $this
      */
-    public function setFdrMethod(string $fdrMethod = 'QV'): self
+    public function setFdrMethod(string $fdrMethod = 'BH'): self
     {
         if (!in_array($fdrMethod, self::SUPPORTED_FDRS)) {
-            $fdrMethod = 'QV';
+            $fdrMethod = 'BH';
         }
         $this->fdrMethod = $fdrMethod;
 

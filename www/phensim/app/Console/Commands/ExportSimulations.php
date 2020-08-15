@@ -65,7 +65,7 @@ class ExportSimulations extends Command
         $parameters['epsilon'] = $simulation->getTypedParameter('epsilon', 'float', 0.00001, false);
         $parameters['nonExpressed'] = $simulation->getTypedParameter('nonExpressed', 'array', [], false);
         $parameters['remove'] = $simulation->getTypedParameter('remove', 'array', [], false);
-        $parameters['fdr'] = $simulation->getParameter('fdr', 'QV');
+        $parameters['fdr'] = $simulation->getParameter('fdr', 'BH');
         $parameters['enrichMirs'] = $simulation->getTypedParameter('enrichMirs', 'bool', true, false);
         $parameters['enrichDb'] = $this->getOptionalFile($simulation, 'enrichDb');
         $parameters['nodeTypes'] = $this->getOptionalFile($simulation, 'nodeTypes');

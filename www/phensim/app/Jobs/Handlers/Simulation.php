@@ -69,7 +69,7 @@ class Simulation extends AbstractHandler
             ->setSimulationParameters($simulationParameters)
             ->setNonExpressedNodes($this->jobData->getTypedParameter('nonExpressed', 'array', [], false))
             ->setRemoveNodes($this->jobData->getTypedParameter('remove', 'array', [], false))
-            ->setFdrMethod($this->jobData->getParameter('fdr', 'QV'));
+            ->setFdrMethod($this->jobData->getParameter('fdr', 'BH'));
         $mirs = $this->jobData->getTypedParameter('enrichMirs', 'bool', true, false);
         if ($mirs) {
             $launcher->addEnricher('mirna');
