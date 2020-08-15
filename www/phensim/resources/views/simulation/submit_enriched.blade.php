@@ -127,7 +127,7 @@
                             <div class="form-group"{{ $errors->has('fdr') ? ' has-error' : '' }}>
                                 {!! Form::label('fdr', 'FDR method', ['class' => 'col-md-3 control-label']) !!}
                                 <div class="col-md-9">
-                                    {!! Form::select('fdr', ['BH' => 'Benjamini & Hochberg', 'QV' => 'Q-value (Storey et al.)', 'LOC' => 'Local FDR (Efron et al.)'], 'QV', ['class' => 'form-control']) !!}
+                                    {!! Form::select('fdr', ['BH' => 'Benjamini & Hochberg', 'QV' => 'Q-value (Storey et al.)', 'LOC' => 'Local FDR (Efron et al.)'], 'BH', ['class' => 'form-control']) !!}
                                     @if($errors->has('fdr'))
                                         <div class="help-block">{{ $errors->first('fdr') }}</div>
                                     @endif
