@@ -49,11 +49,11 @@ nodes[[2]] <- check.range(nodes[[2]])
 paths[[2]] <- check.range(paths[[2]])
 
 if (opt$locfdr) {
-    nodes[[2]] <- tryCatch(locfdr(nodes[[2]], plot=0)$fdr, error=function() (p.adjust(nodes[[2]], method = "fdr")))
-    paths[[2]] <- tryCatch(locfdr(paths[[2]], plot=0)$fdr, error=function() (p.adjust(paths[[2]], method = "fdr")))
+    nodes[[2]] <- tryCatch(locfdr(nodes[[2]], plot=0)$fdr, error=function(e) (p.adjust(nodes[[2]], method = "fdr")))
+    paths[[2]] <- tryCatch(locfdr(paths[[2]], plot=0)$fdr, error=function(e) (p.adjust(paths[[2]], method = "fdr")))
 } else {
-    nodes[[2]] <- tryCatch(qvalue(nodes[[2]])$qvalues, error=function() (p.adjust(nodes[[2]], method = "fdr")))
-    paths[[2]] <- tryCatch(qvalue(paths[[2]])$qvalues, error=function() (p.adjust(paths[[2]], method = "fdr"))) 
+    nodes[[2]] <- tryCatch(qvalue(nodes[[2]])$qvalues, error=function(e) (p.adjust(nodes[[2]], method = "fdr")))
+    paths[[2]] <- tryCatch(qvalue(paths[[2]])$qvalues, error=function(e) (p.adjust(paths[[2]], method = "fdr")))
 }
 
 nodes <- setNames(nodes[[2]], nodes[[1]])
