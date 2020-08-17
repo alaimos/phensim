@@ -26,23 +26,27 @@ final class Reader
         'pathwayFDR',
         'pathwayLL',
         'targetedBy',
+        'averagePerturbation',
+        'averagePathwayPerturbation',
     ];
     public const FIELDS_CAST         = [
-        'pathwayId'            => null,
-        'pathwayName'          => 'pathway',
-        'nodeId'               => null,
-        'nodeName'             => null,
-        'isEndpoint'           => 'boolean',
-        'isDirectTarget'       => 'boolean',
-        'activityScore'        => 'double',
-        'pValue'               => 'double',
-        'FDR'                  => 'double',
-        'LL'                   => 'll',
-        'pathwayActivityScore' => 'double',
-        'pathwayPValue'        => 'double',
-        'pathwayFDR'           => 'double',
-        'pathwayLL'            => 'll',
-        'targetedBy'           => 'array',
+        'pathwayId'                  => null,
+        'pathwayName'                => 'pathway',
+        'nodeId'                     => null,
+        'nodeName'                   => null,
+        'isEndpoint'                 => 'boolean',
+        'isDirectTarget'             => 'boolean',
+        'activityScore'              => 'double',
+        'pValue'                     => 'double',
+        'FDR'                        => 'double',
+        'LL'                         => 'll',
+        'pathwayActivityScore'       => 'double',
+        'pathwayPValue'              => 'double',
+        'pathwayFDR'                 => 'double',
+        'pathwayLL'                  => 'll',
+        'targetedBy'                 => 'array',
+        'averagePerturbation'        => 'double',
+        'averagePathwayPerturbation' => 'double',
     ];
     public const LL                  = ['activation', 'inhibition', 'other'];
     public const ACTIVATION_COLORING = '%s red,black';
@@ -163,12 +167,13 @@ final class Reader
         if (!$fp) {
             throw new ReaderException('Unable to open phensim output file');
         }
+        $max = count(self::FIELDS_ALL);
         while (($line = fgets($fp)) !== false) {
             $line = trim($line);
             if (!empty($line) && $line{0} !== '#') {
                 $fields = explode("\t", $line);
                 $n = count($fields);
-                if ($n >= 12 && $n <= 14) {
+                if ($n <= $max) {
                     $action($this->prepare($fields));
                 }
             }
@@ -220,12 +225,13 @@ final class Reader
                 $pid = $fields['pathwayId'];
                 if (!isset($results[$pid])) {
                     $results[$pid] = [
-                        'id'            => $pid,
-                        'name'          => $fields['pathwayName'],
-                        'activityScore' => $fields['pathwayActivityScore'],
-                        'pValue'        => $fields['pathwayPValue'],
-                        'FDR'           => $fields['pathwayFDR'],
-                        'LL'            => $fields['pathwayLL'],
+                        'id'                  => $pid,
+                        'name'                => $fields['pathwayName'],
+                        'averagePerturbation' => $fields['averagePathwayPerturbation'],
+                        'activityScore'       => $fields['pathwayActivityScore'],
+                        'pValue'              => $fields['pathwayPValue'],
+                        'FDR'                 => $fields['pathwayFDR'],
+                        'LL'                  => $fields['pathwayLL'],
                     ];
                 }
             }
