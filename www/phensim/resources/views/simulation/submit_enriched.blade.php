@@ -136,7 +136,7 @@
                             <div class="form-group"{{ $errors->has('epsilon') ? ' has-error' : '' }}>
                                 {!! Form::label('epsilon', 'Epsilon value', ['class' => 'col-md-3 control-label']) !!}
                                 <div class="col-md-9">
-                                    {!! Form::number('epsilon', 0.00001, ['class' => 'form-control', 'step' => 'any']) !!}
+                                    {!! Form::number('epsilon', 0.001, ['class' => 'form-control', 'step' => 'any']) !!}
                                     @if($errors->has('epsilon'))
                                         <div class="help-block">{{ $errors->first('epsilon') }}</div>
                                     @endif

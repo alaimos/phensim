@@ -62,7 +62,7 @@ class ExportSimulations extends Command
         $parameters['organism'] = $simulation->getParameter('organism');
         $parameters['simulationParameters'] = $simulation->getParameter('simulationParameters');
         $parameters['seed'] = $simulation->getTypedParameter('seed', 'int');
-        $parameters['epsilon'] = $simulation->getTypedParameter('epsilon', 'float', 0.00001, false);
+        $parameters['epsilon'] = $simulation->getTypedParameter('epsilon', 'float', 0.001, false);
         $parameters['nonExpressed'] = $simulation->getTypedParameter('nonExpressed', 'array', [], false);
         $parameters['remove'] = $simulation->getTypedParameter('remove', 'array', [], false);
         $parameters['fdr'] = $simulation->getParameter('fdr', 'BH');

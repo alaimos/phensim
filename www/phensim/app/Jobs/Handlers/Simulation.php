@@ -65,7 +65,7 @@ class Simulation extends AbstractHandler
         $launcher
             ->setOrganism($organism->accession)
             ->setSeed($this->jobData->getTypedParameter('seed', 'int'))
-            ->setEpsilon($this->jobData->getTypedParameter('epsilon', 'float', 0.00001, false))
+            ->setEpsilon($this->jobData->getTypedParameter('epsilon', 'float', 0.001, false))
             ->setSimulationParameters($simulationParameters)
             ->setNonExpressedNodes($this->jobData->getTypedParameter('nonExpressed', 'array', [], false))
             ->setRemoveNodes($this->jobData->getTypedParameter('remove', 'array', [], false))

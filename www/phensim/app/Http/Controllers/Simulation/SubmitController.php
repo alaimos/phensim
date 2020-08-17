@@ -163,7 +163,7 @@ class SubmitController extends Controller
         $nodes = $this->prepareSimpleSimulationList($request);
         $nonExp = $this->prepareSimpleNodesList($request, 'nonexp-nodes', 'nonexp-file');
         $remove = $this->prepareSimpleNodesList($request, 'remove-nodes', 'remove-file');
-        $epsilon = (float)$request->get('epsilon', 0.00001);
+        $epsilon = (float)$request->get('epsilon', 0.001);
         $fdr = $request->get('fdr-method', 'BH');
         $seed = $request->get('random-seed');
         $enrich = in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON'], false);
@@ -335,7 +335,7 @@ class SubmitController extends Controller
                 'remove'               => $remove,
                 'fdr'                  => $request->get('fdr-method', 'BH'),
                 'dbFilter'             => $request->get('db-filter'),
-                'epsilon'              => (float)$request->get('epsilon', 0.00001),
+                'epsilon'              => (float)$request->get('epsilon', 0.001),
                 'seed'                 => $request->get('random-seed'),
                 'enrichMirs'           => in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON'], false),
             ],

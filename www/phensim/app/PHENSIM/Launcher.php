@@ -40,7 +40,7 @@ final class Launcher
 
     private $enrichers = [];
     private $enricherParameters = [];
-    private $epsilon = 0.00001;
+    private $epsilon = 0.001;
     private $simulationParameters = [];
     private $simulationIterations = 100;
     private $bootstrapIterations = 1000;
@@ -212,7 +212,7 @@ final class Launcher
      *
      * @return $this
      */
-    public function setEpsilon($epsilon = 0.00001): self
+    public function setEpsilon($epsilon = 0.001): self
     {
         $this->epsilon = $epsilon;
 

@@ -166,7 +166,7 @@
                                 <div class="form-group"{{ $errors->has('epsilon') ? ' has-error' : '' }}>
                                     <div class="col-sm-8 col-sm-offset-2">
                                         {!! Form::label('epsilon', 'Epsilon value', ['class' => 'control-label']) !!}
-                                        {!! Form::number('epsilon', 0.00001, ['class' => 'form-control', 'step' => 'any']) !!}
+                                        {!! Form::number('epsilon', 0.001, ['class' => 'form-control', 'step' => 'any']) !!}
                                     </div>
                                 </div>
                                 <div class="form-group"{{ $errors->has('random-seed') ? ' has-error' : '' }}>
