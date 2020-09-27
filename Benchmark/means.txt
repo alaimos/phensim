@@ -1,0 +1,12 @@
+[1] "bionsi"
+        Accuracy    Predicted.PPV   Predicted.SENS   Predicted.SPEC NonPredicted.PPV NonPredicted.FNR 
+      0.06401705       0.50752628       0.26922706       0.79250737       0.86238095       0.99699340 
+[1] "bionsi_degs"
+        Accuracy    Predicted.PPV   Predicted.SENS   Predicted.SPEC NonPredicted.PPV NonPredicted.FNR 
+      0.07347588       0.32823577       0.14994324       0.80517062       0.43451516       0.99683466 
+[1] "phensim"
+        Accuracy    Predicted.PPV   Predicted.SENS   Predicted.SPEC NonPredicted.PPV NonPredicted.FNR 
+       0.6647218        0.5123506        0.5190998        0.9884032        0.8920524        0.2711322 
+[1] "phensim_degs"
+        Accuracy    Predicted.PPV   Predicted.SENS   Predicted.SPEC NonPredicted.PPV NonPredicted.FNR 
+       0.5976972        0.7725181        0.8420806        0.9885500        0.9000486        0.4090946 
