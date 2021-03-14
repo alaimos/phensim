@@ -1,4 +1,9 @@
 <?php
+/**
+ * PHENSIM: Phenotype Simulator
+ * @version 2.0.0.2
+ * @author  Salvatore Alaimo, Ph.D.
+ */
 
 namespace App\Models;
 
@@ -16,10 +21,11 @@ class User extends Authenticatable
      *
      * @var array
      */
-    protected $fillable = [
+    protected array $fillable = [
         'name',
         'email',
         'password',
+        'affiliation',
     ];
 
     /**
@@ -27,9 +33,10 @@ class User extends Authenticatable
      *
      * @var array
      */
-    protected $hidden = [
+    protected array $hidden = [
         'password',
         'remember_token',
+        'is_admin',
     ];
 
     /**
@@ -37,7 +44,26 @@ class User extends Authenticatable
      *
      * @var array
      */
-    protected $casts = [
+    protected array $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    /**
+     * The model's default values for attributes.
+     *
+     * @var array
+     */
+    protected array $attributes = [
+        'is_admin' => false,
+    ];
+
+    /**
+     * User-to-Simulation relationship
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function simulations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Simulation::class);
+    }
 }
