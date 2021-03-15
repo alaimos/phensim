@@ -4,6 +4,7 @@
  * @version 2.0.0.2
  * @author  Salvatore Alaimo, Ph.D.
  */
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -24,7 +25,9 @@ class CreateSimulationsTable extends Migration
                 $table->string('name');
                 $table->tinyInteger('status');
                 $table->json('parameters');
-                $table->json('data');
+                $table->string('output_file')->nullable();
+                $table->string('pathway_output_file')->nullable();
+                $table->string('nodes_output_file')->nullable();
                 $table->longText('logs');
                 $table->boolean('public')->default(false);
                 $table->string('public_key')->nullable()->unique();

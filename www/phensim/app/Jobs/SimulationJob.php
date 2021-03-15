@@ -12,7 +12,10 @@ use Throwable;
 
 class SimulationJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     /**
      * A simulation associated to this job
@@ -24,7 +27,7 @@ class SimulationJob implements ShouldQueue
     /**
      * Create a new job instance.
      *
-     * @param \App\Models\Simulation $simulation
+     * @param  \App\Models\Simulation  $simulation
      */
     public function __construct(Simulation $simulation)
     {
@@ -50,7 +53,7 @@ class SimulationJob implements ShouldQueue
             $this->simulation->update(['status' => Simulation::COMPLETED]);
         } catch (Throwable $e) {
             $this->simulation->status = Simulation::FAILED;
-            $this->simulation->appendLog("\nAn error occurred: " . $e->getMessage());
+            $this->simulation->appendLog("\nAn error occurred: ".$e->getMessage());
             $this->fail($e);
         }
     }

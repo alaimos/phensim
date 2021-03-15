@@ -57,7 +57,9 @@ class Simulation extends Model
         'name',
         'status',
         'parameters',
-        'data',
+        'output_file',
+        'pathway_output_file',
+        'nodes_output_file',
         'logs',
         'public',
         'public_key',
@@ -103,8 +105,8 @@ class Simulation extends Model
      * If the user is not logged in no simulations are visible.
      * In all other cases shows only the owned simulations
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param \App\Models\User|null                 $user
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  \App\Models\User|null  $user
      *
      * @return \Illuminate\Database\Eloquent\Builder
      */
@@ -146,7 +148,7 @@ class Simulation extends Model
     /**
      * Set the log attribute.
      *
-     * @param string $value
+     * @param  string  $value
      */
     public function setJobLogAttribute(string $value): void
     {
@@ -170,14 +172,14 @@ class Simulation extends Model
                 $aLines
             )
         );
-        $this->attributes['job_log'] = $value;
+        $this->attributes['logs'] = $value;
     }
 
     /**
      * Checks for a valid state and sets the value in this model.
      * If an invalid state is provided, it will be replaced with a FAILED state.
      *
-     * @param int $value
+     * @param  int  $value
      *
      * @return void
      */
@@ -197,6 +199,99 @@ class Simulation extends Model
     public function getReadableStatusAttribute(): string
     {
         return self::HUMAN_READABLE_STATES[$this->status];
+    }
+
+    /**
+     * Return the output file path of this simulation. If no file exists null will be returned.
+     *
+     * @return string|null
+     * @throws \App\Exceptions\FileSystemException
+     */
+    public function getOutputFileAttribute(): ?string
+    {
+        if (!$this->attributes['output_file']) {
+            return null;
+        }
+
+        return $this->jobFile($this->attributes['output_file']);
+    }
+
+    /**
+     * Set the output filename of this simulation. If the file does not exist null will be stored
+     *
+     * @param  string|null  $value
+     *
+     * @return void
+     */
+    public function setOutputFileAttribute(?string $value): void
+    {
+        if ($value === null || !file_exists($value)) {
+            $this->attributes['output_file'] = null;
+        } else {
+            $this->attributes['output_file'] = basename($value);
+        }
+    }
+
+    /**
+     * Return the pathway matrix file path of this simulation. If no file exists null will be returned.
+     *
+     * @return string|null
+     * @throws \App\Exceptions\FileSystemException
+     */
+    public function getPathwayOutputFileAttribute(): ?string
+    {
+        if (!$this->attributes['pathway_output_file']) {
+            return null;
+        }
+
+        return $this->jobFile($this->attributes['pathway_output_file']);
+    }
+
+    /**
+     * Set the pathway matrix filename of this simulation. If the file does not exist null will be stored
+     *
+     * @param  string|null  $value
+     *
+     * @return void
+     */
+    public function setPathwayOutputFileAttribute(?string $value): void
+    {
+        if ($value === null || !file_exists($value)) {
+            $this->attributes['pathway_output_file'] = null;
+        } else {
+            $this->attributes['pathway_output_file'] = basename($value);
+        }
+    }
+
+    /**
+     * Return the nodes matrix file path of this simulation. If no file exists null will be returned.
+     *
+     * @return string|null
+     * @throws \App\Exceptions\FileSystemException
+     */
+    public function getNodesOutputFileAttribute(): ?string
+    {
+        if (!$this->attributes['nodes_output_file']) {
+            return null;
+        }
+
+        return $this->jobFile($this->attributes['nodes_output_file']);
+    }
+
+    /**
+     * Set the nodes matrix filename of this simulation. If the file does not exist null will be stored
+     *
+     * @param  string|null  $value
+     *
+     * @return void
+     */
+    public function setNodesOutputFileAttribute(?string $value): void
+    {
+        if ($value === null || !file_exists($value)) {
+            $this->attributes['nodes_output_file'] = null;
+        } else {
+            $this->attributes['nodes_output_file'] = basename($value);
+        }
     }
 
     //endregion
@@ -256,9 +351,9 @@ class Simulation extends Model
     /**
      * Append text to the log
      *
-     * @param string  $text
-     * @param boolean $appendNewLine
-     * @param boolean $commit
+     * @param  string  $text
+     * @param  boolean  $appendNewLine
+     * @param  boolean  $commit
      *
      * @return $this
      */
@@ -267,7 +362,7 @@ class Simulation extends Model
         if ($appendNewLine) {
             $text .= "\n";
         }
-        $this->job_log .= $text;
+        $this->logs .= $text;
         if ($commit) {
             $this->save();
         }
@@ -278,8 +373,8 @@ class Simulation extends Model
     /**
      * Get the value of a parameter for this job
      *
-     * @param string $parameter
-     * @param mixed  $default
+     * @param  string  $parameter
+     * @param  mixed  $default
      *
      * @return mixed
      */
@@ -291,10 +386,10 @@ class Simulation extends Model
     /**
      * Get and cast a parameter
      *
-     * @param string          $parameter
-     * @param string|callable $type
-     * @param null|mixed      $default
-     * @param bool            $keepNull
+     * @param  string  $parameter
+     * @param  string|callable  $type
+     * @param  null|mixed  $default
+     * @param  bool  $keepNull
      *
      * @return mixed
      */
@@ -326,8 +421,8 @@ class Simulation extends Model
     /**
      * Set the value of a parameter for this job
      *
-     * @param string $parameter
-     * @param mixed  $value
+     * @param  string  $parameter
+     * @param  mixed  $value
      *
      * @return $this
      */
@@ -336,36 +431,6 @@ class Simulation extends Model
         $tmp = $this->parameters;
         $tmp[$parameter] = $value;
         $this->parameters = $tmp;
-
-        return $this;
-    }
-
-    /**
-     * Get the value of a parameter for this job
-     *
-     * @param string $key
-     * @param mixed  $default
-     *
-     * @return mixed
-     */
-    public function getData(string $key, mixed $default = null): mixed
-    {
-        return $this->data[$key] ?? $default;
-    }
-
-    /**
-     * Set the value of a parameter for this job
-     *
-     * @param string     $key
-     * @param mixed|null $value
-     *
-     * @return $this
-     */
-    public function setData(string $key, mixed $value = null): self
-    {
-        $tmp = $this->data;
-        $tmp[$key] = $value;
-        $this->data = $tmp;
 
         return $this;
     }
@@ -389,7 +454,7 @@ class Simulation extends Model
     /**
      * Returns the absolute path of a file in the job storage directory
      *
-     * @param string $filename
+     * @param  string  $filename
      *
      * @return string
      * @throws \App\Exceptions\FileSystemException
