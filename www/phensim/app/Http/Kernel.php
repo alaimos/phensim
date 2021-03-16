@@ -3,6 +3,7 @@
 namespace App\Http;
 
 use App\Http\Middleware\Authenticate;
+use App\Http\Middleware\CheckUserIsAdmin;
 use App\Http\Middleware\EncryptCookies;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Http\Middleware\RedirectIfAuthenticated;
@@ -35,7 +36,7 @@ class Kernel extends HttpKernel
      *
      * @var array
      */
-    protected array $middleware = [
+    protected $middleware = [
         // \App\Http\Middleware\TrustHosts::class,
         TrustProxies::class,
         HandleCors::class,
@@ -50,7 +51,7 @@ class Kernel extends HttpKernel
      *
      * @var array
      */
-    protected array $middlewareGroups = [
+    protected $middlewareGroups = [
         'web' => [
             EncryptCookies::class,
             AddQueuedCookiesToResponse::class,
@@ -75,7 +76,8 @@ class Kernel extends HttpKernel
      *
      * @var array
      */
-    protected array $routeMiddleware = [
+    protected $routeMiddleware = [
+        'is.admin'         => CheckUserIsAdmin::class,
         'auth'             => Authenticate::class,
         'auth.basic'       => AuthenticateWithBasicAuth::class,
         'cache.headers'    => SetCacheHeaders::class,

@@ -20,7 +20,7 @@ class Node extends Model
      *
      * @var array
      */
-    protected array $fillable = [
+    protected $fillable = [
         'accession',
         'name',
         'aliases',
@@ -32,7 +32,7 @@ class Node extends Model
      *
      * @var array
      */
-    protected array $appends = [
+    protected $appends = [
         'url',
     ];
 
@@ -41,7 +41,7 @@ class Node extends Model
      *
      * @var array
      */
-    protected array $casts = [
+    protected $casts = [
         'aliases' => ToArray::class, // Convert Aliases in PHENSIM format to a PHP Array
     ];
 
@@ -50,7 +50,7 @@ class Node extends Model
      *
      * @var bool
      */
-    public bool $timestamps = false;
+    public $timestamps = false;
 
     /**
      * Organism-to-nodes relationship

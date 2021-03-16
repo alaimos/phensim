@@ -1,11 +1,14 @@
 <?php
+/**
+ * PHENSIM: Phenotype Simulator
+ * @version 2.0.0.2
+ * @author  Salvatore Alaimo, Ph.D.
+ */
 
 namespace App\PHENSIM;
 
-use App\Models\Node;
 use App\Exceptions\PHENSIM\ReaderException;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 final class Reader

@@ -1,4 +1,9 @@
 <?php
+/**
+ * PHENSIM: Phenotype Simulator
+ * @version 2.0.0.2
+ * @author  Salvatore Alaimo, Ph.D.
+ */
 
 namespace App\PHENSIM;
 
@@ -29,6 +34,7 @@ final class Launcher
     private const  SEED                      = '-seed';
     private const  VERBOSE                   = '-verbose';
     private const  REACTOME                  = '-reactome';
+    private const  FAST                      = '-fast';
     private const  REMOVE_NODES_FILE         = '-remove-nodes-file';
     private const  PATHWAY_MATRIX_OUTPUT     = '-output-pathway-matrix';
     private const  NODES_MATRIX_OUTPUT       = '-output-nodes-matrix';
@@ -42,6 +48,7 @@ final class Launcher
     public const   FDR_QV                    = 'QV';   // q-value method
     public const   FDR_LOC                   = 'LOC';  // Local-FDR method
     public const   SUPPORTED_FDRS            = [self::FDR_BH, self::FDR_QV, self::FDR_LOC];
+    public const   MIRNA_ENRICHER            = 'mirna';
 
     //endregion
 
@@ -121,6 +128,13 @@ final class Launcher
      * @var bool
      */
     private bool $reactome = false;
+
+    /**
+     * Should FAST method be used?
+     *
+     * @var bool
+     */
+    private bool $fast = true;
 
     /**
      * Seed for the RNG. Set to null for random seed generation.
@@ -504,6 +518,21 @@ final class Launcher
         return $this;
     }
 
+
+    /**
+     * Enable or disable fast analysis
+     *
+     * @param  bool  $fast
+     *
+     * @return $this
+     */
+    public function setFast(bool $fast = true): self
+    {
+        $this->fast = $fast;
+
+        return $this;
+    }
+
     //endregion
 
     /**
@@ -689,6 +718,9 @@ final class Launcher
         $this->commandLine[] = self::VERBOSE;
         if ($this->reactome) {
             $this->commandLine[] = self::REACTOME;
+        }
+        if ($this->fast) {
+            $this->commandLine[] = self::FAST;
         }
     }
 

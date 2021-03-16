@@ -24,6 +24,12 @@ class CreateSimulationsTable extends Migration
                 $table->id();
                 $table->string('name');
                 $table->tinyInteger('status');
+                $table->string('input_parameters_file')->nullable();
+                $table->string('enrichment_database_file')->nullable();
+                $table->string('node_types_file')->nullable();
+                $table->string('edge_types_file')->nullable();
+                $table->string('edge_subtypes_file')->nullable();
+                $table->string('non_expressed_nodes_file')->nullable();
                 $table->json('parameters');
                 $table->string('output_file')->nullable();
                 $table->string('pathway_output_file')->nullable();

@@ -7,21 +7,24 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+//@todo add this use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory;
+    use Notifiable;
+    use HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected array $fillable = [
+    protected $fillable = [
         'name',
         'email',
         'password',
@@ -33,7 +36,7 @@ class User extends Authenticatable
      *
      * @var array
      */
-    protected array $hidden = [
+    protected $hidden = [
         'password',
         'remember_token',
         'is_admin',
@@ -44,7 +47,7 @@ class User extends Authenticatable
      *
      * @var array
      */
-    protected array $casts = [
+    protected $casts = [
         'email_verified_at' => 'datetime',
     ];
 
@@ -53,7 +56,7 @@ class User extends Authenticatable
      *
      * @var array
      */
-    protected array $attributes = [
+    protected $attributes = [
         'is_admin' => false,
     ];
 
@@ -65,5 +68,17 @@ class User extends Authenticatable
     public function simulations(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Simulation::class);
+    }
+
+    /**
+     * Counts owned simulations by state
+     *
+     * @param  int  $status
+     *
+     * @return int
+     */
+    public function countSimulationsByState(int $status): int
+    {
+        return (!in_array($status, Simulation::VALID_STATES)) ? -1 : $this->simulations()->where('status', $status)->count();
     }
 }

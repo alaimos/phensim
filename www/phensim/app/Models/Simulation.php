@@ -53,7 +53,7 @@ class Simulation extends Model
      *
      * @var array
      */
-    protected array $fillable = [
+    protected $fillable = [
         'name',
         'status',
         'parameters',
@@ -72,7 +72,7 @@ class Simulation extends Model
      *
      * @var array
      */
-    protected array $casts = [
+    protected $casts = [
         'parameters' => 'array',
         'data'       => 'array',
         'public'     => 'boolean',
@@ -83,7 +83,7 @@ class Simulation extends Model
      *
      * @var array
      */
-    protected array $attributes = [
+    protected $attributes = [
         'parameters' => [],
         'data'       => [],
         'public'     => false,
@@ -95,7 +95,7 @@ class Simulation extends Model
      *
      * @var array
      */
-    protected array $appends = [
+    protected $appends = [
         'readable_status',
     ];
 
@@ -202,6 +202,178 @@ class Simulation extends Model
     }
 
     /**
+     * Returns the value of a file attribute
+     *
+     * @param  string  $attribute
+     *
+     * @return string|null
+     * @throws \App\Exceptions\FileSystemException
+     */
+    private function getFileAttr(string $attribute): ?string
+    {
+        if (!$this->attributes[$attribute]) {
+            return null;
+        }
+
+        return $this->jobFile($this->attributes[$attribute]);
+    }
+
+    /**
+     * Set the value of a file attribute in this model
+     *
+     * @param  string  $attribute
+     * @param  string|null  $value
+     *
+     * @return void
+     */
+    private function setFileAttr(string $attribute, ?string $value): void
+    {
+        if ($value === null || !file_exists($value)) {
+            $this->attributes[$attribute] = null;
+        } else {
+            $this->attributes[$attribute] = basename($value);
+        }
+    }
+
+    /**
+     * Return the input parameters file path of this simulation. If no file exists null will be returned.
+     *
+     * @return string|null
+     * @throws \App\Exceptions\FileSystemException
+     */
+    public function getInputParametersFileAttribute(): ?string
+    {
+        return $this->getFileAttr('input_parameters_file');
+    }
+
+    /**
+     * Set the input parameters filename of this simulation. If the file does not exist null will be stored
+     *
+     * @param  string|null  $value
+     *
+     * @return void
+     */
+    public function setInputParametersFileAttribute(?string $value): void
+    {
+        $this->setFileAttr('input_parameters_file', $value);
+    }
+
+    /**
+     * Return the enrichment database file path of this simulation. If no file exists null will be returned.
+     *
+     * @return string|null
+     * @throws \App\Exceptions\FileSystemException
+     */
+    public function getEnrichmentDatabaseFileAttribute(): ?string
+    {
+        return $this->getFileAttr('enrichment_database_file');
+    }
+
+    /**
+     * Set the enrichment database filename of this simulation. If the file does not exist null will be stored
+     *
+     * @param  string|null  $value
+     *
+     * @return void
+     */
+    public function setEnrichmentDatabaseFileAttribute(?string $value): void
+    {
+        $this->setFileAttr('enrichment_database_file', $value);
+    }
+
+    /**
+     * Return the node types file path of this simulation. If no file exists null will be returned.
+     *
+     * @return string|null
+     * @throws \App\Exceptions\FileSystemException
+     */
+    public function getNodeTypesFileAttribute(): ?string
+    {
+        return $this->getFileAttr('node_types_file');
+    }
+
+    /**
+     * Set the node types filename of this simulation. If the file does not exist null will be stored
+     *
+     * @param  string|null  $value
+     *
+     * @return void
+     */
+    public function setNodeTypesFileAttribute(?string $value): void
+    {
+        $this->setFileAttr('node_types_file', $value);
+    }
+
+    /**
+     * Return the edge types file path of this simulation. If no file exists null will be returned.
+     *
+     * @return string|null
+     * @throws \App\Exceptions\FileSystemException
+     */
+    public function getEdgeTypesFileAttribute(): ?string
+    {
+        return $this->getFileAttr('edge_types_file');
+    }
+
+    /**
+     * Set the edge types filename of this simulation. If the file does not exist null will be stored
+     *
+     * @param  string|null  $value
+     *
+     * @return void
+     */
+    public function setEdgeTypesFileAttribute(?string $value): void
+    {
+        $this->setFileAttr('edge_types_file', $value);
+    }
+
+    /**
+     * Return the edge subtypes file path of this simulation. If no file exists null will be returned.
+     *
+     * @return string|null
+     * @throws \App\Exceptions\FileSystemException
+     */
+    public function getEdgeSubtypesFileAttribute(): ?string
+    {
+        return $this->getFileAttr('edge_subtypes_file');
+    }
+
+    /**
+     * Set the edge subtypes filename of this simulation. If the file does not exist null will be stored
+     *
+     * @param  string|null  $value
+     *
+     * @return void
+     */
+    public function setEdgeSubtypesFileAttribute(?string $value): void
+    {
+        $this->setFileAttr('edge_subtypes_file', $value);
+    }
+
+    /**
+     * Return the non-expressed nodes file path of this simulation. If no file exists null will be returned.
+     *
+     * @return string|null
+     * @throws \App\Exceptions\FileSystemException
+     */
+    public function getNonExpressedNodesFileAttribute(): ?string
+    {
+        return $this->getFileAttr('non_expressed_nodes_file');
+    }
+
+    /**
+     * Set the non-expressed nodes filename of this simulation. If the file does not exist null will be stored
+     *
+     * @param  string|null  $value
+     *
+     * @return void
+     */
+    public function setNonExpressedNodesFileAttribute(?string $value): void
+    {
+        $this->setFileAttr('non_expressed_nodes_file', $value);
+    }
+
+    /**
      * Return the output file path of this simulation. If no file exists null will be returned.
      *
      * @return string|null
@@ -209,11 +381,7 @@ class Simulation extends Model
      */
     public function getOutputFileAttribute(): ?string
     {
-        if (!$this->attributes['output_file']) {
-            return null;
-        }
-
-        return $this->jobFile($this->attributes['output_file']);
+        return $this->getFileAttr('output_file');
     }
 
     /**
@@ -225,11 +393,7 @@ class Simulation extends Model
      */
     public function setOutputFileAttribute(?string $value): void
     {
-        if ($value === null || !file_exists($value)) {
-            $this->attributes['output_file'] = null;
-        } else {
-            $this->attributes['output_file'] = basename($value);
-        }
+        $this->setFileAttr('output_file', $value);
     }
 
     /**
@@ -240,11 +404,7 @@ class Simulation extends Model
      */
     public function getPathwayOutputFileAttribute(): ?string
     {
-        if (!$this->attributes['pathway_output_file']) {
-            return null;
-        }
-
-        return $this->jobFile($this->attributes['pathway_output_file']);
+        return $this->getFileAttr('pathway_output_file');
     }
 
     /**
@@ -256,11 +416,7 @@ class Simulation extends Model
      */
     public function setPathwayOutputFileAttribute(?string $value): void
     {
-        if ($value === null || !file_exists($value)) {
-            $this->attributes['pathway_output_file'] = null;
-        } else {
-            $this->attributes['pathway_output_file'] = basename($value);
-        }
+        $this->setFileAttr('pathway_output_file', $value);
     }
 
     /**
@@ -271,11 +427,7 @@ class Simulation extends Model
      */
     public function getNodesOutputFileAttribute(): ?string
     {
-        if (!$this->attributes['nodes_output_file']) {
-            return null;
-        }
-
-        return $this->jobFile($this->attributes['nodes_output_file']);
+        return $this->getFileAttr('nodes_output_file');
     }
 
     /**
@@ -287,11 +439,7 @@ class Simulation extends Model
      */
     public function setNodesOutputFileAttribute(?string $value): void
     {
-        if ($value === null || !file_exists($value)) {
-            $this->attributes['nodes_output_file'] = null;
-        } else {
-            $this->attributes['nodes_output_file'] = basename($value);
-        }
+        $this->setFileAttr('nodes_output_file', $value);
     }
 
     //endregion
@@ -381,41 +529,6 @@ class Simulation extends Model
     public function getParameter(string $parameter, $default = null): mixed
     {
         return $this->parameters[$parameter] ?? $default;
-    }
-
-    /**
-     * Get and cast a parameter
-     *
-     * @param  string  $parameter
-     * @param  string|callable  $type
-     * @param  null|mixed  $default
-     * @param  bool  $keepNull
-     *
-     * @return mixed
-     */
-    public function getTypedParameter(string $parameter, callable|string $type, mixed $default = null, bool $keepNull = true): mixed
-    {
-        $value = $this->getParameter($parameter, $default);
-        if ($keepNull && empty($value)) {
-            return null;
-        }
-        if ($type === 'int') {
-            return (int)$value;
-        }
-        if ($type === 'bool' || $type === 'boolean') {
-            return (bool)$value;
-        }
-        if ($type === 'numeric' || $type === 'double' || $type === 'float') {
-            return (float)$value;
-        }
-        if ($type === 'array') {
-            return (array)$value;
-        }
-        if (is_callable($type)) {
-            return $type($value);
-        }
-
-        return $value;
     }
 
     /**

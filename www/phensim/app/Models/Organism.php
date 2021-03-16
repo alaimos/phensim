@@ -19,7 +19,7 @@ class Organism extends Model
      *
      * @var array
      */
-    protected array $fillable = [
+    protected $fillable = [
         'accession',
         'name',
         'has_reactome',
@@ -30,7 +30,7 @@ class Organism extends Model
      *
      * @var array
      */
-    protected array $casts = [
+    protected $casts = [
         'has_reactome' => 'boolean',
     ];
 
@@ -39,7 +39,7 @@ class Organism extends Model
      *
      * @var bool
      */
-    public bool $timestamps = false;
+    public $timestamps = false;
 
     /**
      * Organism-to-nodes relationship

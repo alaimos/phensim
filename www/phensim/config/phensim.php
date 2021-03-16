@@ -1,4 +1,9 @@
 <?php
+/**
+ * PHENSIM: Phenotype Simulator
+ * @version 2.0.0.2
+ * @author  Salvatore Alaimo, Ph.D.
+ */
 
 return [
 
