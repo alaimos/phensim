@@ -2,25 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\DashboardService;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+
 class HomeController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
 
     /**
      * Show the application dashboard.
      *
+     * @param  \App\Services\DashboardService  $service
+     *
      * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
      */
-    public function index()
+    public function index(DashboardService $service): Factory|View|Application
     {
-        return view('dashboard');
+        $counts = $service->getCounts();
+        return view('dashboard', compact('counts'));
     }
 }

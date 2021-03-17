@@ -47,6 +47,11 @@ final class Launcher
     public const   FDR_BH                    = 'BH';   // Benjamini-Hochberg method
     public const   FDR_QV                    = 'QV';   // q-value method
     public const   FDR_LOC                   = 'LOC';  // Local-FDR method
+    public const   FDRS_NAMES                = [
+        self::FDR_BH  => 'Benjamini & Hochberg',
+        self::FDR_QV  => 'Q-value (Storey et al.)',
+        self::FDR_LOC => 'Local FDR (Efron et al.)',
+    ];
     public const   SUPPORTED_FDRS            = [self::FDR_BH, self::FDR_QV, self::FDR_LOC];
     public const   MIRNA_ENRICHER            = 'mirna';
 

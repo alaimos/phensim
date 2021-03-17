@@ -19,6 +19,7 @@
         "sass-loader": "^8.0.0"
     },
     "dependencies": {
-        "alpinejs": "^2.8.1"
+        "alpinejs": "^2.8.1",
+        "sweetalert": "^2.1.2"
     }
 }

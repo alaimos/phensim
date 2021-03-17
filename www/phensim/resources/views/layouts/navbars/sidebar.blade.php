@@ -41,7 +41,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('home') }}">
+                    <a class="nav-link" href="{{ route('simulations.index') }}">
                         <i class="ni ni-settings-gear-65 text-primary"></i> {{ __('Simulations') }}
                     </a>
                 </li>

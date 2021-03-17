@@ -7,7 +7,6 @@
         <div class="row">
             <div class="col-xl-4 order-xl-2 mb-5 mb-xl-0">
                 @livewire('profile.user-details')
-                <hr class="my-4"/>
                 @livewire('profile.api-token-manager')
             </div>
             <div class="col-xl-8 order-xl-1">
@@ -29,3 +28,22 @@
         @include('layouts.footers.auth')
     </div>
 @endsection
+
+@push('js')
+    <script>
+        window.addEventListener('swal:confirm:delete', event => {
+            swal({
+                title: event.detail.title,
+                text: event.detail.text,
+                icon: event.detail.type,
+                buttons: true,
+                dangerMode: true,
+            })
+            .then((willDelete) => {
+                if (willDelete) {
+                    window.livewire.emit('delete', event.detail.id);
+                }
+            });
+        });
+    </script>
+@endpush

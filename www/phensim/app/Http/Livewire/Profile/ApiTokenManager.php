@@ -35,18 +35,11 @@ class ApiTokenManager extends Component
     public ?string $plainTextToken;
 
     /**
-     * Indicates if the application is confirming if an API token should be deleted.
+     * Listeners for this component
      *
-     * @var bool
+     * @var string[]
      */
-    public bool $confirmingApiTokenDeletion = false;
-
-    /**
-     * The ID of the API token being deleted.
-     *
-     * @var int
-     */
-    public int $apiTokenIdBeingDeleted;
+    protected $listeners = ['delete'];
 
     /**
      * Validation Rules
@@ -96,21 +89,29 @@ class ApiTokenManager extends Component
      */
     public function confirmApiTokenDeletion(int $tokenId): void
     {
-        $this->confirmingApiTokenDeletion = true;
-        $this->apiTokenIdBeingDeleted = $tokenId;
+        $this->dispatchBrowserEvent(
+            'swal:confirm:delete',
+            [
+                'type'  => 'warning',
+                'title' => __('Delete API Token'),
+                'text'  => __('Are you sure you would like to delete this API token?'),
+                'id'    => $tokenId,
+            ]
+        );
     }
 
     /**
      * Delete the API token.
      *
+     * @param  mixed  $id
+     *
      * @return void
      */
-    public function deleteApiToken(): void
+    public function delete(mixed $id): void
     {
         $user = auth()->user();
-        $user->tokens()->where('id', $this->apiTokenIdBeingDeleted)->delete();
+        $user->tokens()->where('id', $id)->delete();
         $user->load('tokens');
-        $this->confirmingApiTokenDeletion = false;
     }
 
     /**

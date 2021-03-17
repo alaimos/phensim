@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use JetBrains\PhpStorm\Pure;
 
 class Simulation extends Model
 {
@@ -32,6 +33,17 @@ class Simulation extends Model
      * An array of allowed values for the status field
      */
     public const VALID_STATES = [self::READY, self::QUEUED, self::PROCESSING, self::COMPLETED, self::FAILED];
+
+    /**
+     * An array mapping states to their names
+     */
+    public const STATE_NAMES = [
+        self::READY      => 'Ready',
+        self::QUEUED     => 'Queued',
+        self::PROCESSING => 'Processing',
+        self::COMPLETED  => 'Completed',
+        self::FAILED     => 'Failed',
+    ];
 
     /**
      * An array mapping states to human readable strings
@@ -84,10 +96,9 @@ class Simulation extends Model
      * @var array
      */
     protected $attributes = [
-        'parameters' => [],
-        'data'       => [],
         'public'     => false,
         'public_key' => null,
+        'logs'       => '',
     ];
 
     /**
@@ -588,6 +599,55 @@ class Simulation extends Model
         return Utils::delete($this->jobDirectory());
     }
 
-
     //endregion
+
+    /**
+     * Checks if this job is in a state suitable for deletion
+     *
+     * @return bool
+     */
+    public function canBeDeleted(): bool
+    {
+        return !in_array($this->status, [self::QUEUED, self::PROCESSING], true);
+    }
+
+    /**
+     * Checks if this job can be submitted
+     *
+     * @return bool
+     */
+    public function isReady(): bool
+    {
+        return $this->status === self::READY;
+    }
+
+    /**
+     * Checks if this job is processing
+     *
+     * @return bool
+     */
+    public function isProcessing(): bool
+    {
+        return $this->status === self::PROCESSING;
+    }
+
+    /**
+     * Checks if this job has been completed
+     *
+     * @return bool
+     */
+    public function isCompleted(): bool
+    {
+        return $this->status === self::COMPLETED;
+    }
+
+    /**
+     * Checks if this job has been completed
+     *
+     * @return bool
+     */
+    public function isFailed(): bool
+    {
+        return $this->status === self::FAILED;
+    }
 }
