@@ -64,7 +64,7 @@ final class Utils
     /**
      * Replace all invalid characters from a filename with a "_" symbol
      *
-     * @param string $name The filename to sanitize
+     * @param  string  $name  The filename to sanitize
      *
      * @return string
      */
@@ -76,7 +76,7 @@ final class Utils
     /**
      * Recursively delete files or directories
      *
-     * @param string $path a filesystem object to delete (file or directory)
+     * @param  string  $path  a filesystem object to delete (file or directory)
      *
      * @return bool
      */
@@ -108,7 +108,7 @@ final class Utils
     /**
      * Create a directory and set permissions
      *
-     * @param string $directory
+     * @param  string  $directory
      *
      * @return void
      * @throws \App\Exceptions\FileSystemException
@@ -129,7 +129,7 @@ final class Utils
      * Returns the path of a folder inside the storage/app directory.
      * The directory will be created if it does not exist
      *
-     * @param string $for A name for the subfolder
+     * @param  string  $for  A name for the subfolder
      *
      * @return string
      * @throws \App\Exceptions\FileSystemException
@@ -147,8 +147,8 @@ final class Utils
     /**
      * Returns the path of a random file in a storage directory
      *
-     * @param string $for
-     * @param string $prefix
+     * @param  string  $for
+     * @param  string  $prefix
      *
      * @return string
      * @throws \App\Exceptions\FileSystemException
@@ -172,8 +172,8 @@ final class Utils
     /**
      * Create a random filename
      *
-     * @param string $prefix
-     * @param string $suffix
+     * @param  string  $prefix
+     * @param  string  $suffix
      *
      * @return string
      */
@@ -185,8 +185,8 @@ final class Utils
     /**
      * Return the path of a temporary file in the temporary directory
      *
-     * @param string $prefix
-     * @param string $extension
+     * @param  string  $prefix
+     * @param  string  $extension
      *
      * @return string
      * @throws \App\Exceptions\FileSystemException
@@ -199,10 +199,10 @@ final class Utils
     /**
      * Runs a shell command and checks for successful completion of execution
      *
-     * @param array         $command
-     * @param string|null   $cwd
-     * @param int|null      $timeout
-     * @param callable|null $callback
+     * @param  array  $command
+     * @param  string|null  $cwd
+     * @param  int|null  $timeout
+     * @param  callable|null  $callback
      *
      * @return string|null
      * @throws \Symfony\Component\Process\Exception\ProcessFailedException
@@ -221,8 +221,8 @@ final class Utils
     /**
      * Maps a ProcessFailedException to a more readable error message.
      *
-     * @param \Symfony\Component\Process\Exception\ProcessFailedException $e
-     * @param array                                                       $errorCodeMap
+     * @param  \Symfony\Component\Process\Exception\ProcessFailedException  $e
+     * @param  array  $errorCodeMap
      *
      * @return \Throwable
      */
@@ -245,9 +245,9 @@ final class Utils
      * The user provides a number to format and the maximum number of decimal places.
      * If the provided number is too small the scientific notation will be used.
      *
-     * @param float $number     A number
-     * @param int   $decimals   The maximum number of decimal places
-     * @param bool  $scientific Is scientific notation enabled?
+     * @param  float  $number  A number
+     * @param  int  $decimals  The maximum number of decimal places
+     * @param  bool  $scientific  Is scientific notation enabled?
      *
      * @return string
      */
@@ -263,7 +263,7 @@ final class Utils
     /**
      * Count the number of lines in a text file using "wc" shell utility for performance
      *
-     * @param string $file
+     * @param  string  $file
      *
      * @return integer
      */
@@ -281,7 +281,7 @@ final class Utils
      * A node types file is a TSV files where comments are denoted with a "#" symbol at the beginning of a row.
      * Each row must contain at most two field: a name (string) and an optional weight (number)
      *
-     * @param string $file
+     * @param  string  $file
      *
      * @return bool
      */
@@ -318,7 +318,7 @@ final class Utils
      * I know a TSV file with a single field doesn't make sense but PHENSIM will use more than one fields when we will introduce ML
      * prediction.
      *
-     * @param string $file
+     * @param  string  $file
      *
      * @return bool
      */
@@ -351,7 +351,7 @@ final class Utils
      * An edge subtypes file is a TSV files where comments are denoted with a "#" symbol at the beginning of a row.
      * Each row must contain at most three field: a name (string), an optional weight (number), and an optional priority (number)
      *
-     * @param string $file
+     * @param  string  $file
      *
      * @return bool
      */
@@ -389,7 +389,7 @@ final class Utils
      * Checks if a file could contain an enrichment db
      * An enrichment file is a TSV files with 9 fields where comments are denoted with a "#" symbol at the beginning of a row.
      *
-     * @param string $file
+     * @param  string  $file
      *
      * @return bool
      */
@@ -421,7 +421,7 @@ final class Utils
     /**
      * Checks if a file is a valid phensim input file
      *
-     * @param string $file
+     * @param  string  $file
      *
      * @return bool
      */
@@ -435,10 +435,8 @@ final class Utils
             return false;
         }
         $aType = [
-            //@todo FILL THIS ARRAY!!!
-            //            Launcher::OVEREXPRESSION  => true,
-            //            Launcher::UNDEREXPRESSION => true,
-            //            Launcher::BOTH            => true,
+            Launcher::OVEREXPRESSION  => true,
+            Launcher::UNDEREXPRESSION => true,
         ];
         $result = true;
         while (($line = fgets($fp)) !== false) {
@@ -451,6 +449,34 @@ final class Utils
                 $c !== 2 ||
                 !isset($aType[strtoupper($fields[1])])
             ) {
+                $result = false;
+                break;
+            }
+        }
+        @fclose($fp);
+
+        return $result;
+    }
+
+    /**
+     * Checks if a file contains a list of elements
+     *
+     * @param  string  $file
+     *
+     * @return bool
+     */
+    public static function checkListFile(string $file): bool
+    {
+        if (!file_exists($file)) {
+            return false;
+        }
+        $fp = @fopen($file, 'rb');
+        if (!$fp) {
+            return false;
+        }
+        $result = true;
+        while (($line = fgets($fp)) !== false) {
+            if (empty($line)) {
                 $result = false;
                 break;
             }

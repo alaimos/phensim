@@ -89,13 +89,15 @@ class SimulationJob implements ShouldQueue
         $this->simulation->appendLog('Preparing simulation...', false);
         $launcher = new Launcher($this->simulation->jobDirectory());
         $launcher->setOrganism($this->simulation->organism->accession)
-                 ->setSeed($this->simulation->getParameter('epsilon', 0.001))
+                 ->setEpsilon($this->simulation->getParameter('epsilon', 0.001))
+                 ->setSeed($this->simulation->getParameter('seed'))
                  ->setRemoveNodes($this->simulation->getParameter('remove', []))
                  ->setFdrMethod($this->simulation->getParameter('fdr', Launcher::FDR_BH))
                  ->setReactome($this->simulation->getParameter('reactome') === true)
                  ->setFast($this->simulation->getParameter('fast') === true);
         if ($this->simulation->getParameter('enrichMiRNAs', false)) {
             $launcher->addEnricher(Launcher::MIRNA_ENRICHER);
+            $launcher->setMiRNAEnrichmentEvidence($this->simulation->getParameter('miRNAsEvidence', Launcher::EVIDENCE_STRONG));
         }
         if ($this->simulation->enrichment_database_file !== null) {
             $launcher->setDBEnricher(

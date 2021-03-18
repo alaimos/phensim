@@ -13,17 +13,19 @@
         <h6 class="heading-small mb-4">1. Choose a name for the simulation</h6>
 
         <div class="pl-lg-4">
-            <label class="form-control-label" for="input-name">{{ __('Name') }}</label>
-            <input type="text" name="name" id="input-name"
-                   class="form-control form-control-alternative @error('state.name') is-invalid @enderror"
-                   placeholder="{{ __('Name') }}"
-                   wire:model.defer="state.name"
-                   required autofocus>
-            @error('state.name')
-            <span class="invalid-feedback" role="alert">
-                <strong>{{ $message }}</strong>
-            </span>
-            @enderror
+            <div class="form-group @error('state.name') has-danger @enderror">
+                <label class="form-control-label" for="input-name">{{ __('Name') }}</label>
+                <input type="text" name="name" id="input-name"
+                       class="form-control form-control-alternative @error('state.name') is-invalid @enderror"
+                       placeholder="{{ __('Name') }}"
+                       wire:model.defer="state.name"
+                       required autofocus>
+                @error('state.name')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+                @enderror
+            </div>
         </div>
 
         <h6 class="heading-small mb-4 mt-4">2. Select the organism</h6>
@@ -171,14 +173,14 @@
                 <h6 class="heading-small mb-4">4. Select optional parameters</h6>
                 <div class="pl-lg-4">
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group @error('state.epsilon') has-danger @enderror">
                                 <label class="form-control-label"
                                        for="input-epsilon">{{ __('Epsilon Threshold') }}</label>
                                 <input type="number" id="input-epsilon"
                                        class="form-control form-control-alternative @error('state.epsilon') is-invalid @enderror"
                                        wire:model.defer="state.epsilon"
-                                       required min="0" max="1" step="0.00001">
+                                       min="0" max="1" step="0.00001">
                                 @error('state.epsilon')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
@@ -186,7 +188,23 @@
                                 @enderror
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+                            <div class="form-group @error('state.seed') has-danger @enderror">
+                                <label class="form-control-label"
+                                       for="input-seed">{{ __('RNG Seed') }}</label>
+                                <input type="number" id="input-seed"
+                                       class="form-control form-control-alternative @error('state.seed') is-invalid @enderror"
+                                       wire:model.defer="state.seed"
+                                       step="1">
+                                @error('state.seed')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
                             <div class="form-group @error('state.fdr') has-danger @enderror">
                                 <label class="form-control-label" for="input-fdr">{{ __('FDR Method') }}</label>
                                 <select id="input-fdr"
@@ -205,21 +223,33 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="custom-control custom-control-alternative custom-checkbox mb-3">
                                 <input class="custom-control-input" id="input-reactome" type="checkbox"
                                        wire:model.defer="state.reactome">
                                 <label class="custom-control-label" for="input-reactome">Add REACTOME pathways?</label>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="custom-control custom-control-alternative custom-checkbox mb-3">
                                 <input class="custom-control-input" id="input-miRNAs" type="checkbox"
-                                       wire:model.defer="state.miRNAs">
+                                       wire:model="state.miRNAs">
                                 <label class="custom-control-label" for="input-miRNAs">Add miRNAs to pathways?</label>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            @if ($state['miRNAs'])
+                                <select
+                                    class="form-control form-control-alternative @error('state.miRNAsEvidence') is-invalid @enderror"
+                                    wire:model="state.miRNAsEvidence">
+                                    <option value=""> -- Select an Evidence Level --</option>
+                                    @foreach(\App\PHENSIM\Launcher::SUPPORTED_EVIDENCE_NAMES as $id => $name)
+                                        <option value="{{ $id }}">{{ $name }}</option>
+                                    @endforeach
+                                </select>
+                            @endif
+                        </div>
+                        <div class="col-md-3">
                             <div class="custom-control custom-control-alternative custom-checkbox mb-3">
                                 <input class="custom-control-input" id="input-fast" type="checkbox"
                                        wire:model.defer="state.fast">
@@ -227,12 +257,11 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
                 <h6 class="heading-small mb-4">5. Submit the simulation</h6>
                 <div class="pl-lg-4">
                     <div class="text-center">
-                        <button type="submit" class="btn btn-success mt-4">{{ __('Save') }}</button>
+                        <button type="submit" class="btn btn-success mt-4">{{ __('Create simulation') }}</button>
                     </div>
                 </div>
             @endif

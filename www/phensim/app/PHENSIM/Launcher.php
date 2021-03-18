@@ -42,6 +42,11 @@ final class Launcher
     public const   EVIDENCE_WEAK             = 'WEAK';
     public const   EVIDENCE_PREDICTION       = 'PREDICTION';
     public const   SUPPORTED_EVIDENCES       = [self::EVIDENCE_STRONG, self::EVIDENCE_WEAK, self::EVIDENCE_PREDICTION];
+    public const   SUPPORTED_EVIDENCE_NAMES  = [
+        self::EVIDENCE_STRONG     => 'Strong interactions',
+        self::EVIDENCE_WEAK       => 'Weak interactions',
+        self::EVIDENCE_PREDICTION => 'Predicted interactions',
+    ];
     public const   OVEREXPRESSION            = 'OVEREXPRESSION';
     public const   UNDEREXPRESSION           = 'UNDEREXPRESSION';
     public const   FDR_BH                    = 'BH';   // Benjamini-Hochberg method
@@ -418,7 +423,7 @@ final class Launcher
     {
         $miRNAEnrichmentEvidence = strtoupper($miRNAEnrichmentEvidence);
         if (!in_array($miRNAEnrichmentEvidence, self::SUPPORTED_EVIDENCES, true)) {
-            throw new LauncherException("Unsupported evidence type.");
+            $miRNAEnrichmentEvidence = self::EVIDENCE_STRONG;
         }
         $this->miRNAEnrichmentEvidence = $miRNAEnrichmentEvidence;
 
@@ -560,6 +565,7 @@ final class Launcher
             throw new LauncherException('Unable to create PHENSIM input file');
         }
         $this->setInputParametersFilePath($inputFile);
+        $this->tempFiles[] = $inputFile;
 
         return $this;
     }
@@ -580,7 +586,9 @@ final class Launcher
             if (file_put_contents($nonExpFile, implode(PHP_EOL, $accessions)) === false) {
                 throw new LauncherException('Unable to create PHENSIM non-expressed nodes file');
             }
+            $this->tempFiles[] = $nonExpFile;
         }
+        $this->setNonExpressedNodesFilePath($nonExpFile);
 
         return $this;
     }

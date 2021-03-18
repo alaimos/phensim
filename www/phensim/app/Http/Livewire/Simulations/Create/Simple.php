@@ -25,19 +25,21 @@ class Simple extends Component
 
     public $organisms;
     public array $state = [
-        'name'     => '',
-        'organism' => '',
-        'nodes'    => [
+        'name'           => '',
+        'organism'       => '',
+        'nodes'          => [
             'over'         => [],
             'under'        => [],
             'nonExpressed' => [],
             'knockout'     => [],
         ],
-        'epsilon'  => 0.001,
-        'fdr'      => Launcher::FDR_BH,
-        'reactome' => false,
-        'fast'     => true,
-        'miRNAs'   => true,
+        'epsilon'        => 0.001,
+        'seed'           => '',
+        'fdr'            => Launcher::FDR_BH,
+        'reactome'       => false,
+        'fast'           => true,
+        'miRNAs'         => true,
+        'miRNAsEvidence' => Launcher::EVIDENCE_STRONG,
     ];
     public $sortColumn = 'name';
     public $sortDirection = 'asc';
@@ -93,10 +95,12 @@ class Simple extends Component
             'state.nodes.knockout'       => ['array'],
             'state.nodes.knockout.*'     => [Rule::exists('nodes', 'accession')],
             'state.epsilon'              => ['numeric'],
+            'state.seed'                 => ['numeric'],
             'state.fdr'                  => ['string', Rule::in(Launcher::SUPPORTED_FDRS)],
             'state.reactome'             => ['boolean'],
             'state.fast'                 => ['boolean'],
             'state.miRNAs'               => ['boolean'],
+            'state.miRNAsEvidence'       => ['string', Rule::in(Launcher::SUPPORTED_EVIDENCES)],
         ];
     }
 
@@ -110,8 +114,6 @@ class Simple extends Component
 
     /**
      * Save the simulation
-     *
-     * @throws \JsonException
      */
     public function save(): void
     {
@@ -128,22 +130,21 @@ class Simple extends Component
                     'user_id'     => auth()->id(),
                     'organism_id' => $state['organism'],
                     'status'      => Simulation::READY,
-                    'parameters'  => json_encode(
-                        [
-                            'inputParameters' => [
-                                Launcher::OVEREXPRESSION  => $state['nodes']['over'],
-                                Launcher::UNDEREXPRESSION => $state['nodes']['under'],
-                            ],
-                            'epsilon'         => $state['epsilon'],
-                            'fdr'             => $state['fdr'],
-                            'reactome'        => $state['reactome'],
-                            'fast'            => $state['fast'],
-                            'enrichMiRNAs'    => $state['miRNAs'],
-                            'nonExpressed'    => $state['nodes']['nonExpressed'],
-                            'remove'          => $state['nodes']['knockout'],
+                    'parameters'  => [
+                        'inputParameters' => [
+                            Launcher::OVEREXPRESSION  => $state['nodes']['over'],
+                            Launcher::UNDEREXPRESSION => $state['nodes']['under'],
                         ],
-                        JSON_THROW_ON_ERROR
-                    ),
+                        'epsilon'         => (!empty($state['epsilon'])) ? $state['epsilon'] : 0.001,
+                        'seed'            => (!empty($state['seed'])) ? $state['seed'] : null,
+                        'fdr'             => $state['fdr'],
+                        'reactome'        => $state['reactome'],
+                        'fast'            => $state['fast'],
+                        'enrichMiRNAs'    => $state['miRNAs'],
+                        'miRNAsEvidence'  => $state['miRNAsEvidence'] ?? Launcher::EVIDENCE_STRONG,
+                        'nonExpressed'    => $state['nodes']['nonExpressed'],
+                        'remove'          => $state['nodes']['knockout'],
+                    ],
                 ]
             );
             $this->dispatchBrowserEvent(
@@ -169,8 +170,7 @@ class Simple extends Component
     public function simulationSubmit(Simulation $simulation, bool $submit): Redirector|RedirectResponse
     {
         if ($submit) {
-            $simulation->update(['status' => Simulation::QUEUED]);
-            dispatch(new SimulationJob($simulation));
+            $simulation->submit();
         }
 
         return redirect()->route('simulations.index');

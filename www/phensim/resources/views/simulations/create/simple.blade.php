@@ -1,7 +1,7 @@
 @extends('layouts.app', ['title' => __('New simulation')])
 
 @section('content')
-    <x-page-header class="col-lg-12" gradient="bg-gradient-primary">
+    <x-page-header class="col-lg-12" gradient="bg-gradient-gray-dark">
         <x-slot name="description">
             From this page you can create a new simulation using a guided procedure.
         </x-slot>

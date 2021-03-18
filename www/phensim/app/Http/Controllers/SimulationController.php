@@ -12,27 +12,18 @@ use Illuminate\Http\Request;
 class SimulationController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a simulation
+     *
+     * @param  \App\Models\Simulation  $simulation
      *
      * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
      */
-    public function index(): Factory|View|Application
+    public function show(Simulation $simulation): Factory|View|Application
     {
-        return view('simulations.index');
+        abort_if(!auth()->user()->is_admin && $simulation->user_id !== auth()->id(), 403);
+
+        return view('simulations.show', compact('simulation'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
-     */
-    public function createSimple(): Factory|View|Application
-    {
-        return view('simulations.create.simple');
-    }
-
-    public function createAdvanced()
-    {
-    }
 
 }

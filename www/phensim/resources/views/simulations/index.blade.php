@@ -23,8 +23,8 @@
                                 &nbsp;
                             </div>
                             <div class="col-4 text-right">
-                                <a href="{{ route('simulations.create.custom') }}" class="btn btn-sm btn-primary">
-                                    New custom simulation
+                                <a href="{{ route('simulations.create.advanced') }}" class="btn btn-sm btn-primary">
+                                    New advanced simulation
                                 </a>
                             </div>
                         </div>
@@ -47,16 +47,16 @@
 
 @push('js')
     <script>
-        window.addEventListener('swal:confirm:delete', event => {
+        window.addEventListener('swal:confirm', event => {
             swal({
-                title: event.detail.title,
-                text: event.detail.text,
-                icon: event.detail.type,
+                title: event.detail.title || "",
+                text: event.detail.text || "",
+                icon: event.detail.icon || "",
                 buttons: true,
-                dangerMode: true,
-            }).then((willDelete) => {
-                if (willDelete) {
-                    window.livewire.emit('deleteSimulation', event.detail.id);
+                dangerMode: event.detail.danger || false,
+            }).then((hasConfirmed) => {
+                if (hasConfirmed) {
+                    window.livewire.emit('receivedConfirmation', event.detail.id, event.detail.type);
                 }
             });
         });

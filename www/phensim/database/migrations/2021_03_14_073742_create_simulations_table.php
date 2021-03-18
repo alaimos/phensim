@@ -30,7 +30,7 @@ class CreateSimulationsTable extends Migration
                 $table->string('edge_types_file')->nullable();
                 $table->string('edge_subtypes_file')->nullable();
                 $table->string('non_expressed_nodes_file')->nullable();
-                $table->json('parameters');
+                $table->jsonb('parameters');
                 $table->string('output_file')->nullable();
                 $table->string('pathway_output_file')->nullable();
                 $table->string('nodes_output_file')->nullable();

@@ -7,13 +7,13 @@
 
 namespace App\Models;
 
+use App\Jobs\SimulationJob;
 use App\PHENSIM\Utils;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use JetBrains\PhpStorm\Pure;
 
 class Simulation extends Model
 {
@@ -86,7 +86,6 @@ class Simulation extends Model
      */
     protected $casts = [
         'parameters' => 'array',
-        'data'       => 'array',
         'public'     => 'boolean',
     ];
 
@@ -161,7 +160,7 @@ class Simulation extends Model
      *
      * @param  string  $value
      */
-    public function setJobLogAttribute(string $value): void
+    public function setLogsAttribute(string $value): void
     {
         $aLines = explode("\n", $value);
         $value = implode(
@@ -564,6 +563,16 @@ class Simulation extends Model
     //region Job Directory Stuff
 
     /**
+     * Returns the relative path of the folder where all simulation files will be stored.
+     *
+     * @return string
+     */
+    public function jobDirectoryRelative(): string
+    {
+        return 'jobs/' . $this->id;
+    }
+
+    /**
      * Returns the absolute path of the folder where all files of this simulation will be stored
      * If the directory does not exist it will be created.
      *
@@ -572,7 +581,7 @@ class Simulation extends Model
      */
     public function jobDirectory(): string
     {
-        return Utils::getStorageDirectory('jobs/' . $this->id);
+        return Utils::getStorageDirectory($this->jobDirectoryRelative());
     }
 
     /**
@@ -609,6 +618,16 @@ class Simulation extends Model
     public function canBeDeleted(): bool
     {
         return !in_array($this->status, [self::QUEUED, self::PROCESSING], true);
+    }
+
+    /**
+     * Checks if this job might have any logs to display
+     *
+     * @return bool
+     */
+    public function hasLogs(): bool
+    {
+        return !in_array($this->status, [self::READY, self::QUEUED], true);
     }
 
     /**
@@ -649,5 +668,36 @@ class Simulation extends Model
     public function isFailed(): bool
     {
         return $this->status === self::FAILED;
+    }
+
+    /**
+     * Submit an analysis job to the queue
+     *
+     * @return void
+     */
+    public function submit(): void
+    {
+        $this->update(['status' => self::QUEUED]);
+        SimulationJob::dispatch($this);
+    }
+
+    /**
+     * Resubmit a failed analysis job
+     */
+    public function reSubmit(): void
+    {
+        if ($this->output_file !== null && file_exists($this->output_file)) {
+            @unlink($this->output_file);
+            $this->output_file = null;
+        }
+        if ($this->nodes_output_file !== null && file_exists($this->nodes_output_file)) {
+            @unlink($this->nodes_output_file);
+            $this->nodes_output_file = null;
+        }
+        if ($this->pathway_output_file !== null && file_exists($this->pathway_output_file)) {
+            @unlink($this->pathway_output_file);
+            $this->pathway_output_file = null;
+        }
+        $this->submit();
     }
 }
