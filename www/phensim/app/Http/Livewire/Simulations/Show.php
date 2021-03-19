@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire\Simulations\Show;
+namespace App\Http\Livewire\Simulations;
 
 use App\Models\Simulation;
 use App\PHENSIM\Reader;
@@ -10,16 +10,18 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-class Pathways extends Component
+class Show extends Component
 {
     use WithPagination;
+
     protected $paginationTheme = 'bootstrap';
 
     public Simulation $simulation;
-    public $sortColumn = 'pathwayId';
+    public $sortColumn = 'pathwayFDR';
     public $sortDirection = 'asc';
     public $perPage = 10;
     public $searchColumns = [
@@ -70,10 +72,10 @@ class Pathways extends Component
         $reader = new Reader($this->simulation->output_file);
         $pathways = $reader->readPathwaysList();
         foreach ($this->searchColumns as $column => $value) {
-            if (is_array($value) && !empty($value['value'])) {
+            if (is_array($value) && $value['value'] !== '') {
                 $pathways = $pathways->where($column, $value['operator'], (double)$value['value']);
             } elseif (!is_array($value) && !empty($value)) {
-                $pathways = $pathways->where($column, $value);
+                $pathways = $pathways->filter(fn($data) => (false !== stripos($data[$column], $value)));
             }
         }
         $pathways = $pathways->sortBy($this->sortColumn, SORT_REGULAR, $this->sortDirection === 'desc');
@@ -91,7 +93,7 @@ class Pathways extends Component
     public function render(): Factory|View|Application
     {
         return view(
-            'livewire.simulations.show.pathways',
+            'livewire.simulations.show',
             [
                 'pathways' => $this->getPathways(),
             ]

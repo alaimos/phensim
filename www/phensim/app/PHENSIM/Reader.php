@@ -10,6 +10,7 @@ namespace App\PHENSIM;
 use App\Exceptions\PHENSIM\ReaderException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 
 final class Reader
 {
@@ -222,6 +223,18 @@ final class Reader
     }
 
     /**
+     * Checks if this simulation has results for a specific pathway
+     *
+     * @param  string  $pathway
+     *
+     * @return bool
+     */
+    public function hasPathway(string $pathway): bool
+    {
+        return file_exists($this->workingDirectory . DIRECTORY_SEPARATOR . 'pathway_' . Str::slug($pathway) . '.json');
+    }
+
+    /**
      * Read the list of altered genes for a single pathway
      *
      * @param  string  $pathway
@@ -249,21 +262,49 @@ final class Reader
      * Builds an image to show the pathway graph
      *
      * @param  string  $pathway
+     * @param  string  $organism
      *
      * @return string
+     * @throws \Throwable
      */
-    public function makePathwayImage(string $pathway): string
+    public function makePathwayImage(string $pathway, string $organism): string
     {
-        $file = $this->workingDirectory . DIRECTORY_SEPARATOR . 'pathway_' . Str::slug($pathway) . '.png';
-        if (!file_exists($file)) {
-            $file = $this->workingDirectory . DIRECTORY_SEPARATOR . 'pathway_' . Str::slug($pathway) . '.json';
-            if (!file_exists($file)) {
+        $outputFile = $this->workingDirectory . DIRECTORY_SEPARATOR . 'pathway_' . Str::slug($pathway) . '.png';
+        if (!file_exists($outputFile)) {
+            $inputFile = $this->workingDirectory . DIRECTORY_SEPARATOR . 'pathway_' . Str::slug($pathway) . '.json';
+            if (!file_exists($inputFile)) {
                 throw new ReaderException(sprintf('Pathway "%s" not found', $pathway));
             }
-            //todo
+            try {
+                Utils::runCommand(
+                    [
+                        config('phensim.rscript'),
+                        config('phensim.build_graph'),
+                        '-i',
+                        $inputFile,
+                        '-p',
+                        $pathway,
+                        '-g',
+                        $organism,
+                        '-o',
+                        $outputFile,
+                    ],
+                    $this->workingDirectory,
+                    60
+                );
+            } catch (ProcessFailedException $e) {
+                throw Utils::mapCommandException(
+                    $e,
+                    [
+                        101 => Utils::IGNORED_ERROR_CODE,
+                        102 => 'Unable to build intermediate output file.',
+                        103 => 'Unable to build output file',
+                    ]
+                );
+            }
         }
 
-        return $file;
+        return $outputFile;
     }
 
 }

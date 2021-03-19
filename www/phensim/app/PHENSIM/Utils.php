@@ -14,6 +14,7 @@ use JetBrains\PhpStorm\Pure;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 use Throwable;
+use ZipArchive;
 
 /**
  * All utilities without a specific place will be put here!
@@ -484,6 +485,31 @@ final class Utils
         @fclose($fp);
 
         return $result;
+    }
+
+    /**
+     * Create a zip archive
+     *
+     * @param  string  $filename
+     * @param  array  $files
+     *
+     * @return bool
+     */
+    public static function createZipArchive(string $filename, array $files): bool
+    {
+        $zip = new ZipArchive();
+        if ($zip->open($filename, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+            foreach ($files as $file) {
+                if (file_exists($file)) {
+                    $zip->addFile($file, basename($file));
+                }
+            }
+            $zip->close();
+        } else {
+            return false;
+        }
+
+        return true;
     }
 
 }

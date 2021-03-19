@@ -11,33 +11,7 @@
     <div class="container-fluid mt--7">
         <div class="row">
             <div class="col">
-                <div class="card shadow">
-                    <div class="card-header border-0">
-                        <div class="row align-items-center">
-                            <div class="col-4 text-left">
-                                <a href="{{ route('simulations.create.simple') }}" class="btn btn-sm btn-primary">
-                                    New simple simulation
-                                </a>
-                            </div>
-                            <div class="col">
-                                &nbsp;
-                            </div>
-                            <div class="col-4 text-right">
-                                <a href="{{ route('simulations.create.advanced') }}" class="btn btn-sm btn-primary">
-                                    New advanced simulation
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                    </div>
-                    @livewire('simulations.data-table')
-                    <div class="card-footer py-4">
-                        <nav class="d-flex justify-content-end" aria-label="...">
-
-                        </nav>
-                    </div>
-                </div>
+                @livewire('simulations.index')
             </div>
         </div>
 

@@ -43,8 +43,9 @@ RUN apt-get update \
     && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
     && add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' \
     && apt-get install -y r-base-dev \
+    && apt-get install -y libxml2-dev libssl-dev libcurl4-openssl-dev librsvg2-dev \
     && R -e "install.packages(c('optparse', 'BiocManager'), dependencies = TRUE)" \
-    && R -e "BiocManager::install(c('qvalue', 'locfdr'), dependencies = TRUE)" \
+    && R -e "BiocManager::install(c('qvalue', 'locfdr', 'rjson', 'dplyr', 'SBGNview', 'pathview'), dependencies = TRUE)" \
     && apt-get -y autoremove \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

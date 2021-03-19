@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-class DataTable extends Component
+class Index extends Component
 {
     use WithPagination;
 
@@ -25,7 +25,7 @@ class DataTable extends Component
         'status' => -1,
     ];
     public $displayingLog = false;
-    public $currentSimulationId = null;
+    public $currentSimulationId;
 
     public function sortByColumn($column): void
     {
@@ -159,7 +159,7 @@ class DataTable extends Component
         $simulations = $this->buildQuery();
 
         return view(
-            'livewire.simulations.data-table',
+            'livewire.simulations.index',
             [
                 'simulations'       => $simulations->paginate($this->perPage),
                 'currentSimulation' => ($this->displayingLog) ? Simulation::where('id', $this->currentSimulationId)->firstOrFail() : null,

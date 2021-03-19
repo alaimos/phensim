@@ -209,6 +209,20 @@ final class Launcher
      */
     private array $tempFiles = [];
 
+    /**
+     * A list of files to put in the input zip archive
+     *
+     * @var array
+     */
+    private array $zipArchiveContent = [];
+
+    /**
+     * A list of files used to add pathway element
+     *
+     * @var array
+     */
+    private array $enrichmentFiles = [];
+
     //endregion
 
     /**
@@ -318,17 +332,21 @@ final class Launcher
             throw new LauncherException('An invalid input file for the DB enrichment has been provided');
         }
         $this->addEnricher('textEnricher')->addEnricherParameters('inputFile', $inputFile);
+        $this->enrichmentFiles = [$inputFile];
         if (!empty($filter)) {
             $this->addEnricherParameters('filter', $filter);
         }
         if (!empty($nodeTypesFile) && file_exists($nodeTypesFile)) {
             $this->addEnricherParameters('nodeTypesFile', $nodeTypesFile);
+            $this->enrichmentFiles[] = $nodeTypesFile;
         }
         if (!empty($edgeTypesFile) && file_exists($edgeTypesFile)) {
             $this->addEnricherParameters('edgeTypesFile', $edgeTypesFile);
+            $this->enrichmentFiles[] = $edgeTypesFile;
         }
         if (!empty($edgeSubTypesFile) && file_exists($edgeSubTypesFile)) {
             $this->addEnricherParameters('edgeSubTypesFile', $edgeSubTypesFile);
+            $this->enrichmentFiles[] = $edgeSubTypesFile;
         }
 
         return $this;
@@ -641,6 +659,7 @@ final class Launcher
         }
         $this->appendParameter($removeNodesFile, self::REMOVE_NODES_FILE);
         $this->tempFiles[] = $removeNodesFile;
+        $this->zipArchiveContent[] = $removeNodesFile;
     }
 
     /**
@@ -683,14 +702,18 @@ final class Launcher
      * @param  mixed  $value
      * @param  string  $parameter
      *
-     * @return void
+     * @return bool
      */
-    private function appendParameter(mixed $value, string $parameter): void
+    private function appendParameter(mixed $value, string $parameter): bool
     {
         if (!empty($value)) {
             $this->commandLine[] = $parameter;
             $this->commandLine[] = $value;
+
+            return true;
         }
+
+        return false;
     }
 
     /**
@@ -715,13 +738,21 @@ final class Launcher
      */
     private function buildCommandLine(): void
     {
+        $this->zipArchiveContent = [
+            $this->inputParametersFilePath,
+        ];
         $this->commandLine = $this->mithrilCommandBase;
         $this->appendParameter($this->inputParametersFilePath, self::INPUT_FILE);
-        $this->appendParameter($this->nonExpressedNodesFilePath, self::NON_EXPRESSED_FILE);
+        if ($this->appendParameter($this->nonExpressedNodesFilePath, self::NON_EXPRESSED_FILE)) {
+            $this->zipArchiveContent[] = $this->nonExpressedNodesFilePath;
+        }
         $this->buildRemoveNodesFile();
         $this->appendOutputFiles();
         $this->appendListParameter($this->enrichers, self::ENRICHER);
         $this->appendEnricherParameters();
+        if (!empty($this->enrichmentFiles)) {
+            $this->zipArchiveContent = array_merge($this->zipArchiveContent, $this->enrichmentFiles);
+        }
         $this->appendParameter(sprintf(self::EPSILON_VALUE, $this->epsilon), self::EPSILON);
         $this->appendParameter($this->simulationIterations, self::SIMULATION_ITERATIONS);
         $this->appendParameter($this->bootstrapIterations, self::BOOTSTRAP_ITERATIONS);
@@ -771,7 +802,7 @@ final class Launcher
      *
      * @return void
      * @throws CommandException
-     * @throws LauncherException
+     * @throws \Throwable
      */
     public function run(?callable $callback = null): void
     {
@@ -782,7 +813,7 @@ final class Launcher
             Utils::runCommand($this->commandLine, $this->workingDirectory, null, $callback);
             $this->runFDR($callback);
         } catch (ProcessFailedException $e) {
-            Utils::mapCommandException(
+            throw Utils::mapCommandException(
                 $e,
                 [
                     101 => 'Invalid input file: file does not exist.',
@@ -799,6 +830,9 @@ final class Launcher
         }
         if (!file_exists($this->nodesMatrixOutputFilename)) {
             throw new LauncherException('Unable to create nodes matrix output file');
+        }
+        if (!empty($this->zipArchiveContent)) {
+            Utils::createZipArchive($this->outputFilename . '.zip', $this->zipArchiveContent);
         }
     }
 
