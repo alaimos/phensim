@@ -669,13 +669,13 @@ final class Launcher
      */
     private function appendOutputFiles(): void
     {
-        $outputFile = $this->workingDirectory . Utils::tempFilename('phensim_output', 'tsv');
+        $outputFile = $this->workingDirectory . Utils::tempFilename('phensim_output', '.tsv');
         $this->appendParameter($outputFile, self::OUTPUT_FILE);
         $this->outputFilename = $outputFile;
-        $outputPathwayMatrix = $this->workingDirectory . Utils::tempFilename('phensim_output_pathway_matrix', 'tsv');
+        $outputPathwayMatrix = $this->workingDirectory . Utils::tempFilename('phensim_output_pathway_matrix', '.tsv');
         $this->appendParameter($outputPathwayMatrix, self::PATHWAY_MATRIX_OUTPUT);
         $this->pathwayMatrixOutputFilename = $outputPathwayMatrix;
-        $outputNodesMatrix = $this->workingDirectory . Utils::tempFilename('phensim_output_nodes_matrix', 'tsv');
+        $outputNodesMatrix = $this->workingDirectory . Utils::tempFilename('phensim_output_nodes_matrix', '.tsv');
         $this->appendParameter($outputNodesMatrix, self::NODES_MATRIX_OUTPUT);
         $this->nodesMatrixOutputFilename = $outputNodesMatrix;
     }
@@ -765,6 +765,11 @@ final class Launcher
         }
         if ($this->fast) {
             $this->commandLine[] = self::FAST;
+        }
+        $commandLineFile = $this->workingDirectory . Utils::tempFilename('phensim_command_line_', '.txt');
+        if (false !== file_put_contents($commandLineFile, implode(' ', $this->commandLine) . PHP_EOL)) {
+            $this->tempFiles[] = $commandLineFile;
+            $this->zipArchiveContent[] = $commandLineFile;
         }
     }
 

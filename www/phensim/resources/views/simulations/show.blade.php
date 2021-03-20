@@ -29,7 +29,6 @@
                                 Download Input Files
                             </a>
                         </div>
-                        <h6 class="heading-small text-muted mb-4">Other parameters</h6>
                     </div>
                 </div>
                 @livewire('simulations.show', ['simulation' => $simulation])

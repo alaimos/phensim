@@ -1,6 +1,15 @@
 <div class="card shadow mt-4">
     <div class="card-header border-0">
-        <h3 class="mb-0">Results by pathway</h3>
+        <div class="row">
+            <div class="col-6">
+                <h3 class="mb-0">Results by pathway</h3>
+            </div>
+            <div class="col-6 text-right">
+                <div wire:loading.delay>
+                    <i class="fas fa-spinner fa-pulse"></i> Loading...
+                </div>
+            </div>
+        </div>
     </div>
     <div class="table-responsive">
         <table class="table align-items-center table-flush">
@@ -101,6 +110,7 @@
                         <td class="text-right">{{ \App\PHENSIM\Utils::formatDouble($pathway['pathwayFDR']) }}</td>
                         <td class="text-center">
                             <a href="{{ route('simulations.pathways.show', [$simulation, $pathway['pathwayId']]) }}"
+                               data-toggle="tooltip" data-placement="top"
                                title="Show pathway">
                                 <i class="fas fa-eye fa-fw" data-toggle="tooltip"></i>
                             </a>

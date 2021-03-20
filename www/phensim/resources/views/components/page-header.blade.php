@@ -6,7 +6,7 @@
         <div class="row">
             <div {{ $attributes->merge(['class' => 'col-md-12']) }}>
                 <h1 class="display-2 text-white">{{ $slot }}</h1>
-                @if ($description)
+                @if ($description ?? null)
                     <p class="text-white mt-0 mb-5">{{ $description }}</p>
                 @endif
             </div>

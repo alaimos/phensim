@@ -10,10 +10,13 @@
                 <div class="col">
                     &nbsp;
                 </div>
-                <div class="col-4 text-right">
+                <div class="col-4 d-flex flex-row-reverse">
                     <a href="{{ route('simulations.create.advanced') }}" class="btn btn-sm btn-primary">
                         New advanced simulation
                     </a>
+                    <div class="mr-2" wire:loading.delay>
+                        <i class="fas fa-spinner fa-pulse"></i> Loading...
+                    </div>
                 </div>
             </div>
         </div>
@@ -75,32 +78,34 @@
                             <td>{{ $simulation->created_at->diffForHumans() }}</td>
                             <td>
                                 @if($simulation->isReady())
-                                    <a href="#"
+                                    <a href="#" data-toggle="tooltip" data-placement="top"
                                        wire:click.prevent="confirmSimulationSubmission({{ $simulation->id }})"
                                        title="Submit simulation">
                                         <i class="fas fa-play fa-fw"></i>
                                     </a>
-                                @elseif ($simulation->isFailed())
-                                    <a href="#"
+                                @elseif ($simulation->isFailed() || ($simulation->isCompleted() && auth()->user()->is_admin))
+                                    <a href="#" data-toggle="tooltip" data-placement="top"
                                        wire:click.prevent="confirmSimulationReSubmission({{ $simulation->id }})"
                                        title="Resubmit simulation">
                                         <i class="fas fa-redo fa-fw"></i>
                                     </a>
                                 @endif
                                 @if($simulation->hasLogs())
-                                    <a href="#"
+                                    <a href="#" data-toggle="tooltip" data-placement="top"
                                        wire:click.prevent="displayLogs({{ $simulation->id }})"
                                        title="Show logs">
                                         <i class="fas fa-file-alt fa-fw"></i>
                                     </a>
                                 @endif
                                 @if($simulation->isCompleted())
-                                    <a href="{{ route('simulations.show', $simulation) }}" title="Show simulation">
+                                    <a href="{{ route('simulations.show', $simulation) }}"
+                                       data-toggle="tooltip" data-placement="top"
+                                       title="Show simulation">
                                         <i class="fas fa-eye fa-fw" data-toggle="tooltip"></i>
                                     </a>
                                 @endif
                                 @if($simulation->canBeDeleted())
-                                    <a href="#"
+                                    <a href="#" data-toggle="tooltip" data-placement="top"
                                        wire:click.prevent="confirmSimulationDeletion({{ $simulation->id }})"
                                        class="text-danger"
                                        title="Delete">

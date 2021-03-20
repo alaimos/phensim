@@ -2,10 +2,13 @@
 
 namespace App\Providers;
 
+use App\Http\Middleware\CheckUserIsAdmin;
+use App\Services\ApiDownloadService;
 use App\Services\DashboardService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -17,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(DashboardService::class, fn($app) => new DashboardService());
+        $this->app->bind(ApiDownloadService::class, fn($app, $params) => new ApiDownloadService(array_shift($params)));
     }
 
     /**
@@ -26,6 +30,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Livewire::addPersistentMiddleware(
+            [
+                CheckUserIsAdmin::class,
+            ]
+        );
+
         /**
          * Paginate a standard Laravel Collection.
          *

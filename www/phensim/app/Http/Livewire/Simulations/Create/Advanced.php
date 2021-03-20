@@ -123,6 +123,7 @@ class Advanced extends Component
                     'fast'           => $state['fast'],
                     'enrichMiRNAs'   => $state['miRNAs'],
                     'miRNAsEvidence' => $state['miRNAsEvidence'] ?? Launcher::EVIDENCE_STRONG,
+                    'filter'         => $state['filter'] ?? null,
                     'remove'         => $knockout,
                 ],
             ]

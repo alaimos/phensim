@@ -68,6 +68,12 @@ class Simulation extends Model
     protected $fillable = [
         'name',
         'status',
+        'input_parameters_file',
+        'enrichment_database_file',
+        'node_types_file',
+        'edge_types_file',
+        'edge_subtypes_file',
+        'non_expressed_nodes_file',
         'parameters',
         'output_file',
         'pathway_output_file',
@@ -221,7 +227,7 @@ class Simulation extends Model
      */
     private function getFileAttr(string $attribute): ?string
     {
-        if (!$this->attributes[$attribute]) {
+        if (!isset($this->attributes[$attribute]) || !$this->attributes[$attribute]) {
             return null;
         }
 

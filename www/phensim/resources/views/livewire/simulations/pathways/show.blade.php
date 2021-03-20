@@ -4,11 +4,14 @@
             <div class="col-8">
                 <h3 class="mb-0">Results</h3>
             </div>
-            <div class="col-4 text-right">
+            <div class="col-4 d-flex flex-row-reverse">
                 <a href="{{ route('simulations.show', $simulation) }}" class="btn btn-sm btn-primary">
                     <i class="fas fa-fw fa-arrow-left"></i>
                     Go back
                 </a>
+                <div class="mr-2" wire:loading.delay>
+                    <i class="fas fa-spinner fa-pulse"></i> Loading...
+                </div>
             </div>
         </div>
     </div>

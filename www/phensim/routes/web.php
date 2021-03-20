@@ -45,6 +45,8 @@ Route::group(
             'simulations.pathways.show'
         );
         Route::view('/simulations', 'simulations.index')->name('simulations.index');
+        Route::view('/docs', 'docs.index')->name('docs.index');
+        Route::view('/docs/api', 'docs.api')->name('docs.api');
 
         Route::group(
             ['middleware' => 'is.admin'],

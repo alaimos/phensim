@@ -2,6 +2,7 @@
 
 namespace App\Rules;
 
+use Illuminate\Http\UploadedFile;
 use Illuminate\Contracts\Validation\Rule;
 use Livewire\TemporaryUploadedFile;
 
@@ -34,7 +35,10 @@ class InputFileRule implements Rule
      */
     public function passes($attribute, $value): bool
     {
-        if ($value instanceof TemporaryUploadedFile && $value->exists()) {
+        if (
+            ($value instanceof TemporaryUploadedFile && $value->exists()) ||
+            ($value instanceof UploadedFile && $value->isFile())
+        ) {
             if ($value->getMimeType() !== 'text/plain') {
                 return false;
             }

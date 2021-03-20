@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\SimulationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +15,16 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});
+Route::group(
+    [
+        'prefix'     => 'v1',
+        'middleware' => 'auth:sanctum',
+        'as'         => 'api.',
+    ],
+    static function () {
+        Route::get('ping', fn(Request $request) => $request->user());
+        Route::get('simulations/{simulation}/download/{type}', [SimulationController::class, 'download'])->name('simulations.download');
+        Route::get('simulations/{simulation}/submit', [SimulationController::class, 'submit'])->name('simulations.submit');
+        Route::apiResource('simulations', SimulationController::class)->except('update');
+    }
+);

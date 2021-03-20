@@ -149,7 +149,7 @@ class Index extends Component
             $simulation->delete();
         } elseif ($type === 'submit' && $simulation->isReady()) {
             $simulation->submit();
-        } elseif ($type === 'resubmit' && $simulation->isFailed()) {
+        } elseif ($type === 'resubmit' && ($simulation->isFailed() || ($simulation->isCompleted() && auth()->user()->is_admin))) {
             $simulation->reSubmit();
         }
     }

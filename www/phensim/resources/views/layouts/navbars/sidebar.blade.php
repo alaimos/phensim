@@ -46,18 +46,18 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('home') }}">
+                    <a class="nav-link" href="{{ route('docs.index') }}">
                         <i class="ni ni-books text-primary"></i> {{ __('User Manual') }}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('docs.api') }}">
+                        <i class="ni ni-ui-04 text-primary"></i> {{ __('API') }}
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('home') }}">
                         <i class="ni ni-book-bookmark text-primary"></i> {{ __('References') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('home') }}">
-                        <i class="ni ni-ui-04 text-primary"></i> {{ __('API') }}
                     </a>
                 </li>
                 <li class="nav-item">

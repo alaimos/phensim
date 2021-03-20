@@ -38,7 +38,7 @@
                                 </div>
                                 <div class="col-auto">
                                     <div class="icon icon-shape bg-orange text-white rounded-circle shadow">
-                                        <i class="fas fa-cog fa-spin"></i>
+                                        <i class="fas fa-cog{{ $counts[\App\Models\Simulation::PROCESSING] > 0 ? ' fa-spin' : '' }}"></i>
                                     </div>
                                 </div>
                             </div>
