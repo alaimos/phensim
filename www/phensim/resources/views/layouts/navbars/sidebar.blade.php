@@ -45,6 +45,13 @@
                         <i class="ni ni-settings-gear-65 text-primary"></i> {{ __('Simulations') }}
                     </a>
                 </li>
+                @if (auth()->user()->is_admin)
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('users.index') }}">
+                            <i class="ni ni-single-02 text-primary"></i> {{ __('Users') }}
+                        </a>
+                    </li>
+                @endif
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('docs.index') }}">
                         <i class="ni ni-books text-primary"></i> {{ __('User Manual') }}

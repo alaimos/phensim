@@ -11,23 +11,29 @@
     <div class="container-fluid mt--7">
         <div class="row">
             <div class="col">
-                <div class="card shadow">
-                    <div class="card-header border-0">
+                <div class="card shadow collapsible">
+                    <div class="card-header border-0" id="headingInputParameters"
+                         data-toggle="collapse" data-target="#inputParameters" aria-expanded="false"
+                         aria-controls="inputParameters">
                         <h3 class="mb-0">Input Parameters</h3>
                     </div>
-                    <div class="card-body">
-                        @if (session()->has('download-status'))
-                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                                {{ session('download-status') }}
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
+                    <div id="inputParameters"
+                         class="collapse" aria-labelledby="headingInputParameters">
+                        <div class="card-body">
+                            @if (session()->has('download-status'))
+                                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                    {{ session('download-status') }}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            @endif
+                            <div class="d-flex align-items-center justify-content-center flex-wrap mb-4">
+                                <a href="{{ route('simulations.download.input', $simulation) }}"
+                                   class="btn btn-primary">
+                                    Download Input Files
+                                </a>
                             </div>
-                        @endif
-                        <div class="d-flex align-items-center justify-content-center flex-wrap mb-4">
-                            <a href="{{ route('simulations.download.input', $simulation) }}" class="btn btn-primary">
-                                Download Input Files
-                            </a>
                         </div>
                     </div>
                 </div>

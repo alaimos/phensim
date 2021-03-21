@@ -26,10 +26,11 @@ class SimulationResource extends JsonResource
         $downloadService = app()->make(ApiDownloadService::class, [$this->resource]);
 
         return [
-            'id'         => $this->id,
-            'name'       => $this->name,
-            'status'     => $this->status,
-            'parameters' => [
+            'id'              => $this->id,
+            'name'            => $this->name,
+            'status'          => $this->status,
+            'readable_status' => $this->readable_status,
+            'parameters'      => [
                 'fast'           => $this->getParameter('fast'),
                 'fdr'            => $this->getParameter('fdr'),
                 'epsilon'        => $this->getParameter('epsilon'),
@@ -38,11 +39,11 @@ class SimulationResource extends JsonResource
                 'enrichMiRNAs'   => $this->getParameter('enrichMiRNAs'),
                 'miRNAsEvidence' => $this->getParameter('miRNAsEvidence'),
             ],
-            'logs'       => $this->logs,
-            'organism'   => $this->organism->accession,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-            'links'      => [
+            'logs'            => $this->logs,
+            'organism'        => $this->organism->accession,
+            'created_at'      => $this->created_at,
+            'updated_at'      => $this->updated_at,
+            'links'           => [
                 'public'              => '',
                 'input_parameters'    => $downloadService->downloadUrl('input_parameters'),
                 'enrichment_database' => $downloadService->downloadUrl('enrichment_database'),

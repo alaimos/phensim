@@ -51,7 +51,7 @@ Route::group(
         Route::group(
             ['middleware' => 'is.admin'],
             static function () {
-                Route::resource('/user', UserController::class)->except(['show']);
+                Route::resource('users', UserController::class)->except(['show']);
             }
         );
     }

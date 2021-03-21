@@ -151,6 +151,7 @@ class SimulationController extends Controller
     public function destroy(Simulation $simulation): JsonResponse
     {
         abort_if(!auth()->user()->is_admin && $simulation->user_id !== auth()->id(), 403);
+        abort_unless($simulation->canBeDeleted(), 500, 'This simulation cannot be deleted');
 
         $simulation->deleteJobDirectory();
         $simulation->delete();
@@ -193,6 +194,8 @@ class SimulationController extends Controller
             $simulation->submit();
         } elseif ($simulation->isFailed() || ($simulation->isCompleted() && auth()->user()->is_admin)) {
             $simulation->reSubmit();
+        } else {
+            abort(500, 'This simulation cannot be submitted');
         }
 
         return new SimulationResource($simulation);

@@ -21872,3 +21872,29 @@ html:not([dir='rtl']) .noUi-horizontal .noUi-handle
 
     height: 3px;
 }
+
+.collapsible .card-header[aria-expanded=true]:after {
+    transform: rotate(
+        180deg
+    );
+}
+
+.collapsible .card-header[aria-expanded=false]:after {
+    content: '\ea0f';
+}
+
+.collapsible .card-header:after {
+    font: normal normal normal 14px/1 NucleoIcons;
+    line-height: 0;
+    position: absolute;
+    top: 50%;
+    right: 1.5rem;
+    content: '\ea0f';
+    transition: all .15s cubic-bezier(.68, -.55, .265, 1.55);
+    transform: translateY(-50%);
+}
+
+.collapsible .card-header {
+    position: relative;
+    cursor: pointer;
+}
