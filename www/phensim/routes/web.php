@@ -47,11 +47,14 @@ Route::group(
         Route::view('/simulations', 'simulations.index')->name('simulations.index');
         Route::view('/docs', 'docs.index')->name('docs.index');
         Route::view('/docs/api', 'docs.api')->name('docs.api');
+        Route::view('/references', 'pages.references')->name('pages.references');
+        Route::view('/contacts', 'pages.contacts')->name('pages.contacts');
 
         Route::group(
             ['middleware' => 'is.admin'],
             static function () {
-                Route::resource('users', UserController::class)->except(['show']);
+                Route::view('users', 'users.index')->name('users.index');
+                Route::view('messages', 'messages.index')->name('messages.index');
             }
         );
     }

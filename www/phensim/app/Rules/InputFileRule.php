@@ -59,6 +59,6 @@ class InputFileRule implements Rule
      */
     public function message(): string
     {
-        return 'An invalid file has been provided.';
+        return 'The :attribute field contains an invalid file.';
     }
 }

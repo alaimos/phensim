@@ -107,7 +107,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form role="form">
+                <form role="form" wire:submit.prevent="saveUser">
                     <div class="form-group @error('currentUser.name')  has-danger @enderror">
                         <div class="input-group input-group-alternative mb-3">
                             <div class="input-group-prepend">

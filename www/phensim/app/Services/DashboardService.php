@@ -5,7 +5,9 @@ namespace App\Services;
 
 
 use App\Exceptions\ServiceException;
+use App\Models\Message;
 use App\Models\Simulation;
+use Illuminate\Database\Eloquent\Collection;
 use JetBrains\PhpStorm\ArrayShape;
 
 class DashboardService
@@ -21,7 +23,7 @@ class DashboardService
         Simulation::PROCESSING => "int",
         Simulation::COMPLETED  => "int",
         Simulation::FAILED     => "int",
-    ])] public function getCounts()
+    ])] public function getCounts(): array
     {
         $user = auth()->user();
         if ($user === null) {
@@ -40,9 +42,13 @@ class DashboardService
         ];
     }
 
-    public function getLatestUpdates(): array
+    /**
+     * Get the latest updates
+     *
+     * @return \Illuminate\Database\Eloquent\Collection|Message[]
+     */
+    public function getLatestUpdates(): Collection|array
     {
-        //@todo
-        return [];
+        return Message::latest()->take(5)->get();
     }
 }

@@ -20,6 +20,8 @@ class HomeController extends Controller
     public function index(DashboardService $service): Factory|View|Application
     {
         $counts = $service->getCounts();
-        return view('dashboard', compact('counts'));
+        $latestUpdates = $service->getLatestUpdates();
+
+        return view('dashboard', compact('counts', 'latestUpdates'));
     }
 }

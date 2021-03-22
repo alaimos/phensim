@@ -51,6 +51,11 @@
                             <i class="ni ni-single-02 text-primary"></i> {{ __('Users') }}
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('messages.index') }}">
+                            <i class="ni ni-bell-55 text-primary"></i> {{ __('Messages') }}
+                        </a>
+                    </li>
                 @endif
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('docs.index') }}">
@@ -63,12 +68,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('home') }}">
+                    <a class="nav-link" href="{{ route('pages.references') }}">
                         <i class="ni ni-book-bookmark text-primary"></i> {{ __('References') }}
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('home') }}">
+                    <a class="nav-link" href="{{ route('pages.contacts') }}">
                         <i class="ni ni-badge text-primary"></i> {{ __('Contacts') }}
                     </a>
                 </li>
