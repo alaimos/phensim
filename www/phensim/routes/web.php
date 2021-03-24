@@ -40,6 +40,12 @@ Route::group(
         Route::get('/simulations/{simulation}/download/node', [SimulationController::class, 'downloadNode'])->name(
             'simulations.download.node'
         );
+        Route::get('/simulations/{simulation}/download/sbml', [SimulationController::class, 'downloadSbml'])->name(
+            'simulations.download.sbml'
+        );
+        Route::get('/simulations/{simulation}/download/sif', [SimulationController::class, 'downloadSif'])->name(
+            'simulations.download.sif'
+        );
         Route::get('/simulations/{simulation}', [SimulationController::class, 'show'])->name('simulations.show');
         Route::get('/simulations/{simulation}/pathways/{pathway}', [PathwayController::class, 'show'])->name(
             'simulations.pathways.show'

@@ -158,6 +158,8 @@ class SimulationJob implements ShouldQueue
                     'output_file'         => $launcher->getOutputFilename(),
                     'pathway_output_file' => $launcher->getPathwayMatrixOutputFilename(),
                     'nodes_output_file'   => $launcher->getNodesMatrixOutputFilename(),
+                    'sbml_output_file'    => $launcher->getSbmlOutputFilename(),
+                    'sif_output_file'     => $launcher->getSifOutputFilename(),
                     'status'              => Simulation::COMPLETED,
                 ]
             );

@@ -55,6 +55,8 @@ class SimulationResource extends JsonResource
                 'output_file'         => $downloadService->downloadUrl('output_file'),
                 'pathway_output'      => $downloadService->downloadUrl('pathway_output'),
                 'nodes_output'        => $downloadService->downloadUrl('nodes_output'),
+                'sbml_output'         => $downloadService->downloadUrl('sbml_output'),
+                'sif_output'          => $downloadService->downloadUrl('sif_output'),
             ],
         ];
     }

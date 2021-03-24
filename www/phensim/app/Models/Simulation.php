@@ -78,6 +78,8 @@ class Simulation extends Model
         'output_file',
         'pathway_output_file',
         'nodes_output_file',
+        'sbml_output_file',
+        'sif_output_file',
         'logs',
         'public',
         'public_key',
@@ -458,6 +460,51 @@ class Simulation extends Model
         $this->setFileAttr('nodes_output_file', $value);
     }
 
+    /**
+     * Return the SBML file path of this simulation. If no file exists null will be returned.
+     *
+     * @return string|null
+     * @throws \App\Exceptions\FileSystemException
+     */
+    public function getSbmlOutputFileAttribute(): ?string
+    {
+        return $this->getFileAttr('sbml_output_file');
+    }
+
+    /**
+     * Set the SBML filename of this simulation. If the file does not exist null will be stored
+     *
+     * @param  string|null  $value
+     *
+     * @return void
+     */
+    public function setSbmlOutputFileAttribute(?string $value): void
+    {
+        $this->setFileAttr('sbml_output_file', $value);
+    }
+
+    /**
+     * Return the SIF file path of this simulation. If no file exists null will be returned.
+     *
+     * @return string|null
+     * @throws \App\Exceptions\FileSystemException
+     */
+    public function getSifOutputFileAttribute(): ?string
+    {
+        return $this->getFileAttr('sif_output_file');
+    }
+
+    /**
+     * Set the SIF filename of this simulation. If the file does not exist null will be stored
+     *
+     * @param  string|null  $value
+     *
+     * @return void
+     */
+    public function setSifOutputFileAttribute(?string $value): void
+    {
+        $this->setFileAttr('sif_output_file', $value);
+    }
     //endregion
 
     //region Visibility Management
@@ -703,6 +750,14 @@ class Simulation extends Model
         if ($this->pathway_output_file !== null && file_exists($this->pathway_output_file)) {
             @unlink($this->pathway_output_file);
             $this->pathway_output_file = null;
+        }
+        if ($this->sbml_output_file !== null && file_exists($this->sbml_output_file)) {
+            @unlink($this->sbml_output_file);
+            $this->sbml_output_file = null;
+        }
+        if ($this->sif_output_file !== null && file_exists($this->sif_output_file)) {
+            @unlink($this->sif_output_file);
+            $this->sif_output_file = null;
         }
         $this->submit();
     }

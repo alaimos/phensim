@@ -38,6 +38,8 @@ final class Launcher
     private const  REMOVE_NODES_FILE         = '-remove-nodes-file';
     private const  PATHWAY_MATRIX_OUTPUT     = '-output-pathway-matrix';
     private const  NODES_MATRIX_OUTPUT       = '-output-nodes-matrix';
+    private const  SBML_OUTPUT               = '-output-sbml';
+    private const  SIF_OUTPUT                = '-output-extended-sif';
     public const   EVIDENCE_STRONG           = 'STRONG';
     public const   EVIDENCE_WEAK             = 'WEAK';
     public const   EVIDENCE_PREDICTION       = 'PREDICTION';
@@ -201,6 +203,20 @@ final class Launcher
      * @var string
      */
     private string $nodesMatrixOutputFilename;
+
+    /**
+     * The output filename for the SBML file encoding this simulation
+     *
+     * @var string
+     */
+    private string $sbmlOutputFilename;
+
+    /**
+     * The output filename for the SIF file encoding this simulation
+     *
+     * @var string
+     */
+    private string $sifOutputFilename;
 
     /**
      * A list of temporary files to delete before destruction of this object
@@ -641,6 +657,26 @@ final class Launcher
         return $this->nodesMatrixOutputFilename;
     }
 
+    /**
+     * Get the output filename of the SBML document
+     *
+     * @return string
+     */
+    public function getSbmlOutputFilename(): string
+    {
+        return $this->sbmlOutputFilename;
+    }
+
+    /**
+     * Get the output filename of the SIF document
+     *
+     * @return string
+     */
+    public function getSifOutputFilename(): string
+    {
+        return $this->sifOutputFilename;
+    }
+
     //region Command Line Builder
 
     /**
@@ -678,6 +714,12 @@ final class Launcher
         $outputNodesMatrix = $this->workingDirectory . Utils::tempFilename('phensim_output_nodes_matrix', '.tsv');
         $this->appendParameter($outputNodesMatrix, self::NODES_MATRIX_OUTPUT);
         $this->nodesMatrixOutputFilename = $outputNodesMatrix;
+        $outputSBML = $this->workingDirectory . Utils::tempFilename('phensim_output_sbml', '.sbml');
+        $this->appendParameter($outputSBML, self::SBML_OUTPUT);
+        $this->sbmlOutputFilename = $outputSBML;
+        $outputSIF = $this->workingDirectory . Utils::tempFilename('phensim_output_sif', '.sif');
+        $this->appendParameter($outputSIF, self::SIF_OUTPUT);
+        $this->sifOutputFilename = $outputSIF;
     }
 
     /**

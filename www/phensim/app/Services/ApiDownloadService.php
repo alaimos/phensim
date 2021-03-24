@@ -335,4 +335,48 @@ class ApiDownloadService
         return response()->download($this->simulation->nodes_output_file, $this->getDownloadFilename('nodes-output'));
     }
 
+    /**
+     * Checks if this simulation has any SBML output file
+     *
+     * @return bool
+     */
+    public function checkSbmlOutput(): bool
+    {
+        return $this->simulation->sbml_output_file !== null;
+    }
+
+    /**
+     * Download the SBML output file
+     *
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function downloadSbmlOutput(): BinaryFileResponse
+    {
+        abort_if($this->simulation->sbml_output_file === null, 404);
+
+        return response()->download($this->simulation->sbml_output_file, $this->getDownloadFilename('sbml-output', '.sbml'));
+    }
+
+    /**
+     * Checks if this simulation has any SIF output file
+     *
+     * @return bool
+     */
+    public function checkSifOutput(): bool
+    {
+        return $this->simulation->sif_output_file !== null;
+    }
+
+    /**
+     * Download the SIF output file
+     *
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function downloadSifOutput(): BinaryFileResponse
+    {
+        abort_if($this->simulation->sif_output_file === null, 404);
+
+        return response()->download($this->simulation->sif_output_file, $this->getDownloadFilename('sif-output', '.sif'));
+    }
+
 }

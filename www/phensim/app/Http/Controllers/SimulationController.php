@@ -96,4 +96,37 @@ class SimulationController extends Controller
         return response()->download($simulation->nodes_output_file, $filename);
     }
 
+    /**
+     * Download the SBML file built from a simulation
+     *
+     * @param  \App\Models\Simulation  $simulation
+     *
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function downloadSbml(Simulation $simulation): BinaryFileResponse
+    {
+        abort_if(!auth()->user()->is_admin && $simulation->user_id !== auth()->id(), 403);
+        abort_if($simulation->sbml_output_file === null || !file_exists($simulation->sbml_output_file), 404);
+
+        $filename = $simulation->id . '-' . Str::slug($simulation->name) . '-output.sbml';
+
+        return response()->download($simulation->sbml_output_file, $filename);
+    }
+
+    /**
+     * Download the SIF file built from a simulation
+     *
+     * @param  \App\Models\Simulation  $simulation
+     *
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function downloadSif(Simulation $simulation): BinaryFileResponse
+    {
+        abort_if(!auth()->user()->is_admin && $simulation->user_id !== auth()->id(), 403);
+        abort_if($simulation->sif_output_file === null || !file_exists($simulation->sif_output_file), 404);
+
+        $filename = $simulation->id . '-' . Str::slug($simulation->name) . '-output.sif';
+
+        return response()->download($simulation->sif_output_file, $filename);
+    }
 }

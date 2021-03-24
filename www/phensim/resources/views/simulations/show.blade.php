@@ -53,6 +53,12 @@
                             <a href="{{ route('simulations.download.node', $simulation) }}" class="btn btn-primary">
                                 Download node scores matrix
                             </a>
+                            <a href="{{ route('simulations.download.sbml', $simulation) }}" class="btn btn-primary">
+                                Download results as an SBML model
+                            </a>
+                            <a href="{{ route('simulations.download.sif', $simulation) }}" class="btn btn-primary">
+                                Download results as an extended SIF file
+                            </a>
                         </div>
                     </div>
                 </div>
