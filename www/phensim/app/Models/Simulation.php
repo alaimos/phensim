@@ -8,6 +8,7 @@
 namespace App\Models;
 
 use App\Jobs\SimulationJob;
+use App\PHENSIM\Reader;
 use App\PHENSIM\Utils;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -739,6 +740,7 @@ class Simulation extends Model
      */
     public function reSubmit(): void
     {
+        Reader::cleanupCache($this->output_file);
         if ($this->output_file !== null && file_exists($this->output_file)) {
             @unlink($this->output_file);
             $this->output_file = null;

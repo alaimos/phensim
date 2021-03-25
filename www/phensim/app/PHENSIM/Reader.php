@@ -73,6 +73,21 @@ final class Reader
     private string $workingDirectory;
 
     /**
+     * Remove the reader cache for a phensim simulation
+     *
+     * @param  string  $phensimFile
+     *
+     * @return void
+     */
+    public static function cleanupCache(string $phensimFile): void
+    {
+        $cacheDirectory = dirname($phensimFile) . DIRECTORY_SEPARATOR . 'reader_cache';
+        if (is_dir($cacheDirectory) && file_exists($cacheDirectory)) {
+            Utils::delete($cacheDirectory);
+        }
+    }
+
+    /**
      * Reader Constructor
      *
      * @param  string  $phensimFile

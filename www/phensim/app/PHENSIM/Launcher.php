@@ -42,12 +42,10 @@ final class Launcher
     private const  SIF_OUTPUT                = '-output-extended-sif';
     public const   EVIDENCE_STRONG           = 'STRONG';
     public const   EVIDENCE_WEAK             = 'WEAK';
-    public const   EVIDENCE_PREDICTION       = 'PREDICTION';
-    public const   SUPPORTED_EVIDENCES       = [self::EVIDENCE_STRONG, self::EVIDENCE_WEAK, self::EVIDENCE_PREDICTION];
+    public const   SUPPORTED_EVIDENCES       = [self::EVIDENCE_STRONG, self::EVIDENCE_WEAK];
     public const   SUPPORTED_EVIDENCE_NAMES  = [
-        self::EVIDENCE_STRONG     => 'Strong interactions',
-        self::EVIDENCE_WEAK       => 'Weak interactions',
-        self::EVIDENCE_PREDICTION => 'Predicted interactions',
+        self::EVIDENCE_STRONG => 'Strong interactions',
+        self::EVIDENCE_WEAK   => 'Weak interactions',
     ];
     public const   OVEREXPRESSION            = 'OVEREXPRESSION';
     public const   UNDEREXPRESSION           = 'UNDEREXPRESSION';

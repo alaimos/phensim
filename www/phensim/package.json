@@ -20,6 +20,7 @@
     },
     "dependencies": {
         "alpinejs": "^2.8.1",
-        "sweetalert": "^2.1.2"
+        "sweetalert": "^2.1.2",
+        "tippy.js": "^6.3.1"
     }
 }

@@ -105,7 +105,7 @@
                                                 <a href="#"
                                                    wire:click.prevent="toggleSelection('{{ $node->accession }}', 'over')"
                                                    class="@if($isSelected($node->accession, 'over')) text-muted @else text-red @endif"
-                                                   data-toggle="tooltip" data-placement="top"
+                                                   data-tippy-content="Set as overexpressed"
                                                    title="Set as overexpressed">
                                                     <i class="fas fa-level-up-alt fa-fw"></i>
                                                 </a>
@@ -116,7 +116,7 @@
                                                 <a href="#"
                                                    wire:click.prevent="toggleSelection('{{ $node->accession }}', 'under')"
                                                    class="@if($isSelected($node->accession, 'under')) text-muted @else text-blue @endif"
-                                                   data-toggle="tooltip" data-placement="top"
+                                                   data-tippy-content="Set as underexpressed"
                                                    title="Set as underexpressed">
                                                     <i class="fas fa-level-down-alt fa-fw"></i>
                                                 </a>
@@ -127,7 +127,7 @@
                                                 <a href="#"
                                                    wire:click.prevent="toggleSelection('{{ $node->accession }}', 'nonExpressed')"
                                                    class="@if($isSelected($node->accession, 'nonExpressed')) text-muted @else text-red @endif"
-                                                   data-toggle="tooltip" data-placement="top"
+                                                   data-tippy-content="Set as non-expressed"
                                                    title="Set as non-expressed">
                                                     <i class="fas fa-ban fa-fw"></i>
                                                 </a>
@@ -138,7 +138,7 @@
                                                 <a href="#"
                                                    wire:click.prevent="toggleSelection('{{ $node->accession }}', 'knockout')"
                                                    class="@if($isSelected($node->accession, 'knockout')) text-muted @else text-black-50 @endif"
-                                                   data-toggle="tooltip" data-placement="top"
+                                                   data-tippy-content="Set as knocked-out"
                                                    title="Set as knocked-out">
                                                     <i class="fas fa-times fa-fw"></i>
                                                 </a>
@@ -272,3 +272,14 @@
         @endif
     </form>
 </div>
+
+@push('js')
+    <script>
+        document.addEventListener("livewire:load", () => {
+            tippy('[data-tippy-content]');
+            Livewire.hook('message.processed', (message, component) => {
+                tippy('[data-tippy-content]');
+            });
+        })
+    </script>
+@endpush

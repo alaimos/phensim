@@ -110,9 +110,9 @@
                         <td class="text-right">{{ \App\PHENSIM\Utils::formatDouble($pathway['pathwayFDR']) }}</td>
                         <td class="text-center">
                             <a href="{{ route('simulations.pathways.show', [$simulation, $pathway['pathwayId']]) }}"
-                               data-toggle="tooltip" data-placement="top"
+                               data-tippy-content="Show pathway"
                                title="Show pathway">
-                                <i class="fas fa-eye fa-fw" data-toggle="tooltip"></i>
+                                <i class="fas fa-eye fa-fw"></i>
                             </a>
                         </td>
                     </tr>
@@ -132,3 +132,14 @@
         </nav>
     </div>
 </div>
+
+@push('js')
+    <script>
+        document.addEventListener('livewire:load', () => {
+            tippy('[data-tippy-content]');
+            Livewire.hook('message.processed', (message, component) => {
+                tippy('[data-tippy-content]');
+            });
+        });
+    </script>
+@endpush

@@ -78,36 +78,37 @@
                             <td>{{ $simulation->created_at->diffForHumans() }}</td>
                             <td>
                                 @if($simulation->isReady())
-                                    <a href="#" data-toggle="tooltip" data-placement="top"
-                                       wire:click.prevent="confirmSimulationSubmission({{ $simulation->id }})"
+                                    <a href="#" wire:click.prevent="confirmSimulationSubmission({{ $simulation->id }})"
+                                       data-tippy-content="Submit simulation"
                                        title="Submit simulation">
                                         <i class="fas fa-play fa-fw"></i>
                                     </a>
                                 @elseif ($simulation->isFailed() || ($simulation->isCompleted() && auth()->user()->is_admin))
-                                    <a href="#" data-toggle="tooltip" data-placement="top"
+                                    <a href="#"
                                        wire:click.prevent="confirmSimulationReSubmission({{ $simulation->id }})"
+                                       data-tippy-content="Resubmit simulation"
                                        title="Resubmit simulation">
                                         <i class="fas fa-redo fa-fw"></i>
                                     </a>
                                 @endif
                                 @if($simulation->hasLogs())
-                                    <a href="#" data-toggle="tooltip" data-placement="top"
-                                       wire:click.prevent="displayLogs({{ $simulation->id }})"
+                                    <a href="#" wire:click.prevent="displayLogs({{ $simulation->id }})"
+                                       data-tippy-content="Show logs"
                                        title="Show logs">
                                         <i class="fas fa-file-alt fa-fw"></i>
                                     </a>
                                 @endif
                                 @if($simulation->isCompleted())
                                     <a href="{{ route('simulations.show', $simulation) }}"
-                                       data-toggle="tooltip" data-placement="top"
+                                       data-tippy-content="Show simulation"
                                        title="Show simulation">
-                                        <i class="fas fa-eye fa-fw" data-toggle="tooltip"></i>
+                                        <i class="fas fa-eye fa-fw"></i>
                                     </a>
                                 @endif
                                 @if($simulation->canBeDeleted())
-                                    <a href="#" data-toggle="tooltip" data-placement="top"
-                                       wire:click.prevent="confirmSimulationDeletion({{ $simulation->id }})"
+                                    <a href="#" wire:click.prevent="confirmSimulationDeletion({{ $simulation->id }})"
                                        class="text-danger"
+                                       data-tippy-content="Delete"
                                        title="Delete">
                                         <i class="fas fa-trash fa-fw"></i>
                                     </a>
@@ -163,3 +164,14 @@
         </div>
     </x-modal>
 </div>
+
+@push('js')
+    <script>
+        document.addEventListener('livewire:load', () => {
+            tippy('[data-tippy-content]');
+            Livewire.hook('message.processed', (message, component) => {
+                tippy('[data-tippy-content]');
+            });
+        });
+    </script>
+@endpush

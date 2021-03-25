@@ -44,19 +44,19 @@
                     </div>
                     <div class="card-body">
                         <div class="d-flex align-items-center justify-content-center flex-wrap">
-                            <a href="{{ route('simulations.download.output', $simulation) }}" class="btn btn-primary">
+                            <a href="{{ route('simulations.download.output', $simulation) }}" class="btn btn-primary mt-4">
                                 Download raw results
                             </a>
-                            <a href="{{ route('simulations.download.pathway', $simulation) }}" class="btn btn-primary">
+                            <a href="{{ route('simulations.download.pathway', $simulation) }}" class="btn btn-primary mt-4">
                                 Download pathway scores matrix
                             </a>
-                            <a href="{{ route('simulations.download.node', $simulation) }}" class="btn btn-primary">
+                            <a href="{{ route('simulations.download.node', $simulation) }}" class="btn btn-primary mt-4">
                                 Download node scores matrix
                             </a>
-                            <a href="{{ route('simulations.download.sbml', $simulation) }}" class="btn btn-primary">
+                            <a href="{{ route('simulations.download.sbml', $simulation) }}" class="btn btn-primary mt-4">
                                 Download results as an SBML model
                             </a>
-                            <a href="{{ route('simulations.download.sif', $simulation) }}" class="btn btn-primary">
+                            <a href="{{ route('simulations.download.sif', $simulation) }}" class="btn btn-primary mt-4">
                                 Download results as an extended SIF file
                             </a>
                         </div>

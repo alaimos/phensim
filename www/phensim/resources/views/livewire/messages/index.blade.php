@@ -53,14 +53,14 @@
                             <td>{{ $message->title }}</td>
                             <td>{{ $message->created_at->diffForHumans() }}</td>
                             <td>
-                                <a href="#" data-toggle="tooltip" data-placement="top"
-                                   wire:click.prevent="openModal({{ $message->id }})"
+                                <a href="#" wire:click.prevent="openModal({{ $message->id }})"
+                                   data-tippy-content="Edit"
                                    title="Edit">
                                     <i class="fas fa-pencil-alt fa-fw"></i>
                                 </a>
-                                <a href="#" data-toggle="tooltip" data-placement="top"
-                                   wire:click.prevent="confirmMessageDeletion({{ $message->id }})"
+                                <a href="#" wire:click.prevent="confirmMessageDeletion({{ $message->id }})"
                                    class="text-danger"
+                                   data-tippy-content="Delete"
                                    title="Delete">
                                     <i class="fas fa-trash fa-fw"></i>
                                 </a>
@@ -137,3 +137,14 @@
     </x-modal>
 
 </div>
+
+@push('js')
+    <script>
+        document.addEventListener('livewire:load', () => {
+            tippy('[data-tippy-content]');
+            Livewire.hook('message.processed', (message, component) => {
+                tippy('[data-tippy-content]');
+            });
+        });
+    </script>
+@endpush

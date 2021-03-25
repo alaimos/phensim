@@ -29,3 +29,6 @@ import 'alpinejs';
 
 window.swal = require('sweetalert');
 
+window.tippy = require('tippy.js').default;
+
+import 'tippy.js/dist/tippy.css';
