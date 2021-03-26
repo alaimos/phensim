@@ -73,10 +73,12 @@ class Show extends Component
         foreach ($this->searchColumns as $column => $value) {
             if (is_array($value) && $value['value'] !== '') {
                 $nodes = $nodes->where($column, $value['operator'], (double)$value['value']);
-            } elseif (!is_array($value) && !empty($value)) {
-                if ($column === 'isEndpoint') {
+            }
+
+            if (!is_array($value)) {
+                if ($column === 'isEndpoint' && $value !== '') {
                     $nodes = $nodes->where($column, (bool)$value);
-                } else {
+                } elseif (!empty($value)) {
                     $nodes = $nodes->filter(fn($data) => (false !== stripos($data[$column], $value)));
                 }
             }
