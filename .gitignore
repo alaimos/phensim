@@ -9,7 +9,6 @@ _ide_helper.php
 /logs/php_error.log
 /www/phensim/vendor/
 /www/phensim/node_modules/
-/www/phensim/bootstrap/cache/
 /www/phensim/storage/app/graph/*
 !/www/phensim/storage/app/graph/.gitkeep
 /www/phensim/storage/app/jobs/*
