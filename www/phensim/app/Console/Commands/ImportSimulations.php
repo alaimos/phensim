@@ -78,7 +78,7 @@ class ImportSimulations extends Command
         }
         $simulation = Simulation::create(
             [
-                'name'        => $imported['name'] ?? 'Job of ' . $owner->email . ' created at ' . now()->toDayDateTimeString(),
+                'name'        => $imported['name'] ?? 'Job of ' . $imported['owner'] . ' imported on ' . now()->toDayDateTimeString(),
                 'user_id'     => $owner->id,
                 'organism_id' => Organism::where('accession', $parameters['organism'])->firstOrFail()->id,
                 'logs'        => $imported['log'],
