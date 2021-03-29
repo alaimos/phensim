@@ -28,6 +28,8 @@ RUN apt-get update \
        php8.0-redis libapache2-mod-php8.0 apache2 \
     && apt-get autoremove -y \
     && echo "ServerName localhost" >> /etc/apache2/apache2.conf \
+    && a2enmod rewrite \
+    && sed -i 's/www-data/phensim/' /etc/apache2/envvars \
     && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer \
     && curl -sL https://deb.nodesource.com/setup_15.x | bash - \
     && apt-get install -y nodejs \
@@ -55,11 +57,13 @@ RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.0
 RUN groupadd --force -g $WWWGROUP phensim
 RUN useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 phensim
 
-COPY start-container /usr/local/bin/start-container
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-COPY apache_default.conf /etc/apache2/sites-available/000-default.conf
-COPY php.ini /etc/php/8.0/cli/conf.d/99-phensim.ini
+COPY start-container      /usr/local/bin/start-container
+COPY supervisord.conf     /etc/supervisor/conf.d/supervisord.conf
+COPY apache_default.conf  /etc/apache2/sites-available/000-default.conf
+COPY php.ini              /etc/php/8.0/cli/conf.d/99-phensim.ini
+COPY start-apache2.sh     /usr/local/bin/start-apache2.sh
 RUN chmod +x /usr/local/bin/start-container
+RUN chmod +x /usr/local/bin/start-apache2.sh
 
 EXPOSE 80
 

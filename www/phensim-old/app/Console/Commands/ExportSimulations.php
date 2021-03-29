@@ -1,4 +1,5 @@
-<?php /** @noinspection DisconnectedForeachInstructionInspection */
+<?php
+/** @noinspection DisconnectedForeachInstructionInspection */
 
 namespace App\Console\Commands;
 
@@ -13,7 +14,7 @@ class ExportSimulations extends Command
      *
      * @var string
      */
-    protected $signature = 'export:simulations {listFile} {outputFile}';
+    protected $signature = 'export:simulations {outputFile} {listFile?}';
 
     /**
      * The console command description.
@@ -25,9 +26,9 @@ class ExportSimulations extends Command
     /**
      * Get the content of an optional file
      *
-     * @param \App\Models\Job $job
-     * @param string          $parameter
-     * @param bool            $data
+     * @param  \App\Models\Job  $job
+     * @param  string  $parameter
+     * @param  bool  $data
      *
      * @return array|null
      */
@@ -52,7 +53,7 @@ class ExportSimulations extends Command
     /**
      * Build the array containing all the details of a simulation
      *
-     * @param \App\Models\Job $simulation
+     * @param  \App\Models\Job  $simulation
      *
      * @return array
      */
@@ -97,22 +98,28 @@ class ExportSimulations extends Command
     {
         $listFile = $this->argument('listFile');
         $outputFile = $this->argument('outputFile');
-        if (!file_exists($listFile) || !is_file($listFile) || !is_readable($listFile)) {
-            $this->error('Invalid input list.');
+        if (!empty($listFile)) {
+            if (!file_exists($listFile) || !is_file($listFile) || !is_readable($listFile)) {
+                $this->error('Invalid input list.');
 
-            return 101;
+                return 101;
+            }
         }
         if (!is_writable(dirname($outputFile))) {
             $this->error('Output file is not writable');
 
             return 102;
         }
-        $list = array_filter(
-            array_filter(file($listFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES)),
-            static function ($e) {
-                return is_numeric($e);
-            }
-        );
+        if (!empty($listFile)) {
+            $list = array_filter(
+                array_filter(file($listFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES)),
+                static function ($e) {
+                    return is_numeric($e);
+                }
+            );
+        } else {
+            $list = array_values(Job::all()->pluck('id')->toArray());
+        }
         if (empty($list)) {
             $this->error('Input list is empty');
 

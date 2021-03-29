@@ -9,8 +9,15 @@ export APP_SERVICE=${APP_SERVICE:-"phensim"}
 export WWWUSER=${WWWUSER:-$UID}
 export WWWGROUP=${WWWGROUP:-$(id -g)}
 
-RANDOM_PASSWORD=test
-#$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c${1:-32};echo;)
+RANDOM_PASSWORD=$(date +%s | sha256sum | base64 | head -c 20)
+
+if [ ! -d ./database/mysql ]; then
+  mkdir -p ./database/mysql
+fi
+
+if [ ! -d ./database/redis ]; then
+  mkdir -p ./database/redis
+fi
 
 # Ensure that Docker is running...
 if ! docker info >/dev/null 2>&1; then
@@ -23,7 +30,6 @@ if [ $# -gt 0 ]; then
 
   # Source .env file
   if [ -f ./www/phensim/.env ]; then
-    echo "Sourcing .env file"
     source ./www/phensim/.env
     export DB_PASSWORD
     export DB_DATABASE
@@ -31,6 +37,7 @@ if [ $# -gt 0 ]; then
   fi
 
   if [ "$1" == "up" ]; then
+    shift 1
 
     if [ ! -f ./.deployed ]; then
       source ./deploy.conf
@@ -55,11 +62,25 @@ if [ $# -gt 0 ]; then
 
   elif [ "$1" == "deploy" ]; then
     echo -e "${WHITE}Deploying PHENSIM${NC}" >&2
-    if ! docker-compose exec -u phensim "$APP_SERVICE" composer install --no-dev &&
-      docker-compose exec -u phensim "$APP_SERVICE" php artisan key:generate --force &&
-      docker-compose exec -u phensim "$APP_SERVICE" php artisan migrate:fresh --seed --force &&
-      docker-compose exec -u phensim "$APP_SERVICE" php artisan import:database; then
-      echo -e "${WHITE}Unable to deploy PHENSIM${NC}" >&2
+    if ! docker-compose exec -u phensim "$APP_SERVICE" composer install --no-dev; then
+      echo -e "${WHITE}Unable to install PHP dependencies${NC}" >&2
+
+      exit 1
+    fi
+
+    if ! docker-compose exec -u phensim "$APP_SERVICE" php artisan key:generate --force; then
+      echo -e "${WHITE}Unable to generate secret key${NC}" >&2
+
+      exit 1
+    fi
+
+    if ! docker-compose exec -u phensim "$APP_SERVICE" php artisan migrate:fresh --seed --force; then
+      echo -e "${WHITE}Unable to migrate database${NC}" >&2
+
+      exit 1
+    fi
+    if ! docker-compose exec -u phensim "$APP_SERVICE" php artisan import:database; then
+      echo -e "${WHITE}Unable to import PHENSIM database${NC}" >&2
 
       exit 1
     fi
