@@ -125,7 +125,12 @@ final class Reader
                 $line = trim($line);
                 if (!empty($line) && !str_starts_with($line, '#')) {
                     $fields = str_getcsv($line, "\t");
-                    if (count($fields) === $max) {
+                    $n = count($fields);
+                    while ($n < count(self::FIELDS_ALL)) {
+                        $fields[] = '';
+                        $n = count($fields);
+                    }
+                    if ($n === $max) {
                         $fields = $this->prepare($fields);
                         $pId = $fields['pathwayId'];
                         if (!isset($pathways[$pId])) {
