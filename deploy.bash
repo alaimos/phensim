@@ -40,7 +40,6 @@ if [ $# -gt 0 ]; then
 
         exit 1
       else
-        echo "Sourcing .env file"
         source ./www/phensim/.env
         export DB_PASSWORD
         export DB_DATABASE
@@ -64,31 +63,43 @@ if [ $# -gt 0 ]; then
 
       exit 1
     fi
+
+    touch ./.deployed
+
   elif [ "$1" == "composer" ]; then
     shift 1
 
-    if [ "$EXEC" == "yes" ]; then
-      docker-compose exec \
-        -u sail \
-        "$APP_SERVICE" \
-        composer "$@"
-    else
-      sail_is_not_running
-    fi
+    docker-compose exec -u phensim "$APP_SERVICE" composer "$@"
 
-  # Proxy Artisan commands to the "artisan" binary on the application container...
   elif [ "$1" == "artisan" ] || [ "$1" == "art" ]; then
     shift 1
 
-    if [ "$EXEC" == "yes" ]; then
-      docker-compose exec \
-        -u sail \
-        "$APP_SERVICE" \
-        php artisan "$@"
-    else
-      sail_is_not_running
-    fi
+    docker-compose exec -u phensim "$APP_SERVICE" php artisan "$@"
+
+  elif [ "$1" == "tinker" ]; then
+    shift 1
+
+    docker-compose exec -u phensim "$APP_SERVICE" php artisan
+
+  elif [ "$1" == "shell" ] || [ "$1" == "bash" ]; then
+    shift 1
+
+    docker-compose exec -u phensim "$APP_SERVICE" bash
+
+  elif [ "$1" == "root-shell" ]; then
+    shift 1
+
+    docker-compose exec "$APP_SERVICE" bash
+
+  else
+
+    docker-compose "$@"
+
   fi
+
+else
+
+  docker-compose ps
 
 fi
 
@@ -115,86 +126,6 @@ fi
 #  # Source the ".env" file so Laravel's environment variables are available...
 #
 #  # Proxy PHP commands to the "php" binary on the application container...
-#  if [ "$1" == "php" ]; then
-#    shift 1
-#
-#    if [ "$EXEC" == "yes" ]; then
-#      docker-compose exec \
-#        -u sail \
-#        "$APP_SERVICE" \
-#        php "$@"
-#    else
-#      sail_is_not_running
-#    fi
-#
-#  # Proxy Composer commands to the "composer" binary on the application container...
-#  elif [ "$1" == "composer" ]; then
-#    shift 1
-#
-#    if [ "$EXEC" == "yes" ]; then
-#      docker-compose exec \
-#        -u sail \
-#        "$APP_SERVICE" \
-#        composer "$@"
-#    else
-#      sail_is_not_running
-#    fi
-#
-#  # Proxy Artisan commands to the "artisan" binary on the application container...
-#  elif [ "$1" == "artisan" ] || [ "$1" == "art" ]; then
-#    shift 1
-#
-#    if [ "$EXEC" == "yes" ]; then
-#      docker-compose exec \
-#        -u sail \
-#        "$APP_SERVICE" \
-#        php artisan "$@"
-#    else
-#      sail_is_not_running
-#    fi
-#
-#  # Proxy the "test" command to the "php artisan test" Artisan command...
-#  elif [ "$1" == "test" ]; then
-#    shift 1
-#
-#    if [ "$EXEC" == "yes" ]; then
-#      docker-compose exec \
-#        -u sail \
-#        "$APP_SERVICE" \
-#        php artisan test "$@"
-#    else
-#      sail_is_not_running
-#    fi
-#
-#  # Proxy the "dusk" command to the "php artisan dusk" Artisan command...
-#  elif [ "$1" == "dusk" ]; then
-#    shift 1
-#
-#    if [ "$EXEC" == "yes" ]; then
-#      docker-compose exec \
-#        -u sail \
-#        -e "APP_URL=http://laravel.test" \
-#        -e "DUSK_DRIVER_URL=http://selenium:4444/wd/hub" \
-#        "$APP_SERVICE" \
-#        php artisan dusk "$@"
-#    else
-#      sail_is_not_running
-#    fi
-#
-#  # Proxy the "dusk:fails" command to the "php artisan dusk:fails" Artisan command...
-#  elif [ "$1" == "dusk:fails" ]; then
-#    shift 1
-#
-#    if [ "$EXEC" == "yes" ]; then
-#      docker-compose exec \
-#        -u sail \
-#        -e "APP_URL=http://laravel.test" \
-#        -e "DUSK_DRIVER_URL=http://selenium:4444/wd/hub" \
-#        "$APP_SERVICE" \
-#        php artisan dusk:fails "$@"
-#    else
-#      sail_is_not_running
-#    fi
 #
 #  # Initiate a Laravel Tinker session within the application container...
 #  elif [ "$1" == "tinker" ]; then
@@ -286,47 +217,3 @@ fi
 #    fi
 #
 #  # Initiate a Bash shell within the application container...
-#  elif [ "$1" == "shell" ] || [ "$1" == "bash" ]; then
-#    shift 1
-#
-#    if [ "$EXEC" == "yes" ]; then
-#      docker-compose exec \
-#        -u sail \
-#        "$APP_SERVICE" \
-#        bash
-#    else
-#      sail_is_not_running
-#    fi
-#
-#  # Initiate a root user Bash shell within the application container...
-#  elif [ "$1" == "root-shell" ]; then
-#    shift 1
-#
-#    if [ "$EXEC" == "yes" ]; then
-#      docker-compose exec \
-#        "$APP_SERVICE" \
-#        bash
-#    else
-#      sail_is_not_running
-#    fi
-#
-#  # Share the site...
-#  elif [ "$1" == "share" ]; then
-#    shift 1
-#
-#    if [ "$EXEC" == "yes" ]; then
-#      docker run --init beyondcodegmbh/expose-server:latest share http://host.docker.internal:"$APP_PORT" \
-#        --server-host=laravel-sail.site \
-#        --server-port=8080 \
-#        "$@"
-#    else
-#      sail_is_not_running
-#    fi
-#
-#  # Pass unknown commands to the "docker-compose" binary...
-#  else
-#    docker-compose "$@"
-#  fi
-#else
-#  docker-compose ps
-#fi
