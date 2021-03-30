@@ -72,7 +72,10 @@ if (substr(opt$pathway,1,5) == "path:") {
            kegg.dir = tempdir(), 
            out.suffix = suffix,
            limit = list(gene = c(-max.genes,max.genes), cpd=c(-max.metab, max.metab)),
-           kegg.native = TRUE)
+           kegg.native = TRUE, 
+           low = list(gene = "blue", cpd = "blue"), 
+           mid = list(gene = "white", cpd = "white"), 
+           high = list(gene = "red", cpd = "red"))
   files <- list.files(".")
   tmp.output <- grep(suffix, files)
   if (length(tmp.output) == 0) {
