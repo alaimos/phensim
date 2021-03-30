@@ -10,12 +10,13 @@ namespace App\PHENSIM;
 use App\Exceptions\PHENSIM\ReaderException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use PhpParser\Node\Expr\Cast\Double;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 
 final class Reader
 {
 
-    public const FIELDS_ALL          = [
+    public const FIELDS_ALL = [
         'pathwayId',
         'pathwayName',
         'nodeId',
@@ -34,7 +35,62 @@ final class Reader
         'averagePerturbation',
         'averagePathwayPerturbation',
     ];
-    public const FIELDS_CAST         = [
+
+    /*
+     * I know this is not a good way but the deadline is coming!!
+     */
+    public const FIELD_OLD = [
+        13 => [
+            'pathwayId',
+            'pathwayName',
+            'nodeId',
+            'nodeName',
+            'isEndpoint',
+            'isDirectTarget',
+            'activityScore',
+            'pValue',
+            'LL',
+            'pathwayActivityScore',
+            'pathwayPValue',
+            'pathwayLL',
+            'targetedBy',
+        ],
+        14 => [
+            'pathwayId',
+            'pathwayName',
+            'nodeId',
+            'nodeName',
+            'isEndpoint',
+            'isDirectTarget',
+            'activityScore',
+            'pValue',
+            'LL',
+            'pathwayActivityScore',
+            'pathwayPValue',
+            'pathwayLL',
+            'targetedBy',
+            'probabilities',
+        ],
+        15 => [
+            'pathwayId',
+            'pathwayName',
+            'nodeId',
+            'nodeName',
+            'isEndpoint',
+            'isDirectTarget',
+            'activityScore',
+            'pValue',
+            'FDR',
+            'LL',
+            'pathwayActivityScore',
+            'pathwayPValue',
+            'pathwayFDR',
+            'pathwayLL',
+            'targetedBy',
+        ],
+    ];
+
+    public const FIELDS_CAST = [
         'pathwayId'                  => null,
         'pathwayName'                => 'pathway',
         'nodeId'                     => null,
@@ -52,11 +108,9 @@ final class Reader
         'targetedBy'                 => 'array',
         'averagePerturbation'        => 'double',
         'averagePathwayPerturbation' => 'double',
+        'probabilities'              => 'ignore',
     ];
-    public const LL                  = ['activation', 'inhibition', 'other'];
-    public const ACTIVATION_COLORING = '%s red,black';
-    public const INHIBITION_COLORING = '%s blue,yellow';
-    public const GID_RXP             = '/^[0-9]+$/';
+    public const LL          = ['activation', 'inhibition', 'other'];
 
     /**
      * The phensim input file
@@ -126,11 +180,7 @@ final class Reader
                 if (!empty($line) && !str_starts_with($line, '#')) {
                     $fields = str_getcsv($line, "\t");
                     $n = count($fields);
-                    while ($n < count(self::FIELDS_ALL)) {
-                        $fields[] = '';
-                        $n = count($fields);
-                    }
-                    if ($n === $max) {
+                    if ($n === $max || isset(self::FIELD_OLD[$n])) {
                         $fields = $this->prepare($fields);
                         $pId = $fields['pathwayId'];
                         if (!isset($pathways[$pId])) {
@@ -184,15 +234,6 @@ final class Reader
         if (self::FIELDS_CAST[$field] === 'double') {
             return (float)$value;
         }
-//        if (self::FIELDS_CAST[$field] === 'll') {
-//            $tmp = array_map('doubleval', explode(",", $value));
-//            $tmp = array_slice($tmp, 0, 3);
-//            if (count($tmp) < 3) {
-//                $tmp = [null, null, null];
-//            }
-//
-//            return array_combine(self::LL, $tmp);
-//        }
         if (self::FIELDS_CAST[$field] === 'array') {
             return (empty($value)) ? [] : explode(",", $value);
         }
@@ -206,18 +247,27 @@ final class Reader
     /**
      * Prepares all fields in a line of PHENSIM output file
      *
-     * @param  array  $fields
+     * @param  array  $lineData
      *
      * @return array
      */
-    private function prepare(array $fields): array
+    private function prepare(array $lineData): array
     {
-        $fields = array_combine(self::FIELDS_ALL, $fields);
-        foreach ($fields as $key => $value) {
-            $fields[$key] = $this->cast($key, $value);
+        $n = count($lineData);
+        $lineData = array_combine(self::FIELD_OLD[$n] ?? self::FIELDS_ALL, $lineData);
+        foreach ($lineData as $field => $value) {
+            $lineData[$field] = $this->cast($field, $value);
         }
 
-        return $fields;
+        if (isset(self::FIELD_OLD[$n])) {
+            foreach (self::FIELDS_ALL as $field) {
+                if (!isset($lineData[$field])) {
+                    $lineData[$field] = $this->cast($field, '');
+                }
+            }
+        }
+
+        return $lineData;
     }
 
     /**
