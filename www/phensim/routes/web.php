@@ -17,6 +17,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+$proxy_schema = config('phensim.proxy_scheme');
+
+if (!empty($proxy_schema)) {
+    URL::forceScheme($proxy_schema);
+}
+
 Route::view('/', 'welcome');
 
 Auth::routes();
