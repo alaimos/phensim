@@ -13,6 +13,7 @@ return [
     'fdr'          => env('COMPUTE_FDR_PATH', resource_path('bin/compute_fdrs.R')),
     'build_graph'  => env('BUILD_GRAPH_PATH', resource_path('bin/build_graph.R')),
     'threads'      => env('PHENSIM_THREADS', 2),
+    'proxy_url'    => env('PROXY_URL'),
     'proxy_scheme' => env('PROXY_SCHEMA'),
 
 ];
