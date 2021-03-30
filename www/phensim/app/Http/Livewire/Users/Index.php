@@ -136,7 +136,7 @@ class Index extends Component
     {
         $validData = $this->validate();
         $currentUser = $validData['currentUser'];
-        $isAdmin = $validData['is_admin'] ?? false;
+        $isAdmin = $currentUser['is_admin'] ?? false;
         if (is_null($this->currentUserId)) {
             $currentUser['password'] = Hash::make($currentUser['password']);
             $user = (new User())->fill($currentUser);
