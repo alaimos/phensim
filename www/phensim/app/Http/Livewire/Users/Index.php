@@ -106,7 +106,12 @@ class Index extends Component
         $this->resetErrorBag();
         $this->displayingModal = true;
         $this->currentUserId = $userId;
-        $this->currentUser = ($userId) ? User::find($userId)->toArray() : [];
+        if ($userId) {
+            $user = User::find($userId) ?? new User();
+            $userData = $user->toArray();
+            $userData['is_admin'] = $user->is_admin;
+        }
+        $this->currentUser = ($userId) ? $userData : [];
     }
 
     /**
