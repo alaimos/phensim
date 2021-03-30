@@ -1,12 +1,7 @@
-puphpet/config-custom.yaml
-.vagrant/
 .idea/
 .phpstorm.meta.php
 _ide_helper.php
 .env
-/www/html/index.html
-/www/html/beanstalk_console/
-/logs/php_error.log
 /www/phensim/vendor/
 /www/phensim/node_modules/
 /www/phensim/storage/app/graph/*
@@ -38,7 +33,4 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 *.lnk
-www/phensim/test.txt
-www/phensim/storage/logs/*
-www/phensim/phensim-output-204.tsv
 .deployed
