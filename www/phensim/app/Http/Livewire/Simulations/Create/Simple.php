@@ -86,9 +86,9 @@ class Simple extends Component
         return [
             'state.name'                 => ['required', 'max:255'],
             'state.organism'             => ['required', Rule::exists('organisms', 'id')],
-            'state.nodes.over'           => ['filled', 'array'],
+            'state.nodes.over'           => ['sometimes', 'array'],
             'state.nodes.over.*'         => [Rule::exists('nodes', 'accession')],
-            'state.nodes.under'          => ['filled', 'array'],
+            'state.nodes.under'          => ['sometimes', 'array'],
             'state.nodes.under.*'        => [Rule::exists('nodes', 'accession')],
             'state.nodes.nonExpressed'   => ['array'],
             'state.nodes.nonExpressed.*' => [Rule::exists('nodes', 'accession')],
