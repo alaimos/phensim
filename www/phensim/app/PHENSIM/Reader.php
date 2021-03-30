@@ -176,7 +176,6 @@ final class Reader
             }
             $max = count(self::FIELDS_ALL);
             while (($line = fgets($fp)) !== false) {
-                $line = trim($line);
                 if (!empty($line) && !str_starts_with($line, '#')) {
                     $fields = str_getcsv($line, "\t");
                     $n = count($fields);
