@@ -68,7 +68,7 @@ class ExportSimulations extends Command
         if ($simulation->input_parameters_file !== null) {
             $parameters['simulationParameters'] = $this->getOptionalFile($simulation->input_parameters_file);
         } else {
-            $parameters['simulationParameters'] = $simulation->getParameter('simulationParameters');
+            $parameters['simulationParameters'] = $simulation->getParameter('inputParameters');
         }
         if ($simulation->non_expressed_nodes_file !== null) {
             $parameters['nonExpressed'] = $this->getOptionalFile($simulation->non_expressed_nodes_file);

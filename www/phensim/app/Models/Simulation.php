@@ -740,8 +740,8 @@ class Simulation extends Model
      */
     public function reSubmit(): void
     {
-        Reader::cleanupCache($this->output_file);
         if ($this->output_file !== null && file_exists($this->output_file)) {
+            Reader::cleanupCache($this->output_file);
             @unlink($this->output_file);
             $this->output_file = null;
         }

@@ -107,7 +107,7 @@ class ImportSimulations extends Command
         if (isset($simulationParameters['file']) && $simulationParameters['file']) {
             $simulation->input_parameters_file = $this->importOptionalFile($simulation, $simulationParameters);
         } elseif (isset($simulationParameters[Launcher::OVEREXPRESSION]) || isset($simulationParameters[Launcher::UNDEREXPRESSION])) {
-            $simulation->setParameter('simulationParameters', $simulationParameters);
+            $simulation->setParameter('inputParameters', $simulationParameters);
         } else {
             $newParameters = [Launcher::OVEREXPRESSION => [], Launcher::UNDEREXPRESSION => []];
             foreach ($simulationParameters as $parameter => $direction) {
@@ -115,7 +115,7 @@ class ImportSimulations extends Command
                     $newParameters[$direction][] = $parameter;
                 }
             }
-            $simulation->setParameter('simulationParameters', $newParameters);
+            $simulation->setParameter('inputParameters', $newParameters);
         }
         $nonExpressedNodes = $parameters['nonExpressed'] ?? null;
         if (is_array($nonExpressedNodes) && isset($nonExpressedNodes['file']) && $nonExpressedNodes['file']) {
