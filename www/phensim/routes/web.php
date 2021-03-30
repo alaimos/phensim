@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PathwayController;
+use App\Http\Controllers\SimulationController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Route;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -11,86 +17,52 @@
 |
 */
 
-Route::get(
-    '/',
-    static function () {
-        return view('welcome');
-    }
-);
+Route::view('/', 'welcome');
 
 Auth::routes();
 
-Route::get('logout', 'Auth\LoginController@logout')->name('logout');
-
-Route::get('/home', 'HomeController@index')->name('user-home');
-
-Route::get(
-    '/references',
-    static function () {
-        return view('references');
-    }
-);
-
-Route::get(
-    '/help',
-    static function () {
-        return view('help');
-    }
-);
-
-Route::get(
-    '/contacts',
-    static function () {
-        return view('contacts');
-    }
-);
-
-Route::any('/jobs/list', 'HomeController@jobsData')->name('jobs-list');
-
-Route::any('/jobs/{job}/view', 'HomeController@viewJob')->middleware(['permission:read-job'])->name('job-view');
-
-Route::any('/jobs/{job}/delete', 'HomeController@deleteJob')->middleware(['permission:delete-job'])->name('job-delete');
-
-Route::any('/jobs/{job}/log', 'HomeController@jobLog')->middleware(['permission:read-job'])->name('job-log');
-
 Route::group(
-    [
-        'prefix'     => 'simulation',
-        'middleware' => ['auth', 'role:user|administrator'],
-        'namespace'  => 'Simulation',
-    ],
+    ['middleware' => 'auth'],
     static function () {
+        Route::get('/home', [HomeController::class, 'index'])->name('home');
+        Route::view('/profile', 'profile.edit')->name('profile.edit');
+        Route::view('/simulations/create/simple', 'simulations.create.simple')->name('simulations.create.simple');
+        Route::view('/simulations/create/advanced', 'simulations.create.advanced')->name('simulations.create.advanced');
+        Route::get('/simulations/{simulation}/download/input', [SimulationController::class, 'downloadInput'])->name(
+            'simulations.download.input'
+        );
+        Route::get('/simulations/{simulation}/download/output', [SimulationController::class, 'downloadOutput'])->name(
+            'simulations.download.output'
+        );
+        Route::get('/simulations/{simulation}/download/pathway', [SimulationController::class, 'downloadPathway'])->name(
+            'simulations.download.pathway'
+        );
+        Route::get('/simulations/{simulation}/download/node', [SimulationController::class, 'downloadNode'])->name(
+            'simulations.download.node'
+        );
+        Route::get('/simulations/{simulation}/download/sbml', [SimulationController::class, 'downloadSbml'])->name(
+            'simulations.download.sbml'
+        );
+        Route::get('/simulations/{simulation}/download/sif', [SimulationController::class, 'downloadSif'])->name(
+            'simulations.download.sif'
+        );
+        Route::get('/simulations/{simulation}', [SimulationController::class, 'show'])->name('simulations.show');
+        Route::get('/simulations/{simulation}/pathways/{pathway}', [PathwayController::class, 'show'])->name(
+            'simulations.pathways.show'
+        );
+        Route::view('/simulations', 'simulations.index')->name('simulations.index');
+        Route::view('/docs', 'docs.index')->name('docs.index');
+        Route::view('/docs/api', 'docs.api')->name('docs.api');
+        Route::view('/references', 'pages.references')->name('pages.references');
+        Route::view('/contacts', 'pages.contacts')->name('pages.contacts');
+
         Route::group(
-            ['prefix' => 'submit', 'middleware' => ['permission:create-job']],
+            ['middleware' => 'is.admin'],
             static function () {
-                Route::get('simple', 'SubmitController@submitSimple')->name('submit-simple');
-                Route::post('simple', 'SubmitController@doSubmitSimple')->name('do-submit-simple');
-                Route::get('enriched', 'SubmitController@submitEnriched')->name('submit-enriched');
-                Route::post('enriched', 'SubmitController@doSubmitEnriched')->name('do-submit-enriched');
-                Route::match(['get', 'post'], 'list/nodes', 'SubmitController@listNodes')->name('list-nodes');
+                Route::view('users', 'users.index')->name('users.index');
+                Route::view('messages', 'messages.index')->name('messages.index');
             }
         );
-        Route::get('{job}/view', 'SimulationController@viewSimulation')->middleware(['permission:read-job'])
-             ->name('view-simulation-job');
-        Route::get('{job}/download', 'SimulationController@downloadData')->middleware(['permission:read-job'])
-             ->name('download-simulation-data');
-        Route::get('{job}/download/pathway', 'SimulationController@downloadPathwayData')->middleware(['permission:read-job'])
-             ->name('download-simulation-pathway-data');
-        Route::get('{job}/download/nodes', 'SimulationController@downloadNodesData')->middleware(['permission:read-job'])
-             ->name('download-simulation-nodes-data');
-        Route::any('{job}/view/pathways/list', 'SimulationController@pathwaysListData')
-             ->middleware(['permission:read-job'])->name('view-pathway-list-data');
-        Route::get('{job}/view/pathway/{pid}/view', 'SimulationController@viewPathway')
-             ->middleware(['permission:read-job'])->name('view-pathway-results');
-        Route::any('{job}/view/pathway/{pid}/data', 'SimulationController@pathwayViewListData')
-             ->middleware(['permission:read-job'])->name('sim-nodes-list-data');
     }
 );
 
-Route::get('/home/api', 'Api\ApiController@help')->middleware(
-    [
-        'auth',
-        'role:user|administrator',
-        'permission:use-api',
-    ]
-)->name('api-index');

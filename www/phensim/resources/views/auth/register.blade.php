@@ -1,134 +1,122 @@
-@extends('layouts.app')
+@extends('layouts.app', ['class' => 'bg-default'])
 
 @section('content')
-    <!-- Hero Content -->
-    <div class="bg-primary-dark">
-        <section class="content content-full content-boxed overflow-hidden">
-            <!-- Section Content -->
-            <div class="push-100-t push-50 text-center">
-                <h1 class="h2 text-white push-10 visibility-hidden" data-toggle="appear"
-                    data-class="animated fadeInDown">Sign up</h1>
-                <h2 class="h5 text-white-op visibility-hidden" data-toggle="appear"
-                    data-class="animated fadeInDown">You need to have an account to use PHENSIM.</h2>
-            </div>
-            <!-- END Section Content -->
-        </section>
-    </div>
-    <!-- END Hero Content -->
+    @include('layouts.headers.guest')
 
-    <!-- Content -->
-    <div class="bg-white">
-        <section class="content content-boxed">
-            <!-- Section Content -->
-            <div class="row items-push push-50-t push-30">
-                <div class="col-md-6 col-md-offset-3">
-                    <form class="form-horizontal" action="{{ route('register') }}" method="post">
-                        {{ csrf_field() }}
+    <div class="container mt--8 pb-5">
+        <!-- Table -->
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+                <div class="card bg-secondary shadow border-0">
+                    {{--                    <div class="card-header bg-transparent pb-5">--}}
+                    {{--                        <div class="text-muted text-center mt-2 mb-4"><small>{{ __('Sign up with') }}</small></div>--}}
+                    {{--                        <div class="text-center">--}}
+                    {{--                            <a href="#" class="btn btn-neutral btn-icon mr-4">--}}
+                    {{--                                <span class="btn-inner--icon"><img src="{{ asset('argon') }}/img/icons/common/github.svg"></span>--}}
+                    {{--                                <span class="btn-inner--text">{{ __('Github') }}</span>--}}
+                    {{--                            </a>--}}
+                    {{--                            <a href="#" class="btn btn-neutral btn-icon">--}}
+                    {{--                                <span class="btn-inner--icon"><img src="{{ asset('argon') }}/img/icons/common/google.svg"></span>--}}
+                    {{--                                <span class="btn-inner--text">{{ __('Google') }}</span>--}}
+                    {{--                            </a>--}}
+                    {{--                        </div>--}}
+                    {{--                    </div>--}}
+                    <div class="card-body px-lg-5 py-lg-5">
+                        <div class="text-center text-muted mb-4">
+                            <small>{{ __('Sign up with credentials') }}</small>
+                        </div>
+                        <form role="form" method="POST" action="{{ route('register') }}">
+                            @csrf
 
-                        <div class="form-group{{ $errors->has('name') ? ' has-error' : '' }}">
-                            <div class="col-xs-12">
-                                <div class="form-material form-material-primary">
-                                    <input id="name" type="text" class="form-control" name="name"
-                                           value="{{ old('name') }}"
-                                           placeholder="Enter your name">
-                                    <label for="name">Name</label>
+                            <div class="form-group{{ $errors->has('name') ? ' has-danger' : '' }}">
+                                <div class="input-group input-group-alternative mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="ni ni-hat-3"></i></span>
+                                    </div>
+                                    <input class="form-control{{ $errors->has('name') ? ' is-invalid' : '' }}"
+                                           placeholder="{{ __('Name') }}" type="text" name="name"
+                                           value="{{ old('name') }}" required autofocus>
                                 </div>
                                 @if ($errors->has('name'))
-                                    <div id="name-error" class="help-block text-right animated fadeInDown">
-                                        {{ $errors->first('name') }}
-                                    </div>
+                                    <span class="invalid-feedback" style="display: block;" role="alert">
+                                        <strong>{{ $errors->first('name') }}</strong>
+                                    </span>
                                 @endif
                             </div>
-                        </div>
-
-                        <div class="form-group{{ $errors->has('affiliation') ? ' has-error' : '' }}">
-                            <div class="col-xs-12">
-                                <div class="form-material form-material-primary">
-                                    <input id="affiliation" type="text" class="form-control" name="affiliation"
-                                           value="{{ old('affiliation') }}"
-                                           placeholder="Enter your affiliation">
-                                    <label for="affiliation">Affiliation</label>
+                            <div class="form-group{{ $errors->has('affiliation') ? ' has-danger' : '' }}">
+                                <div class="input-group input-group-alternative mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="ni ni-building"></i></span>
+                                    </div>
+                                    <input class="form-control{{ $errors->has('affiliation') ? ' is-invalid' : '' }}"
+                                           placeholder="{{ __('Affiliation') }}" type="text" name="affiliation"
+                                           value="{{ old('affiliation') }}" required autofocus>
                                 </div>
                                 @if ($errors->has('affiliation'))
-                                    <div id="name-error" class="help-block text-right animated fadeInDown">
-                                        {{ $errors->first('affiliation') }}
-                                    </div>
+                                    <span class="invalid-feedback" style="display: block;" role="alert">
+                                        <strong>{{ $errors->first('affiliation') }}</strong>
+                                    </span>
                                 @endif
                             </div>
-                        </div>
-
-                        <div class="form-group{{ $errors->has('email') ? ' has-error' : '' }}">
-                            <div class="col-xs-12">
-                                <div class="form-material form-material-primary">
-                                    <input id="email" type="email" class="form-control" name="email"
-                                           value="{{ old('email') }}"
-                                           placeholder="Provide your email">
-                                    <label for="email">Email</label>
+                            <div class="form-group{{ $errors->has('email') ? ' has-danger' : '' }}">
+                                <div class="input-group input-group-alternative mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="ni ni-email-83"></i></span>
+                                    </div>
+                                    <input class="form-control{{ $errors->has('email') ? ' is-invalid' : '' }}"
+                                           placeholder="{{ __('Email') }}" type="email" name="email"
+                                           value="{{ old('email') }}" required>
                                 </div>
                                 @if ($errors->has('email'))
-                                    <div id="email-error" class="help-block text-right animated fadeInDown">
-                                        {{ $errors->first('email') }}
-                                    </div>
+                                    <span class="invalid-feedback" style="display: block;" role="alert">
+                                        <strong>{{ $errors->first('email') }}</strong>
+                                    </span>
                                 @endif
                             </div>
-                        </div>
-
-                        <div class="form-group{{ $errors->has('password') ? ' has-error' : '' }}">
-                            <div class="col-xs-12">
-                                <div class="form-material form-material-primary">
-                                    <input id="password" type="password" class="form-control" name="password"
-                                           placeholder="Choose a strong password..">
-                                    <label for="password">Password</label>
+                            <div class="form-group{{ $errors->has('password') ? ' has-danger' : '' }}">
+                                <div class="input-group input-group-alternative">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="ni ni-lock-circle-open"></i></span>
+                                    </div>
+                                    <input class="form-control{{ $errors->has('password') ? ' is-invalid' : '' }}"
+                                           placeholder="{{ __('Password') }}" type="password" name="password" required>
+                                </div>
+                                @if ($errors->has('password'))
+                                    <span class="invalid-feedback" style="display: block;" role="alert">
+                                        <strong>{{ $errors->first('password') }}</strong>
+                                    </span>
+                                @endif
+                            </div>
+                            <div class="form-group">
+                                <div class="input-group input-group-alternative">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="ni ni-lock-circle-open"></i></span>
+                                    </div>
+                                    <input class="form-control" placeholder="{{ __('Confirm Password') }}"
+                                           type="password" name="password_confirmation" required>
                                 </div>
                             </div>
-                            @if ($errors->has('password'))
-                                <div id="password-error" class="help-block text-right animated fadeInDown">
-                                    {{ $errors->first('password') }}
-                                </div>
-                            @endif
-                        </div>
-                        <div class="form-group{{ $errors->has('password_confirmation') ? ' has-error' : '' }}">
-                            <div class="col-xs-12">
-                                <div class="form-material form-material-primary">
-                                    <input id="password-confirm" type="password" class="form-control"
-                                           name="password_confirmation" placeholder="..and confirm it">
-                                    <label for="password-confirm">Password</label>
-                                </div>
+                            {{--                            <div class="text-muted font-italic">--}}
+                            {{--                                <small>{{ __('password strength') }}: <span class="text-success font-weight-700">{{ __('strong') }}strong</span></small>--}}
+                            {{--                            </div>--}}
+                            {{--                            <div class="row my-4">--}}
+                            {{--                                <div class="col-12">--}}
+                            {{--                                    <div class="custom-control custom-control-alternative custom-checkbox">--}}
+                            {{--                                        <input class="custom-control-input" id="customCheckRegister" type="checkbox">--}}
+                            {{--                                        <label class="custom-control-label" for="customCheckRegister">--}}
+                            {{--                                            <span class="text-muted">{{ __('I agree with the') }} <a--}}
+                            {{--                                                    href="#!">{{ __('Privacy Policy') }}</a></span>--}}
+                            {{--                                        </label>--}}
+                            {{--                                    </div>--}}
+                            {{--                                </div>--}}
+                            {{--                            </div>--}}
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary mt-4">{{ __('Create account') }}</button>
                             </div>
-                            @if ($errors->has('password_confirmation'))
-                                <div id="password-confirm-error" class="help-block text-right animated fadeInDown">
-                                    {{ $errors->first('password_confirmation') }}
-                                </div>
-                            @endif
-                        </div>
-
-                        <div class="form-group">
-                            <div class="col-sm-6 col-sm-offset-3">
-                                <button class="btn btn-block btn-success" type="submit"><i
-                                            class="fa fa-plus pull-right"></i> Sign Up
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </div>
-            <!-- END Section Content -->
-        </section>
+        </div>
     </div>
-    <!-- END Content -->
-
-    <!-- Login -->
-    <div class="bg-gray-lighter">
-        <section class="content content-full content-boxed">
-            <!-- Section Content -->
-            <div class="push-20-t push-20 text-center">
-                <h3 class="h4 push-20 visibility-hidden" data-toggle="appear">Do you already have an account?</h3>
-                <a class="btn btn-rounded btn-noborder btn-lg btn-success visibility-hidden" data-toggle="appear"
-                   data-class="animated bounceIn" href="{{ route('login') }}">Log In</a>
-            </div>
-            <!-- END Section Content -->
-        </section>
-    </div>
-    <!-- END Login -->
-
 @endsection

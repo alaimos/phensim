@@ -1,11 +1,12 @@
-<?php /** @noinspection DisconnectedForeachInstructionInspection */
+<?php
 
 namespace App\Console\Commands;
 
-use App\Jobs\DispatcherJob;
-use App\Models\Job;
+use App\Jobs\SimulationJob;
+use App\Models\Organism;
+use App\Models\Simulation;
 use App\Models\User;
-use App\PHENSIM\Constants;
+use App\PHENSIM\Launcher;
 use Illuminate\Console\Command;
 
 class ImportSimulations extends Command
@@ -25,87 +26,124 @@ class ImportSimulations extends Command
     protected $description = 'Import a set of simulations';
 
     /**
+     * A map from old state to new state variables
+     */
+    private const STATE_MAP = [
+        'queued'     => Simulation::QUEUED,
+        'processing' => Simulation::PROCESSING,
+        'completed'  => Simulation::COMPLETED,
+        'failed'     => Simulation::FAILED,
+    ];
+
+    /**
      * Import an optional file
      *
-     * @param \App\Models\Job $job
-     * @param string          $name
-     * @param array|null      $file
-     * @param bool            $data
+     * @param  \App\Models\Simulation  $simulation
+     * @param  array|null  $file
+     *
+     * @return string|null
+     * @throws \App\Exceptions\FileSystemException
      */
-    public function importOptionalFile(Job $job, string $name, ?array $file, bool $data = false): void
+    public function importOptionalFile(Simulation $simulation, ?array $file): ?string
     {
         if ($file === null || !isset($file['file']) || !$file['file']) {
             $result = null;
         } else {
-            $result = $job->getJobFile($file['name']);
-            file_put_contents($result, gzuncompress(base64_decode($file['data'])));
-            if (!file_exists($result)) {
+            $result = $simulation->jobFile($file['name']);
+            if (false === file_put_contents($result, gzuncompress(base64_decode($file['data'])))) {
                 $this->warn('Unable to write "' . $result . '".');
                 $result = null;
             }
         }
-        if ($data) {
-            $job->setData($name, $result);
-        } else {
-            $job->setParameter($name, $result);
-        }
+
+        return $result;
     }
 
     /**
-     * Import a simulation
+     * Import a simulation. The function has to handle several checks since it might be importing
+     * a simulation from an older version of the PHENSIM GUI.
      *
-     * @param array            $simulation
-     * @param \App\Models\User $defaultOwner
+     * @param  array  $imported
+     * @param  \App\Models\User  $defaultOwner
+     *
+     * @throws \App\Exceptions\FileSystemException
      */
-    public function importSimulationsArray(array $simulation, User $defaultOwner): void
+    public function importSimulationsArray(array $imported, User $defaultOwner): void
     {
-        $parameters = $simulation['parameters'];
-        $data = $simulation['data'];
-        $sourceId = $parameters['sourceId'] ?? null;
-        $job = null;
-        if (!empty($sourceId)) {
-            $job = Job::whereId($sourceId)->first();
+        $parameters = $imported['parameters'];
+        $data = $imported['data'];
+        $owner = User::where('email', $imported['owner'])->first();
+        if ($owner === null) {
+            $owner = $defaultOwner;
         }
-        if ($job === null) {
-            $job = new Job();
-            $job->job_type = Constants::SIMULATION_JOB;
-            $job->job_key = $simulation['key'];
-            $owner = User::whereId($simulation['owner'])->first();
-            if ($owner === null) {
-                $owner = $defaultOwner;
+        $simulation = Simulation::create(
+            [
+                'name'        => $imported['name'] ?? 'Job of ' . $imported['owner'] . ' imported on ' . now()->toDayDateTimeString(),
+                'user_id'     => $owner->id,
+                'organism_id' => Organism::where('accession', $parameters['organism'])->firstOrFail()->id,
+                'logs'        => $imported['log'],
+                'public'      => $imported['public'] ?? false,
+                'public_key'  => $imported['publicKey'] ?? null,
+                'status'      => is_numeric(
+                    $imported['status']
+                ) ? $imported['status'] : (self::STATE_MAP[$imported['status']] ?? Simulation::READY),
+                'parameters'  => [
+                    'epsilon'        => $parameters['epsilon'] ?? 0.001,
+                    'seed'           => $parameters['seed'] ?? 0.001,
+                    'fdr'            => $parameters['fdr'] ?? Launcher::FDR_BH,
+                    'reactome'       => $parameters['reactome'] ?? false,
+                    'remove'         => $parameters['remove'] ?? [],
+                    'fast'           => $parameters['fast'] ?? [],
+                    'enrichMiRNAs'   => $parameters['enrichMirs'] ?? true,
+                    'miRNAsEvidence' => $parameters['miRNAsEvidence'] ?? Launcher::EVIDENCE_STRONG,
+                ],
+            ]
+        );
+        $simulation->enrichment_database_file = $this->importOptionalFile($simulation, $parameters['enrichDb']);
+        $simulation->node_types_file = $this->importOptionalFile($simulation, $parameters['nodeTypes']);
+        $simulation->edge_types_file = $this->importOptionalFile($simulation, $parameters['edgeTypes']);
+        $simulation->edge_subtypes_file = $this->importOptionalFile($simulation, $parameters['edgeSubTypes']);
+        $simulationParameters = $parameters['simulationParameters'] ?? [];
+        if (isset($simulationParameters['file']) && $simulationParameters['file']) {
+            $simulation->input_parameters_file = $this->importOptionalFile($simulation, $simulationParameters);
+        } elseif (isset($simulationParameters[Launcher::OVEREXPRESSION]) || isset($simulationParameters[Launcher::UNDEREXPRESSION])) {
+            $simulation->setParameter('simulationParameters', $simulationParameters);
+        } else {
+            $newParameters = [Launcher::OVEREXPRESSION => [], Launcher::UNDEREXPRESSION => []];
+            foreach ($simulationParameters as $parameter => $direction) {
+                if (in_array($direction, [Launcher::OVEREXPRESSION, Launcher::UNDEREXPRESSION], true)) {
+                    $newParameters[$direction][] = $parameter;
+                }
             }
-            $job->user_id = $owner->id;
+            $simulation->setParameter('simulationParameters', $newParameters);
         }
-        $job->job_name = $simulation['name'];
-        $job->job_status = $simulation['status'];
-        $job->job_log = $simulation['log'];
-        $job->setParameters($parameters);
-        $job->setData($data);
-        if (empty($sourceId)) {
-            $job->setParameter('sourceId', $simulation['id']);
+        $nonExpressedNodes = $parameters['nonExpressed'] ?? null;
+        if (is_array($nonExpressedNodes) && isset($nonExpressedNodes['file']) && $nonExpressedNodes['file']) {
+            $simulation->non_expressed_nodes_file = $this->importOptionalFile($simulation, $nonExpressedNodes);
+        } elseif (is_array($nonExpressedNodes)) {
+            $simulation->setParameter('nonExpressed', $nonExpressedNodes);
         }
-        $this->importOptionalFile($job, 'enrichDb', $parameters['enrichDb']);
-        $this->importOptionalFile($job, 'nodeTypes', $parameters['nodeTypes']);
-        $this->importOptionalFile($job, 'edgeTypes', $parameters['edgeTypes']);
-        $this->importOptionalFile($job, 'edgeSubTypes', $parameters['edgeSubTypes']);
-
-        $this->importOptionalFile($job, 'outputFile', $data['outputFile'], true);
-        $this->importOptionalFile($job, 'pathwayOutputFile', $data['pathwayOutputFile'], true);
-        $this->importOptionalFile($job, 'nodesOutputFile', $data['nodesOutputFile'], true);
-        \Auth::login(User::whereId($job->user_id)->first(), false);
-        $job->save();
-        \Auth::logout();
-        if ($simulation['status'] === Job::QUEUED) {
-            dispatch(new DispatcherJob($job->id));
+        $simulation->output_file = $this->importOptionalFile($simulation, $data['outputFile']);
+        $simulation->pathway_output_file = $this->importOptionalFile($simulation, $data['pathwayOutputFile']);
+        $simulation->nodes_output_file = $this->importOptionalFile($simulation, $data['nodesOutputFile']);
+        if (isset($data['zipFile'])) {
+            $this->importOptionalFile($simulation, $data['zipFile']);
+        }
+        $simulation->save();
+        if ($simulation->status === Simulation::QUEUED) {
+            SimulationJob::dispatch($simulation);
         }
     }
+
 
     /**
      * Execute the console command.
      *
-     * @return mixed
+     * @return int
+     * @throws \JsonException
+     * @throws \App\Exceptions\FileSystemException
      */
-    public function handle()
+    public function handle(): int
     {
         $simulationsArchive = $this->argument('simulationsArchive');
         if (!file_exists($simulationsArchive) || !is_file($simulationsArchive) || !is_readable($simulationsArchive)) {
@@ -114,32 +152,29 @@ class ImportSimulations extends Command
             return 101;
         }
 
-        $defaultOwner = User::whereId((int)$this->argument('defaultOwner'))->first();
+        $defaultOwner = User::where('id', (int)$this->argument('defaultOwner'))->first();
         if ($defaultOwner === null) {
             $this->error('Invalid default owner.');
 
             return 102;
         }
-
-        $data = json_decode(file_get_contents($simulationsArchive), true);
-
-        if (empty($data)) {
+        $simulations = json_decode(file_get_contents($simulationsArchive), true, 512, JSON_THROW_ON_ERROR);
+        if (empty($simulations)) {
             $this->error('Input archive is empty');
 
             return 103;
         }
-
-        $bar = $this->output->createProgressBar(count($data));
-        foreach ($data as $d) {
-            $simulationArray = json_decode(gzuncompress(base64_decode($d)), true);
+        $this->output->progressStart(count($simulations));
+        foreach ($simulations as $simulation) {
+            $simulationArray = json_decode(gzuncompress(base64_decode($simulation)), true, 512, JSON_THROW_ON_ERROR);
             if (!is_array($simulationArray) || empty($simulationArray)) {
                 $this->warn('A corrupted record has been found!');
             } else {
                 $this->importSimulationsArray($simulationArray, $defaultOwner);
             }
-            $bar->advance();
+            $this->output->progressAdvance();
         }
-        $bar->finish();
+        $this->output->progressFinish();
 
         $this->info("\nSimulations imported!");
 

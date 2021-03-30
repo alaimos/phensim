@@ -1,103 +1,100 @@
-@extends('layouts.app')
+@extends('layouts.app', ['class' => 'bg-default'])
 
 @section('content')
-    <!-- Main Container -->
-    <main id="main-container">
-        <!-- Hero Content -->
-        <div class="bg-primary-dark">
-            <section class="content content-full content-boxed overflow-hidden">
-                <!-- Section Content -->
-                <div class="push-100-t push-50 text-center">
-                    <h1 class="h2 text-white push-10 visibility-hidden" data-toggle="appear"
-                        data-class="animated fadeInDown">Log in</h1>
-                    <h2 class="h5 text-white-op visibility-hidden" data-toggle="appear"
-                        data-class="animated fadeInDown">To use this software you need to log in.</h2>
-                </div>
-                <!-- END Section Content -->
-            </section>
-        </div>
-        <!-- END Hero Content -->
+    @include('layouts.headers.guest')
 
-        <!-- Log In Form -->
-        <div class="bg-white">
-            <section class="content content-boxed">
-                <!-- Section Content -->
-                <div class="row items-push push-50-t push-30">
-                    <div class="col-md-6 col-md-offset-3">
-                        <!-- Login Form -->
-                        <form class="form-horizontal" action="{{ route('login') }}" method="post">
-                            {{ csrf_field() }}
-                            <div class="form-group{{ $errors->has('email') ? ' has-error' : '' }}">
-                                <div class="col-xs-12">
-                                    <div class="form-material form-material-primary">
-                                        <input id="email" type="email" class="form-control" name="email"
-                                               value="{{ old('email') }}" required autofocus
-                                               placeholder="Enter your email address">
-                                        <label for="email">E-Mail Address</label>
+    <div class="container mt--8 pb-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-5 col-md-7">
+                <div class="card bg-secondary shadow border-0">
+                    {{--                    <div class="card-header bg-transparent pb-5">--}}
+                    {{--                        <div class="text-muted text-center mt-2 mb-3"><small>{{ __('Sign in with') }}</small></div>--}}
+                    {{--                        <div class="btn-wrapper text-center">--}}
+                    {{--                            <a href="#" class="btn btn-neutral btn-icon">--}}
+                    {{--                                <span class="btn-inner--icon"><img--}}
+                    {{--                                        src="{{ asset('argon') }}/img/icons/common/github.svg"></span>--}}
+                    {{--                                <span class="btn-inner--text">{{ __('Github') }}</span>--}}
+                    {{--                            </a>--}}
+                    {{--                            <a href="#" class="btn btn-neutral btn-icon">--}}
+                    {{--                                <span class="btn-inner--icon"><img--}}
+                    {{--                                        src="{{ asset('argon') }}/img/icons/common/google.svg"></span>--}}
+                    {{--                                <span class="btn-inner--text">{{ __('Google') }}</span>--}}
+                    {{--                            </a>--}}
+                    {{--                        </div>--}}
+                    {{--                    </div>--}}
+                    <div class="card-body px-lg-5 py-lg-5">
+                        <div class="text-center text-muted mb-4">
+                            <small>
+                                Create new account OR Sign in with your credentials:
+                                <br>
+                                For reviewer access:
+                                <br>
+                                Username <strong>review@app.com</strong>
+                                <br>
+                                Password: <strong>ReV1EwP45sW0rD</strong>
+                            </small>
+                        </div>
+                        <form role="form" method="POST" action="{{ route('login') }}">
+                            @csrf
+
+                            <div class="form-group{{ $errors->has('email') ? ' has-danger' : '' }} mb-3">
+                                <div class="input-group input-group-alternative">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="ni ni-email-83"></i></span>
                                     </div>
-                                    @if ($errors->has('email'))
-                                        <div id="email-error" class="help-block text-right animated fadeInDown">
-                                            {{ $errors->first('email') }}
-                                        </div>
-                                    @endif
+                                    <input class="form-control{{ $errors->has('email') ? ' is-invalid' : '' }}"
+                                           placeholder="{{ __('Email') }}" type="email" name="email"
+                                           value="{{ old('email') }}" required autofocus>
                                 </div>
-                            </div>
-                            <div class="form-group{{ $errors->has('password') ? ' has-error' : '' }}">
-                                <div class="col-xs-12">
-                                    <div class="form-material form-material-primary">
-                                        <input id="password" type="password" class="form-control" name="password"
-                                               required placeholder="Enter your password">
-                                        <label for="password">Password</label>
-                                    </div>
-                                </div>
-                                @if ($errors->has('password'))
-                                    <div id="password-error" class="help-block text-right animated fadeInDown">
-                                        {{ $errors->first('password') }}
-                                    </div>
+                                @if ($errors->has('email'))
+                                    <span class="invalid-feedback" style="display: block;" role="alert">
+                                        <strong>{{ $errors->first('email') }}</strong>
+                                    </span>
                                 @endif
                             </div>
-
-                            <div class="form-group">
-                                <div class="col-xs-12 text-center">
-                                    <label class="css-input switch switch-sm switch-primary">
-                                        <input type="checkbox" name="remember"
-                                                {{ old('remember') ? 'checked' : '' }}><span></span> Remember Me?
-                                    </label>
+                            <div class="form-group{{ $errors->has('password') ? ' has-danger' : '' }}">
+                                <div class="input-group input-group-alternative">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="ni ni-lock-circle-open"></i></span>
+                                    </div>
+                                    <input class="form-control{{ $errors->has('password') ? ' is-invalid' : '' }}"
+                                           name="password" placeholder="{{ __('Password') }}" type="password"
+                                           required>
                                 </div>
+                                @if ($errors->has('password'))
+                                    <span class="invalid-feedback" style="display: block;" role="alert">
+                                        <strong>{{ $errors->first('password') }}</strong>
+                                    </span>
+                                @endif
                             </div>
-
-                            <div class="form-group">
-                                <div class="col-xs-12 col-sm-6 col-sm-offset-3">
-                                    <button class="btn btn-block btn-primary" type="submit"><i
-                                                class="fa fa-arrow-right pull-right"></i> Log in
-                                    </button>
-                                </div>
+                            <div class="custom-control custom-control-alternative custom-checkbox">
+                                <input class="custom-control-input" name="remember" id="customCheckLogin"
+                                       type="checkbox" {{ old('remember') ? 'checked' : '' }}>
+                                <label class="custom-control-label" for="customCheckLogin">
+                                    <span class="text-muted">{{ __('Remember me') }}</span>
+                                </label>
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary my-4">{{ __('Sign in') }}</button>
                             </div>
                         </form>
-                        <div class="small text-center">
-                            Forgot Password? <a href="{{ route('password.request') }}" class="btn-link">Click here!</a>
-                        </div>
-                        <!-- END Login Form -->
                     </div>
                 </div>
-                <!-- END Section Content -->
-            </section>
-        </div>
-        <!-- END Log In Form -->
-
-        <!-- Sign Up Today -->
-        <div class="bg-gray-lighter">
-            <section class="content content-full content-boxed">
-                <!-- Section Content -->
-                <div class="push-20-t push-20 text-center">
-                    <h3 class="h4 push-20 visibility-hidden" data-toggle="appear">Don’t have an account?</h3>
-                    <a class="btn btn-rounded btn-noborder btn-lg btn-success visibility-hidden" data-toggle="appear"
-                       data-class="animated bounceIn" href="{{ route('register') }}">Sign Up</a>
+                <div class="row mt-3">
+                    <div class="col-6">
+                        @if (Route::has('password.request'))
+                            <a href="{{ route('password.request') }}" class="text-light">
+                                <small>{{ __('Forgot password?') }}</small>
+                            </a>
+                        @endif
+                    </div>
+                    <div class="col-6 text-right">
+                        <a href="{{ route('register') }}" class="text-light">
+                            <small>{{ __('Create new account') }}</small>
+                        </a>
+                    </div>
                 </div>
-                <!-- END Section Content -->
-            </section>
+            </div>
         </div>
-        <!-- END Sign Up Today -->
-    </main>
-    <!-- END Main Container -->
+    </div>
 @endsection

@@ -2,314 +2,202 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Jobs\DispatcherJob;
-use App\Models\Job;
-use App\PHENSIM\Constants;
-use App\PHENSIM\Reader;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\SimulationRequest;
+use App\Http\Resources\SimulationResource;
+use App\Models\Organism;
+use App\Models\Simulation;
+use App\PHENSIM\Launcher;
 use App\PHENSIM\Utils;
+use App\Rules\InputFileRule;
+use App\Services\ApiDownloadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
+use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SimulationController extends Controller
 {
-
-    public static function provideRoutes(): array
+    /**
+     * Display a listing of the resource.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     *
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection|\Illuminate\Http\Response
+     */
+    public function index(Request $request): Response|AnonymousResourceCollection
     {
-        return [
-            '/simulations'                                  => [
-                'get'    => ['SimulationController@listSimulations', 'api-simulations-list'],
-                'post'   => ['SimulationController@submitSimulation', 'api-submit-simulation'],
-                'others' => ['SimulationController@unsupportedMethod'],
-            ],
-            '/simulations/{job}'                            => [
-                'get'    => ['SimulationController@getSimulation', 'api-get-simulation'],
-                'others' => ['SimulationController@unsupportedMethod'],
-            ],
-            '/simulations/{job}/parameters'                 => [
-                'get'    => ['SimulationController@getSimulationParameters', 'api-get-simulation-parameters'],
-                'others' => ['SimulationController@unsupportedMethod'],
-            ],
-            '/simulations/{job}/results/raw'                => [
-                'get'    => ['SimulationController@getSimulationResultsRaw', 'api-get-simulation-results-raw'],
-                'others' => ['SimulationController@unsupportedMethod'],
-            ],
-            '/simulations/{job}/results/pathways'           => [
-                'get'    => [
-                    'SimulationController@getSimulationResultsPathways',
-                    'api-get-simulation-results-pathways',
-                ],
-                'others' => ['SimulationController@unsupportedMethod'],
-            ],
-            '/simulations/{job}/results/pathways/{pathway}' => [
-                'get'    => [
-                    'SimulationController@getSimulationResultsOnePathway',
-                    'api-get-simulation-results-one-pathway',
-                ],
-                'others' => ['SimulationController@unsupportedMethod'],
-            ],
-        ];
+        $perPage = (int)$request->get('per_page', 10);
+
+        return SimulationResource::collection(
+            Simulation::visible()->with('organism')->paginate($perPage)->appends($request->input())
+        );
     }
 
     /**
-     * Get and checks a job from the DB
+     * Store a newly created resource in storage.
      *
-     * @param mixed $job
-     * @param bool  $checkCompleted
+     * @param  \App\Http\Requests\Api\SimulationRequest  $request
      *
-     * @return \App\Models\Job
+     * @return \App\Http\Resources\SimulationResource
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException|\App\Exceptions\FileSystemException
      */
-    private function getJob($job, $checkCompleted = true): Job
+    public function store(SimulationRequest $request): SimulationResource
     {
-        Job::setRoute('api-get-simulation');
-        $job = Job::find($job);
-        if (!$job || !$job->exists || $job->job_type !== Constants::SIMULATION_JOB) {
-            abort(404, 'An invalid simulation identifier has been provided');
-        }
-        if (!$job->canBeRead()) {
-            abort(403, 'You are not allowed to view this simulation job');
-        }
-        if ($checkCompleted && $job->job_status !== Job::COMPLETED) {
-            abort(500, 'Simulation job not completed. Please retry when status of the job is COMPLETED.');
-        }
+        $validData = $request->validated();
 
-        return $job;
-    }
-
-    /**
-     * Lists all simulations
-     *
-     * @param \Illuminate\Http\Request $request
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function listSimulations(Request $request): JsonResponse
-    {
-        Job::setRoute('api-get-simulation');
-
-        return response()->json(Job::listJobs($request->get('status'), Constants::SIMULATION_JOB)->get());
-    }
-
-    private function prepareUploadedFile(Request $request, Job $job, string $field, callable $callback)
-    {
-        $content = $request->get($field);
-        if ($content === null) {
-            return null;
-        }
-        $filename = $job->getJobFile(str_replace('-', '_', $field));
-        if (file_put_contents($filename, $content) === false) {
-            abort(500, 'Unable to write file "' . $field . '"');
-        }
-        if (!$callback($filename)) {
-            abort(422, 'Invalid content of the "' . $field . '" field.');
-        }
-
-        return $filename;
-    }
-
-    /**
-     * @param \Illuminate\Http\Request $request
-     *
-     * @return \Illuminate\Http\JsonResponse
-     * @throws \Exception
-     */
-    public function submitSimulation(Request $request): JsonResponse
-    {
-        if (!Job::canBeCreated()) {
-            abort(403, 'You are not allowed to run a new simulation');
-        }
-        $this->validate(
-            $request,
+        $simulation = Simulation::create(
             [
-                'organism'         => 'required|exists:organisms,accession',
-                'simulation-input' => 'required',
-                'epsilon'          => 'sometimes|numeric',
+                'name'        => $validData['name'],
+                'user_id'     => auth()->id(),
+                'organism_id' => Organism::where('accession', $validData['organism'])->firstOrFail()->id,
+                'status'      => Simulation::READY,
+                'parameters'  => [
+                    'epsilon'        => $validData['epsilon'] ?? 0.001,
+                    'seed'           => $validData['seed'] ?? null,
+                    'fdr'            => $validData['fdr'] ?? Launcher::FDR_BH,
+                    'reactome'       => $validData['reactome'] ?? false,
+                    'fast'           => $validData['fast'] ?? true,
+                    'enrichMiRNAs'   => $validData['miRNAs'] ?? true,
+                    'miRNAsEvidence' => $validData['miRNAsEvidence'] ?? Launcher::EVIDENCE_STRONG,
+                    'remove'         => $validData['nodes']['knockout'] ?? [],
+                    'filter'         => $validData['filter'] ?? null,
+                ],
             ]
         );
-        $name = trim($request->get('name', ''));
-        $nonExp = (array)$request->get('nonexp-nodes', []);
-        $remove = (array)$request->get('remove-nodes', []);
-        $job = null;
-        try {
-            $job = Job::buildJob(
-                Constants::SIMULATION_JOB,
+        $jobDirRelative = $simulation->jobDirectoryRelative();
+        $jobDirAbsolute = $simulation->jobDirectory() . DIRECTORY_SEPARATOR;
+        if ($request->hasFile('simulationParametersFile')) {
+            $file = $request->file('simulationParametersFile');
+            $filename = basename($file->store($jobDirRelative));
+            $simulation->input_parameters_file = $jobDirAbsolute . $filename;
+        } else {
+            $simulation->setParameter(
+                'inputParameters',
                 [
-                    'organism'     => $request->get('organism', 'hsa'),
-                    'nonExpressed' => $nonExp,
-                    'remove'       => $remove,
-                    'fdr'          => $request->get('fdr-method', 'BH'),
-                    'dbFilter'     => $request->get('db-filter'),
-                    'epsilon'      => (float)$request->get('epsilon', 0.001),
-                    'seed'         => $request->get('random-seed'),
-                    'enrichMirs'   => in_array($request->get('enrich-mirnas'), ['on', 1, 'On', 'ON'], false),
-                ],
-                [],
-                $name
-            );
-            $simulationInputFile = $this->prepareUploadedFile(
-                $request,
-                $job,
-                'simulation-input',
-                static function ($f) {
-                    return Utils::checkInputFile($f);
-                }
-            );
-            $job->addParameters(
-                [
-                    'simulationParameters' => Utils::readInputFile($simulationInputFile),
-                    'enrichDb'             => $this->prepareUploadedFile(
-                        $request,
-                        $job,
-                        'enrich-db',
-                        static function ($f) {
-                            return Utils::checkDbFile($f);
-                        }
-                    ),
-                    'nodeTypes'            => $this->prepareUploadedFile(
-                        $request,
-                        $job,
-                        'custom-node-types',
-                        static function ($f) {
-                            return Utils::checkNodeTypeFile($f);
-                        }
-                    ),
-                    'edgeTypes'            => $this->prepareUploadedFile(
-                        $request,
-                        $job,
-                        'custom-edge-types',
-                        static function ($f) {
-                            return Utils::checkEdgeTypeFile($f);
-                        }
-                    ),
-                    'edgeSubTypes'         => $this->prepareUploadedFile(
-                        $request,
-                        $job,
-                        'custom-edge-subtypes',
-                        static function ($f) {
-                            return Utils::checkEdgeSubTypeFile($f);
-                        }
-                    ),
+                    Launcher::OVEREXPRESSION  => $validData['nodes']['overExpressed'] ?? [],
+                    Launcher::UNDEREXPRESSION => $validData['nodes']['underExpressed'] ?? [],
                 ]
             );
-            @unlink($simulationInputFile);
-            $job->save();
-            $this->dispatch(new DispatcherJob($job->id));
-        } catch (\Exception $e) {
-            if ($job !== null) {
-                $job->delete();
-            }
-            throw $e;
+        }
+        if ($request->hasFile('nonExpressedNodesFile')) {
+            $file = $request->file('nonExpressedNodesFile');
+            $filename = basename($file->store($jobDirRelative));
+            $simulation->non_expressed_nodes_file = $jobDirAbsolute . $filename;
+        } else {
+            $simulation->setParameter('nonExpressed', $validData['nodes']['nonExpressed'] ?? []);
+        }
+        if ($request->hasFile('enrichmentDatabaseFile')) {
+            $file = $request->file('enrichmentDatabaseFile');
+            $filename = basename($file->store($jobDirRelative));
+            $simulation->enrichment_database_file = $jobDirAbsolute . $filename;
+        }
+        if ($request->hasFile('customNodeTypesFile')) {
+            $file = $request->file('customNodeTypesFile');
+            $filename = basename($file->store($jobDirRelative));
+            $simulation->node_types_file = $jobDirAbsolute . $filename;
+        }
+        if ($request->hasFile('customEdgeTypesFile')) {
+            $file = $request->file('customEdgeTypesFile');
+            $filename = basename($file->store($jobDirRelative));
+            $simulation->edge_types_file = $jobDirAbsolute . $filename;
+        }
+        if ($request->hasFile('customEdgeSubtypesFile')) {
+            $file = $request->file('customEdgeSubtypesFile');
+            $filename = basename($file->store($jobDirRelative));
+            $simulation->edge_subtypes_file = $jobDirAbsolute . $filename;
+        }
+        if ($request->hasFile('knockoutNodesFile')) {
+            $file = $request->file('knockoutNodesFile');
+            $simulation->setParameter(
+                'remove',
+                array_filter(array_map("trim", explode("\n", $file->get())))
+            );
+        }
+        $simulation->save();
+        if ($validData['submit'] ?? false) {
+            $simulation->submit();
         }
 
-        return response()->json($job);
+        return new SimulationResource($simulation);
     }
 
     /**
-     * Get one simulation
+     * Display the specified resource.
      *
-     * @param $job
+     * @param  \App\Models\Simulation  $simulation
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return \App\Http\Resources\SimulationResource|\Illuminate\Http\Response
      */
-    public function getSimulation($job): JsonResponse
+    public function show(Simulation $simulation): Response|SimulationResource
     {
-        $job = $this->getJob($job, false);
-        $arr = $job->toArray();
-        $arr['parametersUri'] = route('api-get-simulation-parameters', ['job' => $job]);
-        $arr['rawResultsUri'] = route('api-get-simulation-results-raw', ['job' => $job]);
-        $arr['pathwayResultsUri'] = route('api-get-simulation-results-pathways', ['job' => $job]);
+        abort_if(!auth()->user()->is_admin && $simulation->user_id !== auth()->id(), 403);
 
-        return response()->json($arr);
+        return new SimulationResource($simulation);
     }
 
     /**
-     * Get the parameters of one simulation
+     * Remove the specified resource from storage.
      *
-     * @param $job
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function getSimulationParameters($job): JsonResponse
-    {
-        $job = $this->getJob($job, false);
-        $params = $job->job_parameters;
-        if ($params['enrichDb'] !== null && file_exists($params['enrichDb'])) {
-            $params['enrichDb'] = file_get_contents($params['enrichDb']);
-        }
-        if ($params['nodeTypes'] !== null && file_exists($params['nodeTypes'])) {
-            $params['nodeTypes'] = file_get_contents($params['nodeTypes']);
-        }
-        if ($params['edgeTypes'] !== null && file_exists($params['edgeTypes'])) {
-            $params['edgeTypes'] = file_get_contents($params['edgeTypes']);
-        }
-        if ($params['edgeSubTypes'] !== null && file_exists($params['edgeSubTypes'])) {
-            $params['edgeSubTypes'] = file_get_contents($params['edgeSubTypes']);
-        }
-
-        return response()->json($params);
-    }
-
-    /**
-     * Get the raw results of one simulation
-     *
-     * @param $job
+     * @param  \App\Models\Simulation  $simulation
      *
      * @return \Illuminate\Http\JsonResponse
+     * @throws \App\Exceptions\FileSystemException
+     * @throws \Exception
      */
-    public function getSimulationResultsRaw($job): JsonResponse
+    public function destroy(Simulation $simulation): JsonResponse
     {
-        $job = $this->getJob($job);
-        $reader = new Reader($job);
+        abort_if(!auth()->user()->is_admin && $simulation->user_id !== auth()->id(), 403);
+        abort_unless($simulation->canBeDeleted(), 500, 'This simulation cannot be deleted');
+
+        $simulation->deleteJobDirectory();
+        $simulation->delete();
 
         return response()->json(
             [
-                'output' => file_get_contents($reader->getOutputFilename()),
+                'deleted' => true,
             ]
         );
     }
 
     /**
-     * Get the list of pathways for one simulation job
+     * Download the specified file from the resource
      *
-     * @param $job
+     * @param  \App\Models\Simulation  $simulation
+     * @param  string  $type
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse|\Symfony\Component\HttpFoundation\StreamedResponse
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
-    public function getSimulationResultsPathways($job): JsonResponse
+    public function download(Simulation $simulation, string $type): BinaryFileResponse|StreamedResponse
     {
-        $job = $this->getJob($job);
-        $reader = new Reader($job);
-        $pathways = $reader->readPathwaysList();
-        $pathways = $pathways->map(
-            static function ($item) use ($job) {
-                $item['uri'] = route(
-                    'api-get-simulation-results-one-pathway',
-                    [
-                        'job'     => $job,
-                        'pathway' => $item['id'],
-                    ]
-                );
+        abort_if(!auth()->user()->is_admin && $simulation->user_id !== auth()->id(), 403);
+        $downloadService = app()->make(ApiDownloadService::class, [$simulation]);
 
-                return $item;
-            }
-        );
-
-        return response()->json($pathways);
+        return $downloadService->download($type);
     }
 
     /**
-     * Get the list of nodes for one simulation job
+     * Submit or resubmit the specified resource to the job queue
      *
-     * @param $job
-     * @param $pathway
+     * @param  \App\Models\Simulation  $simulation
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return \App\Http\Resources\SimulationResource
      */
-    public function getSimulationResultsOnePathway($job, $pathway): JsonResponse
+    public function submit(Simulation $simulation): SimulationResource
     {
-        $job = $this->getJob($job);
-        $reader = new Reader($job);
+        abort_if(!auth()->user()->is_admin && $simulation->user_id !== auth()->id(), 403);
+        if ($simulation->isReady()) {
+            $simulation->submit();
+        } elseif ($simulation->isFailed() || ($simulation->isCompleted() && auth()->user()->is_admin)) {
+            $simulation->reSubmit();
+        } else {
+            abort(500, 'This simulation cannot be submitted');
+        }
 
-        return response()->json($reader->readPathway($pathway));
+        return new SimulationResource($simulation);
     }
-
 }

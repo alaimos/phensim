@@ -1,50 +1,23 @@
 <?php
+/**
+ * PHENSIM: Phenotype Simulator
+ * @version 2.0.0.2
+ * @author  Salvatore Alaimo, Ph.D.
+ */
 
 namespace App\Models;
 
-use App\Exceptions\SecurityException;
-use Auth;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Query\Builder;
+//@todo add this use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laratrust\Contracts\Ownable;
-use Laratrust\Traits\LaratrustUserTrait;
-use Laravel\Passport\HasApiTokens;
+use Laravel\Sanctum\HasApiTokens;
 
-/**
- * App\Models\User
- *
- * @property int                                                                                                            $id
- * @property string                                                                                                         $name
- * @property string                                                                                                         $email
- * @property string                                                                                                         $password
- * @property string                                                                                                         $affiliation
- * @property string                                                                                                         $secret
- * @property string                                                                                                         $remember_token
- * @property \Carbon\Carbon                                                                                                 $created_at
- * @property \Carbon\Carbon                                                                                                 $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection|\Laravel\Passport\Client[]                                       $clients
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Job[]                                                $jobs
- * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\Illuminate\Notifications\DatabaseNotification[] $notifications
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Permission[]                                         $permissions
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Role[]                                               $roles
- * @property-read \Illuminate\Database\Eloquent\Collection|\Laravel\Passport\Token[]                                        $tokens
- * @method static Builder|User whereAffiliation($value)
- * @method static Builder|User whereCreatedAt($value)
- * @method static Builder|User whereEmail($value)
- * @method static Builder|User whereId($value)
- * @method static Builder|User whereName($value)
- * @method static Builder|User wherePassword($value)
- * @method static Builder|User whereRememberToken($value)
- * @method static Builder|User whereRoleIs($role = '')
- * @method static Builder|User whereSecret($value)
- * @method static Builder|User whereUpdatedAt($value)
- * @mixin \Eloquent
- */
-class User extends Authenticatable implements Ownable
+class User extends Authenticatable
 {
-    use LaratrustUserTrait, Notifiable, HasApiTokens;
+    use HasFactory;
+    use Notifiable;
+    use HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -55,8 +28,7 @@ class User extends Authenticatable implements Ownable
         'name',
         'email',
         'password',
-        'remember_token',
-        'secret',
+        'affiliation',
     ];
 
     /**
@@ -67,128 +39,46 @@ class User extends Authenticatable implements Ownable
     protected $hidden = [
         'password',
         'remember_token',
-        'secret',
+        'is_admin',
     ];
 
     /**
-     * Jobs Models HasMany Relationship
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
+    /**
+     * The model's default values for attributes.
+     *
+     * @var array
+     */
+    protected $attributes = [
+        'is_admin' => false,
+    ];
+
+    /**
+     * User-to-Simulation relationship
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function jobs(): HasMany
+    public function simulations(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(Job::class, 'user_id', 'id');
+        return $this->hasMany(Simulation::class);
     }
 
     /**
-     * Checks if the user is an administrator
+     * Counts owned simulations by state
      *
-     * @return bool
+     * @param  int  $status
+     *
+     * @return int
      */
-    public function isAdmin(): bool
+    public function countSimulationsByState(int $status): int
     {
-        return $this->hasRole('administrator');
+        return (!in_array($status, Simulation::VALID_STATES)) ? -1 : $this->simulations()->where('status', $status)->count();
     }
-
-    /**
-     * Checks if an user can create a user
-     *
-     * @param null|\App\Models\User $user
-     *
-     * @return bool
-     */
-    public static function canBeCreated(User $user = null): bool
-    {
-        if ($user === null) {
-            $user = Auth::user();
-        }
-        if ($user === null) {
-            return false;
-        }
-
-        return $user->hasRole('administrator') || $user->can('create-users');
-    }
-
-    /**
-     * Checks if an user can update this user
-     *
-     * @param \App\Models\User|null $user
-     *
-     * @return bool
-     */
-    public function canBeUpdated(User $user = null): bool
-    {
-        if ($user === null) {
-            $user = Auth::user();
-        }
-        if ($user === null) {
-            return false;
-        }
-
-        return $user->hasRole('administrator') || $user->canAndOwns('update-users', $this);
-    }
-
-    /**
-     * Checks if an user can delete this user
-     *
-     * @param \App\Models\User|null $user
-     *
-     * @return bool
-     */
-    public function canBeDeleted(User $user = null): bool
-    {
-        if ($user === null) {
-            $user = Auth::user();
-        }
-        if ($user === null) {
-            return false;
-        }
-
-        return $user->hasRole('administrator') || $user->canAndOwns('delete-users', $this);
-    }
-
-    /**
-     * Gets the owner key value inside the model or object
-     *
-     * @return mixed
-     */
-    public function ownerKey()
-    {
-        return $this->id;
-    }
-
-    /**
-     * Save the model to the database.
-     *
-     * @param array $options
-     *
-     * @return mixed
-     */
-    public function save(array $options = [])
-    {
-        if (!$this->exists) {
-            $this->remember_token = null;
-            $this->secret = bcrypt(str_random(32));
-        }
-
-        return parent::save($options);
-    }
-
-    /**
-     * Delete the model from the database.
-     *
-     * @return mixed
-     *
-     * @throws \Exception
-     */
-    public function delete()
-    {
-        if (!$this->canBeDeleted()) {
-            throw new SecurityException('The current user is not allowed to delete this object');
-        }
-
-        return parent::delete();
-    }
-
-
 }

@@ -1,10 +1,10 @@
-<?php /** @noinspection DisconnectedForeachInstructionInspection */
+<?php
 
 namespace App\Console\Commands;
 
-use App\Models\Job;
-use App\Models\User;
+use App\Models\Simulation;
 use Illuminate\Console\Command;
+use JetBrains\PhpStorm\ArrayShape;
 
 class ExportSimulations extends Command
 {
@@ -13,7 +13,7 @@ class ExportSimulations extends Command
      *
      * @var string
      */
-    protected $signature = 'export:simulations {listFile} {outputFile}';
+    protected $signature = 'simulations:export {outputFile} {listFile?}';
 
     /**
      * The console command description.
@@ -25,64 +25,71 @@ class ExportSimulations extends Command
     /**
      * Get the content of an optional file
      *
-     * @param \App\Models\Job $job
-     * @param string          $parameter
-     * @param bool            $data
+     * @param  string|null  $filename
      *
      * @return array|null
      */
-    public function getOptionalFile(Job $job, string $parameter, bool $data = false): ?array
+    private function getOptionalFile(?string $filename): ?array
     {
-        if ($data) {
-            $file = $job->getData($parameter);
-        } else {
-            $file = $job->getParameter($parameter);
-        }
-        if (empty($file) || !file_exists($file)) {
+        if (empty($filename) || !file_exists($filename)) {
             return null;
         }
 
         return [
             'file' => true,
-            'name' => basename($file),
-            'data' => base64_encode(gzcompress(file_get_contents($file), 9)),
+            'name' => basename($filename),
+            'data' => base64_encode(gzcompress(file_get_contents($filename), 9)),
         ];
     }
 
     /**
      * Build the array containing all the details of a simulation
      *
-     * @param \App\Models\Job $simulation
+     * @param  \App\Models\Simulation  $simulation
      *
      * @return array
      */
-    public function buildSimulationArray(Job $simulation): array
+    private function buildSimulationArray(Simulation $simulation): array
     {
-        $parameters = array_merge([], $simulation->job_parameters);
-        $parameters['organism'] = $simulation->getParameter('organism');
-        $parameters['simulationParameters'] = $simulation->getParameter('simulationParameters');
-        $parameters['seed'] = $simulation->getTypedParameter('seed', 'int');
-        $parameters['epsilon'] = $simulation->getTypedParameter('epsilon', 'float', 0.001, false);
-        $parameters['nonExpressed'] = $simulation->getTypedParameter('nonExpressed', 'array', [], false);
-        $parameters['remove'] = $simulation->getTypedParameter('remove', 'array', [], false);
-        $parameters['fdr'] = $simulation->getParameter('fdr', 'BH');
-        $parameters['enrichMirs'] = $simulation->getTypedParameter('enrichMirs', 'bool', true, false);
-        $parameters['enrichDb'] = $this->getOptionalFile($simulation, 'enrichDb');
-        $parameters['nodeTypes'] = $this->getOptionalFile($simulation, 'nodeTypes');
-        $parameters['edgeTypes'] = $this->getOptionalFile($simulation, 'edgeTypes');
-        $parameters['edgeSubTypes'] = $this->getOptionalFile($simulation, 'edgeSubTypes');
-        $data = array_merge([], $simulation->job_data);
-        $data['outputFile'] = $this->getOptionalFile($simulation, 'outputFile', true);
-        $data['pathwayOutputFile'] = $this->getOptionalFile($simulation, 'pathwayOutputFile', true);
-        $data['nodesOutputFile'] = $this->getOptionalFile($simulation, 'nodesOutputFile', true);
+        $parameters = array_merge([], $simulation->parameters);
+        $parameters['organism'] = $simulation->organism->accession;
+        $parameters['seed'] = $simulation->getParameter('seed');
+        $parameters['epsilon'] = $simulation->getParameter('epsilon');
+        $parameters['remove'] = $simulation->getParameter('remove');
+        $parameters['fdr'] = $simulation->getParameter('fdr');
+        $parameters['enrichMirs'] = $simulation->getParameter('enrichMiRNAs');
+        $parameters['miRNAsEvidence'] = $simulation->getParameter('miRNAsEvidence');
+        $parameters['reactome'] = $simulation->getParameter('reactome');
+        $parameters['fast'] = $simulation->getParameter('fast');
+        $parameters['enrichDb'] = $this->getOptionalFile($simulation->enrichment_database_file);
+        $parameters['nodeTypes'] = $this->getOptionalFile($simulation->node_types_file);
+        $parameters['edgeTypes'] = $this->getOptionalFile($simulation->edge_types_file);
+        $parameters['edgeSubTypes'] = $this->getOptionalFile($simulation->edge_subtypes_file);
+        if ($simulation->input_parameters_file !== null) {
+            $parameters['simulationParameters'] = $this->getOptionalFile($simulation->input_parameters_file);
+        } else {
+            $parameters['simulationParameters'] = $simulation->getParameter('simulationParameters');
+        }
+        if ($simulation->non_expressed_nodes_file !== null) {
+            $parameters['nonExpressed'] = $this->getOptionalFile($simulation->non_expressed_nodes_file);
+        } else {
+            $parameters['nonExpressed'] = $simulation->getParameter('nonExpressed');
+        }
+        $data = [
+            'outputFile'        => $this->getOptionalFile($simulation->output_file),
+            'pathwayOutputFile' => $this->getOptionalFile($simulation->pathway_output_file),
+            'nodesOutputFile'   => $this->getOptionalFile($simulation->nodes_output_file),
+            'zipFile'           => ($simulation->output_file !== null) ? $this->getOptionalFile($simulation->output_file . '.zip') : '',
+        ];
 
         return [
             'id'         => $simulation->id,
-            'name'       => $simulation->job_name,
-            'key'        => $simulation->job_key,
-            'status'     => $simulation->job_status,
-            'log'        => $simulation->job_log,
+            'name'       => $simulation->name,
+            'status'     => $simulation->status,
+            'log'        => $simulation->logs,
             'owner'      => $simulation->user->email,
+            'public'     => $simulation->public,
+            'publicKey'  => $simulation->public_key,
             'parameters' => $parameters,
             'data'       => $data,
         ];
@@ -91,13 +98,18 @@ class ExportSimulations extends Command
     /**
      * Execute the console command.
      *
-     * @return mixed
+     * @return int
+     * @throws \JsonException
      */
-    public function handle()
+    public function handle(): int
     {
-        $listFile = $this->argument('listFile');
+        if ($this->hasArgument('listFile')) {
+            $listFile = $this->argument('listFile');
+        } else {
+            $listFile = null;
+        }
         $outputFile = $this->argument('outputFile');
-        if (!file_exists($listFile) || !is_file($listFile) || !is_readable($listFile)) {
+        if ($listFile !== null && (!file_exists($listFile) || !is_file($listFile) || !is_readable($listFile))) {
             $this->error('Invalid input list.');
 
             return 101;
@@ -107,34 +119,26 @@ class ExportSimulations extends Command
 
             return 102;
         }
-        $list = array_filter(
-            array_filter(file($listFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES)),
-            static function ($e) {
-                return is_numeric($e);
-            }
-        );
-        if (empty($list)) {
-            $this->error('Input list is empty');
-
-            return 103;
+        if ($listFile !== null) {
+            $list = array_filter(
+                array_filter(file($listFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES)),
+                static function ($e) {
+                    return is_numeric($e);
+                }
+            );
+            $simulationsQuery = Simulation::whereIn('id', $list);
+        } else {
+            $simulationsQuery = Simulation::query();
         }
-
-        $jobs = [];
-        $bar = $this->output->createProgressBar(count($list));
-        foreach ($list as $id) {
-            $job = Job::whereId($id)->first();
-            if ($job === null) {
-                $this->warn('Invalid identifier "' . $id . '".');
-            } else {
-                $jobs[] = base64_encode(gzcompress(json_encode($this->buildSimulationArray($job)), 9));
-            }
+        $simulations = $simulationsQuery->with(['user', 'organism'])->get();
+        $outputData = [];
+        $bar = $this->output->createProgressBar($simulations->count());
+        foreach ($simulations as $simulation) {
+            $outputData[] = base64_encode(gzcompress(json_encode($this->buildSimulationArray($simulation), JSON_THROW_ON_ERROR), 9));
             $bar->advance();
         }
         $bar->finish();
-
-        @file_put_contents($outputFile, json_encode($jobs));
-
-        if (!file_exists($outputFile)) {
+        if (false === file_put_contents($outputFile, json_encode($outputData, JSON_THROW_ON_ERROR))) {
             $this->error('Unable to write output file!');
 
             return 104;

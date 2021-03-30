@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\Role;
+use App\Providers\RouteServiceProvider;
 use App\Models\User;
+use App\Rules\Password;
 use Illuminate\Foundation\Auth\RegistersUsers;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class RegisterController extends Controller
@@ -28,10 +30,12 @@ class RegisterController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/home';
+    protected string $redirectTo = RouteServiceProvider::HOME;
 
     /**
      * Create a new controller instance.
+     *
+     * @return void
      */
     public function __construct()
     {
@@ -41,37 +45,39 @@ class RegisterController extends Controller
     /**
      * Get a validator for an incoming registration request.
      *
-     * @param  array $data
+     * @param  array  $data
      *
      * @return \Illuminate\Contracts\Validation\Validator
      */
-    protected function validator(array $data)
+    protected function validator(array $data): \Illuminate\Contracts\Validation\Validator
     {
-        return Validator::make($data, [
-            'name'        => 'required|max:255',
-            'affiliation' => 'required|max:255',
-            'email'       => 'required|email|max:255|unique:users',
-            'password'    => 'required|min:8|confirmed',
-        ]);
+        return Validator::make(
+            $data,
+            [
+                'name'        => ['required', 'string', 'max:255'],
+                'email'       => ['required', 'string', 'email', 'max:255', 'unique:users'],
+                'password'    => ['required', 'string', (new Password())->length(8)->requireNumeric()->requireUppercase(), 'confirmed'],
+                'affiliation' => ['required', 'string', 'max:255'],
+            ]
+        );
     }
 
     /**
      * Create a new user instance after a valid registration.
      *
-     * @param  array $data
+     * @param  array  $data
      *
-     * @return User
+     * @return \App\Models\User
      */
-    protected function create(array $data)
+    protected function create(array $data): User
     {
-        /** @var \App\Models\User $user */
-        $user = User::create([
-            'name'        => $data['name'],
-            'affiliation' => $data['affiliation'],
-            'email'       => $data['email'],
-            'password'    => bcrypt($data['password']),
-        ]);
-        $user->attachRole(Role::whereName('user')->first());
-        return $user;
+        return User::create(
+            [
+                'name'        => $data['name'],
+                'email'       => $data['email'],
+                'password'    => Hash::make($data['password']),
+                'affiliation' => $data['affiliation'],
+            ]
+        );
     }
 }

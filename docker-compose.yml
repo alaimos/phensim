@@ -1,0 +1,44 @@
+version: '3'
+services:
+    phensim:
+        build:
+            context: ./docker/
+            dockerfile: Dockerfile
+            args:
+                WWWGROUP: '${WWWGROUP}'
+        ports:
+            - '${APP_PORT:-8888}:80'
+        environment:
+            WWWUSER: '${WWWUSER}'
+        volumes:
+            - './www/phensim:/var/www/html'
+        networks:
+            - phensim
+        depends_on:
+            - mysql
+            - redis
+    mysql:
+        image: 'mysql:8.0'
+        environment:
+            MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+            MYSQL_DATABASE: '${DB_DATABASE}'
+            MYSQL_USER: '${DB_USERNAME}'
+            MYSQL_PASSWORD: '${DB_PASSWORD}'
+            MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+        volumes:
+            - './database/mysql:/var/lib/mysql'
+        networks:
+            - phensim
+        healthcheck:
+          test: ["CMD", "mysqladmin", "ping"]
+    redis:
+        image: 'redis:alpine'
+        volumes:
+            - './database/redis:/data'
+        networks:
+            - phensim
+        healthcheck:
+          test: ["CMD", "redis-cli", "ping"]
+networks:
+    phensim:
+        driver: bridge

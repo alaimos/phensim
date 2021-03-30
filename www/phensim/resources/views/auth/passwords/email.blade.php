@@ -1,72 +1,52 @@
-@extends('layouts.app')
+@extends('layouts.app', ['class' => 'bg-default'])
 
 @section('content')
+    @include('layouts.headers.guest')
 
-    <!-- Reminder Content -->
-    <div class="content overflow-hidden">
-        <div class="row">
-            <div class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4">
-                <!-- Reminder Block -->
-                <div class="block block-themed animated fadeIn">
-                    <div class="block-header bg-primary">
-                        <ul class="block-options">
-                            <li>
-                                <a href="{{ route('login') }}" data-toggle="tooltip" data-placement="left"
-                                   title="Log In"><i class="si si-login"></i></a>
-                            </li>
-                        </ul>
-                        <h3 class="block-title">Forgot your password?</h3>
-                    </div>
-                    <div class="block-content block-content-full block-content-narrow">
-                        <!-- Reminder Title -->
-                        <p>Please provide your account’s email to proceed with password reset.</p>
-                        <!-- END Reminder Title -->
+    <div class="container mt--8 pb-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-5 col-md-7">
+                <div class="card bg-secondary shadow border-0">
+                    <div class="card-body px-lg-5 py-lg-5">
+                        <div class="text-center text-muted mb-4">
+                            <small>{{ __('Reset password') }}</small>
+                        </div>
 
                         @if (session('status'))
-                            <div class="alert alert-success">
+                            <div class="alert alert-success" role="alert">
                                 {{ session('status') }}
                             </div>
                         @endif
 
-                        <!-- Reminder Form -->
-                        <form class="form-horizontal push-30-t push-50" action="{{ route('password.email') }}"
-                              method="post">
-                            {{ csrf_field() }}
-                            <div class="form-group{{ $errors->has('email') ? ' has-error' : '' }}">
-                                <div class="col-xs-12">
-                                    <div class="form-material form-material-primary floating">
-                                        <input id="email" type="email" class="form-control" name="email"
-                                               value="{{ old('email') }}" required autofocus>
-                                        <label for="email">E-Mail Address</label>
-                                    </div>
-                                    @if ($errors->has('email'))
-                                        <div id="email-error" class="help-block text-right animated fadeInDown">
-                                            {{ $errors->first('email') }}
-                                        </div>
-                                    @endif
-                                </div>
+                        @if (session('info'))
+                            <div class="alert alert-info" role="alert">
+                                {{ session('info') }}
                             </div>
-                            <div class="form-group">
-                                <div class="col-xs-12 col-sm-6 col-md-5">
-                                    <button class="btn btn-primary" type="submit"><i
-                                                class="si si-envelope-open"></i> Send Reset Link
-                                    </button>
+                        @endif
+
+                        <form role="form" method="POST" action="{{ route('password.email') }}">
+                            @csrf
+
+                            <div class="form-group{{ $errors->has('email') ? ' has-danger' : '' }} mb-3">
+                                <div class="input-group input-group-alternative">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="ni ni-email-83"></i></span>
+                                    </div>
+                                    <input class="form-control{{ $errors->has('email') ? ' is-invalid' : '' }}" placeholder="{{ __('Email') }}" type="email" name="email" value="{{ old('email') }}" required autofocus>
                                 </div>
+                                @if ($errors->has('email'))
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $errors->first('email') }}</strong>
+                                    </span>
+                                @endif
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary my-4">{{ __('Send Password Reset Link') }}</button>
                             </div>
                         </form>
-                        <!-- END Reminder Form -->
                     </div>
                 </div>
-                <!-- END Reminder Block -->
             </div>
         </div>
     </div>
-    <!-- END Reminder Content -->
-    <!-- Reminder Footer -->
-    <div class="push-10-t text-center animated fadeInUp">
-        <small class="text-muted font-w600">
-            &copy; <span class="js-year-copy"></span> - Developed by: <span class="font-w600">S. Alaimo, Ph.D.</span>
-        </small>
-    </div>
-    <!-- END Reminder Footer -->
 @endsection

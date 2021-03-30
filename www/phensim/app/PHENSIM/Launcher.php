@@ -1,19 +1,24 @@
 <?php
+/**
+ * PHENSIM: Phenotype Simulator
+ * @version 2.0.0.2
+ * @author  Salvatore Alaimo, Ph.D.
+ */
 
 namespace App\PHENSIM;
 
 use App\Exceptions\CommandException;
-use App\Models\Job;
-use App\PHENSIM\Exception\LauncherException;
+use App\Exceptions\PHENSIM\LauncherException;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 
 final class Launcher
 {
-    /**
-     * @var array
-     */
-    private $mithrilCommandBase;
 
+    //region Constants
+
+    /*
+     * Set of constants used to build PHENSIM command parameters.
+     */
     private const  ENRICHER                  = '-e';
     private const  ENRICHER_PARAM            = '-p';
     private const  ENRICHER_PARAM_VALUE      = '%s=%s';
@@ -28,102 +33,271 @@ final class Launcher
     private const  OUTPUT_FILE               = '-o';
     private const  SEED                      = '-seed';
     private const  VERBOSE                   = '-verbose';
+    private const  REACTOME                  = '-reactome';
+    private const  FAST                      = '-fast';
     private const  REMOVE_NODES_FILE         = '-remove-nodes-file';
     private const  PATHWAY_MATRIX_OUTPUT     = '-output-pathway-matrix';
     private const  NODES_MATRIX_OUTPUT       = '-output-nodes-matrix';
+    private const  SBML_OUTPUT               = '-output-sbml';
+    private const  SIF_OUTPUT                = '-output-extended-sif';
+    public const   EVIDENCE_STRONG           = 'STRONG';
+    public const   EVIDENCE_WEAK             = 'WEAK';
+    public const   SUPPORTED_EVIDENCES       = [self::EVIDENCE_STRONG, self::EVIDENCE_WEAK];
+    public const   SUPPORTED_EVIDENCE_NAMES  = [
+        self::EVIDENCE_STRONG => 'Strong interactions',
+        self::EVIDENCE_WEAK   => 'Weak interactions',
+    ];
+    public const   OVEREXPRESSION            = 'OVEREXPRESSION';
+    public const   UNDEREXPRESSION           = 'UNDEREXPRESSION';
+    public const   FDR_BH                    = 'BH';   // Benjamini-Hochberg method
+    public const   FDR_QV                    = 'QV';   // q-value method
+    public const   FDR_LOC                   = 'LOC';  // Local-FDR method
+    public const   FDRS_NAMES                = [
+        self::FDR_BH  => 'Benjamini & Hochberg',
+        self::FDR_QV  => 'Q-value (Storey et al.)',
+        self::FDR_LOC => 'Local FDR (Efron et al.)',
+    ];
+    public const   SUPPORTED_FDRS            = [self::FDR_BH, self::FDR_QV, self::FDR_LOC];
+    public const   MIRNA_ENRICHER            = 'mirna';
 
-    public const SUPPORTED_EVIDENCES = ['STRONG', 'WEAK', 'PREDICTION'];
-    public const OVEREXPRESSION      = 'OVEREXPRESSION';
-    public const UNDEREXPRESSION     = 'UNDEREXPRESSION';
-    public const BOTH                = 'BOTH';
-    public const SUPPORTED_FDRS      = ['BH', 'QV', 'LOC'];
+    //endregion
 
-    private $enrichers = [];
-    private $enricherParameters = [];
-    private $epsilon = 0.001;
-    private $simulationParameters = [];
-    private $simulationIterations = 100;
-    private $bootstrapIterations = 1000;
-    private $miRNAEnrichmentEvidence = 'STRONG';
-    private $nonExpressedNodes = [];
-    private $removeNodes = [];
-    private $organism = 'hsa';
-    private $fdrMethod = 'BH';
-    private $seed = null;
+    //region Private variables
+
+    /**
+     * The base command used to call PHENSIM executable inside the MITHrIL package
+     *
+     * @var array
+     */
+    private array $mithrilCommandBase;
+
+    /**
+     * A list of enrichers algorithm used to modify pathway topology
+     * @var array
+     */
+    private array $enrichers = [];
+
+    /**
+     * A map of parameters passed to the algorithms
+     * @var array
+     */
+    private array $enricherParameters = [];
+
+    /**
+     * Epsilon value used to predict non-expression of a node
+     *
+     * @var float
+     */
+    private float $epsilon = 0.001;
+
+    /**
+     * Number of iterations for the p-value simulation
+     *
+     * @var int
+     */
+    private int $simulationIterations = 100;
+
+    /**
+     * Number of iterations for the bootstrapping procedure
+     *
+     * @var int
+     */
+    private int $bootstrapIterations = 1000;
+
+    /**
+     * Evidence level for miRNA enrichment
+     *
+     * @var string
+     */
+    private string $miRNAEnrichmentEvidence = 'STRONG';
+
+    /**
+     * Set of knocked-out nodes
+     *
+     * @var array
+     */
+    private array $removeNodes = [];
+
+    /**
+     * Organism of the simulation
+     *
+     * @var string
+     */
+    private string $organism = 'hsa';
+
+    /**
+     * FDR computation method
+     *
+     * @var string
+     */
+    private string $fdrMethod = 'BH';
+
+    /**
+     * Should REACTOME be used with KEGG pathways?
+     *
+     * @var bool
+     */
+    private bool $reactome = false;
+
+    /**
+     * Should FAST method be used?
+     *
+     * @var bool
+     */
+    private bool $fast = true;
+
+    /**
+     * Seed for the RNG. Set to null for random seed generation.
+     *
+     * @var int|null
+     */
+    private ?int $seed = null;
+
+    /**
+     * Path of PHENSIM input file
+     *
+     * @var string
+     */
+    private string $inputParametersFilePath;
+
+    /**
+     * Path of the non-expressed nodes file
+     *
+     * @var string|null
+     */
+    private ?string $nonExpressedNodesFilePath = null;
+
+    /**
+     * The command line to call PHENSIM
+     *
+     * @var array
+     */
+    private array $commandLine = [];
 
     /**
      * The working directory of this job
      *
      * @var string
      */
-    private $workingDirectory;
+    private string $workingDirectory;
 
     /**
      * The output filename generated after the analysis was performed
      *
      * @var string
      */
-    private $outputFilename;
+    private string $outputFilename;
 
     /**
      * The output filename for the pathway matrix that will be generated after the analysis is performed
      *
      * @var string
      */
-    private $pathwayMatrixOutputFilename;
+    private string $pathwayMatrixOutputFilename;
 
     /**
      * The output filename for the nodes matrix that will be generated after the analysis is performed
      *
      * @var string
      */
-    private $nodesMatrixOutputFilename;
+    private string $nodesMatrixOutputFilename;
 
     /**
-     * A list of input files to delete before destruction of this object
+     * The output filename for the SBML file encoding this simulation
+     *
+     * @var string
+     */
+    private string $sbmlOutputFilename;
+
+    /**
+     * The output filename for the SIF file encoding this simulation
+     *
+     * @var string
+     */
+    private string $sifOutputFilename;
+
+    /**
+     * A list of temporary files to delete before destruction of this object
      *
      * @var array
      */
-    private $inputFiles = [];
+    private array $tempFiles = [];
+
+    /**
+     * A list of files to put in the input zip archive
+     *
+     * @var array
+     */
+    private array $zipArchiveContent = [];
+
+    /**
+     * A list of files used to add pathway element
+     *
+     * @var array
+     */
+    private array $enrichmentFiles = [];
+
+    //endregion
 
     /**
      * Launcher constructor.
      *
-     * @param null|string|\App\Models\Job $directory
+     * @param  null|string  $directory
      */
-    public function __construct($directory = null)
+    public function __construct(?string $directory = null)
     {
         if ($directory !== null) {
             $this->setWorkingDirectory($directory);
         }
         $this->mithrilCommandBase = [
-            env('JAVA_PATH') . '/java',
+            config('phensim.java'),
             '-jar',
-            resource_path('bin/MITHrIL2.jar'),
+            config('phensim.mithril'),
             'phensim',
             '-threads',
-            env('PHENSIM_THREADS', 2),
+            config('phensim.threads'),
         ];
     }
 
-    /**
-     * Get the list of enrichers for this analysis
-     *
-     * @return array
-     */
-    public function getEnrichers(): array
-    {
-        return $this->enrichers;
-    }
+    //region Setters
 
     /**
-     * Add one or more enricher for this analysis
+     * Set the path of the input file for this simulation
      *
-     * @param array|string $enricher
+     * @param  string  $inputParametersFilePath
      *
      * @return $this
      */
-    public function addEnricher($enricher): self
+    public function setInputParametersFilePath(string $inputParametersFilePath): self
+    {
+        $this->inputParametersFilePath = $inputParametersFilePath;
+
+        return $this;
+    }
+
+    /**
+     * Set the path of the non-expressed nodes file for this simulation.
+     * To provide no non-expressed nodes set the path to NULL.
+     *
+     * @param  string|null  $nonExpressedNodesFilePath
+     *
+     * @return $this
+     */
+    public function setNonExpressedNodesFilePath(?string $nonExpressedNodesFilePath): self
+    {
+        $this->nonExpressedNodesFilePath = $nonExpressedNodesFilePath;
+
+        return $this;
+    }
+
+    /**
+     * Add one or more enricher to this analysis
+     *
+     * @param  array|string  $enricher
+     *
+     * @return $this
+     */
+    public function addEnricher(array|string $enricher): self
     {
         if (is_array($enricher)) {
             foreach ($enricher as $e) {
@@ -139,11 +313,11 @@ final class Launcher
     /**
      * Set the list of enrichers for this analysis
      *
-     * @param array $enrichers
+     * @param  array  $enrichers
      *
      * @return $this
      */
-    public function setEnrichers($enrichers = []): self
+    public function setEnrichers(array $enrichers = []): self
     {
         $this->enrichers = $enrichers;
 
@@ -151,24 +325,56 @@ final class Launcher
     }
 
     /**
-     * Get all parameters for the enrichers
+     * Add all parameters needed to setup a local db file enrichment in PHENSIM
      *
-     * @return array
+     * @param  string  $inputFile
+     * @param  string|null  $filter
+     * @param  string|null  $nodeTypesFile
+     * @param  string|null  $edgeTypesFile
+     * @param  string|null  $edgeSubTypesFile
+     *
+     * @return $this
      */
-    public function getEnricherParameters(): array
-    {
-        return $this->enricherParameters;
+    public function setDBEnricher(
+        string $inputFile,
+        ?string $filter = null,
+        ?string $nodeTypesFile = null,
+        ?string $edgeTypesFile = null,
+        ?string $edgeSubTypesFile = null
+    ): self {
+        if (!file_exists($inputFile)) {
+            throw new LauncherException('An invalid input file for the DB enrichment has been provided');
+        }
+        $this->addEnricher('textEnricher')->addEnricherParameters('inputFile', $inputFile);
+        $this->enrichmentFiles = [$inputFile];
+        if (!empty($filter)) {
+            $this->addEnricherParameters('filter', $filter);
+        }
+        if (!empty($nodeTypesFile) && file_exists($nodeTypesFile)) {
+            $this->addEnricherParameters('nodeTypesFile', $nodeTypesFile);
+            $this->enrichmentFiles[] = $nodeTypesFile;
+        }
+        if (!empty($edgeTypesFile) && file_exists($edgeTypesFile)) {
+            $this->addEnricherParameters('edgeTypesFile', $edgeTypesFile);
+            $this->enrichmentFiles[] = $edgeTypesFile;
+        }
+        if (!empty($edgeSubTypesFile) && file_exists($edgeSubTypesFile)) {
+            $this->addEnricherParameters('edgeSubTypesFile', $edgeSubTypesFile);
+            $this->enrichmentFiles[] = $edgeSubTypesFile;
+        }
+
+        return $this;
     }
 
     /**
      * Set one or more parameters for the enrichers
      *
-     * @param array|string $param
-     * @param null|mixed   $value
+     * @param  array|string  $param
+     * @param  null|mixed  $value
      *
      * @return $this
      */
-    public function addEnricherParameters($param, $value = null): self
+    public function addEnricherParameters(array|string $param, mixed $value = null): self
     {
         if (is_array($param)) {
             foreach ($this->enricherParameters as $key => $val) {
@@ -184,11 +390,11 @@ final class Launcher
     /**
      * Set parameters for the enrichers
      *
-     * @param array $enricherParameters
+     * @param  array  $enricherParameters
      *
      * @return $this
      */
-    public function setEnricherParameters($enricherParameters = []): self
+    public function setEnricherParameters(array $enricherParameters = []): self
     {
         $this->enricherParameters = $enricherParameters;
 
@@ -196,23 +402,13 @@ final class Launcher
     }
 
     /**
-     * Get the current value of the epsilon parameter
-     *
-     * @return float
-     */
-    public function getEpsilon(): float
-    {
-        return $this->epsilon;
-    }
-
-    /**
      * Set the value of the epsilon parameter for PHENSIM
      *
-     * @param float $epsilon
+     * @param  float  $epsilon
      *
      * @return $this
      */
-    public function setEpsilon($epsilon = 0.001): self
+    public function setEpsilon(float $epsilon = 0.001): self
     {
         $this->epsilon = $epsilon;
 
@@ -220,73 +416,13 @@ final class Launcher
     }
 
     /**
-     * Get the list of parameters for the simulation
-     *
-     * @return array
-     */
-    public function getSimulationParameters(): array
-    {
-        return $this->simulationParameters;
-    }
-
-    /**
-     * Add one or more simulation parameters
-     *
-     * @param string|array $parameter
-     * @param string       $expressionChange
-     *
-     * @return $this
-     */
-    public function addSimulationParameter($parameter, $expressionChange = self::BOTH): self
-    {
-        if (is_array($parameter)) {
-            foreach ($parameter as $key => $change) {
-                $this->addSimulationParameter($key, $change);
-            }
-        } else {
-            $expressionChange = strtoupper($expressionChange);
-            if (!in_array($expressionChange, [self::OVEREXPRESSION, self::UNDEREXPRESSION, self::BOTH])) {
-                throw new LauncherException('Unsupported expression change');
-            }
-            $this->simulationParameters[$parameter] = $expressionChange;
-        }
-
-        return $this;
-    }
-
-    /**
-     * Set parameters for the simulation
-     *
-     * @param array $simulationParameters
-     *
-     * @return $this
-     */
-    public function setSimulationParameters($simulationParameters): self
-    {
-        $this->simulationParameters = [];
-        $this->addSimulationParameter($simulationParameters);
-
-        return $this;
-    }
-
-    /**
-     * Get the number of iterations used for the simulation cycle
-     *
-     * @return int
-     */
-    public function getSimulationIterations(): int
-    {
-        return $this->simulationIterations;
-    }
-
-    /**
      * Set the number of iterations used for the simulation cycle
      *
-     * @param int $simulationIterations
+     * @param  int  $simulationIterations
      *
      * @return $this
      */
-    public function setSimulationIterations($simulationIterations = 100): self
+    public function setSimulationIterations(int $simulationIterations = 100): self
     {
         $this->simulationIterations = $simulationIterations;
 
@@ -294,19 +430,9 @@ final class Launcher
     }
 
     /**
-     * Get the number of iterations used for the bootstrapping procedure
-     *
-     * @return int
-     */
-    public function getBootstrapIterations(): int
-    {
-        return $this->bootstrapIterations;
-    }
-
-    /**
      * Set the number of iterations used for the bootstrapping procedure
      *
-     * @param int $bootstrapIterations
+     * @param  int  $bootstrapIterations
      *
      * @return $this
      */
@@ -317,30 +443,19 @@ final class Launcher
         return $this;
     }
 
-
-    /**
-     * Returns the type of evidence used for the enrichment with microRNAs (if enabled)
-     *
-     * @return string
-     */
-    public function getMiRNAEnrichmentEvidence(): string
-    {
-        return $this->miRNAEnrichmentEvidence;
-    }
-
     /**
      * Set the type of evidence used for the enrichment with microRNAs (if enabled).
      * Allowed types are: "STRONG", "WEAK", "PREDICTION"
      *
-     * @param string $miRNAEnrichmentEvidence
+     * @param  string  $miRNAEnrichmentEvidence
      *
      * @return $this
      */
-    public function setMiRNAEnrichmentEvidence($miRNAEnrichmentEvidence = 'STRONG'): self
+    public function setMiRNAEnrichmentEvidence(string $miRNAEnrichmentEvidence = self::EVIDENCE_STRONG): self
     {
         $miRNAEnrichmentEvidence = strtoupper($miRNAEnrichmentEvidence);
-        if (!in_array($miRNAEnrichmentEvidence, self::SUPPORTED_EVIDENCES)) {
-            throw new LauncherException("Unsupported evidence type.");
+        if (!in_array($miRNAEnrichmentEvidence, self::SUPPORTED_EVIDENCES, true)) {
+            $miRNAEnrichmentEvidence = self::EVIDENCE_STRONG;
         }
         $this->miRNAEnrichmentEvidence = $miRNAEnrichmentEvidence;
 
@@ -348,43 +463,9 @@ final class Launcher
     }
 
     /**
-     * Get a list of non-expressed nodes in the simulation
-     *
-     * @return array
-     */
-    public function getNonExpressedNodes(): array
-    {
-        return $this->nonExpressedNodes;
-    }
-
-    /**
-     * Set a list of non-expressed nodes in the simulation
-     *
-     * @param array $nonExpressedNodes
-     *
-     * @return $this
-     */
-    public function setNonExpressedNodes($nonExpressedNodes = []): self
-    {
-        $this->nonExpressedNodes = $nonExpressedNodes;
-
-        return $this;
-    }
-
-    /**
-     * Get the list of nodes that will be removed to simulate a gene knockout
-     *
-     * @return array
-     */
-    public function getRemoveNodes(): array
-    {
-        return $this->removeNodes;
-    }
-
-    /**
      * Set the list of nodes that will be removed to simulate a knockout
      *
-     * @param array $removeNodes
+     * @param  array  $removeNodes
      *
      * @return $this
      */
@@ -395,25 +476,14 @@ final class Launcher
         return $this;
     }
 
-
-    /**
-     * Get the organism used for the current analysis
-     *
-     * @return string
-     */
-    public function getOrganism(): string
-    {
-        return $this->organism;
-    }
-
     /**
      * Set the organism used for the current analysis
      *
-     * @param string $organism
+     * @param  string  $organism
      *
      * @return $this
      */
-    public function setOrganism($organism = 'hsa'): self
+    public function setOrganism(string $organism): self
     {
         $this->organism = $organism;
 
@@ -421,23 +491,13 @@ final class Launcher
     }
 
     /**
-     * Get the customized seed used for the random number generator
-     *
-     * @return null|integer
-     */
-    public function getSeed(): ?int
-    {
-        return $this->seed;
-    }
-
-    /**
      * Set the seed of the random number generator
      *
-     * @param null|integer $seed
+     * @param  null|int  $seed
      *
      * @return $this
      */
-    public function setSeed($seed = null): self
+    public function setSeed(?int $seed = null): self
     {
         $this->seed = $seed;
 
@@ -457,15 +517,12 @@ final class Launcher
     /**
      * Set the working directory for this analysis
      *
-     * @param mixed $workingDirectory
+     * @param  string  $workingDirectory
      *
      * @return $this
      */
-    public function setWorkingDirectory($workingDirectory): self
+    public function setWorkingDirectory(string $workingDirectory): self
     {
-        if ($workingDirectory instanceof Job) {
-            $workingDirectory = $workingDirectory->getJobDirectory();
-        }
         $workingDirectory = rtrim($workingDirectory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
         $this->workingDirectory = $workingDirectory;
 
@@ -473,23 +530,13 @@ final class Launcher
     }
 
     /**
-     * Get the method used for FDR computation
-     *
-     * @return string
-     */
-    public function getFdrMethod(): string
-    {
-        return $this->fdrMethod;
-    }
-
-    /**
      * Set the method used for FDR computation
      *
-     * @param string $fdrMethod
+     * @param  string  $fdrMethod
      *
      * @return $this
      */
-    public function setFdrMethod(string $fdrMethod = 'BH'): self
+    public function setFdrMethod(string $fdrMethod = self::FDR_BH): self
     {
         if (!in_array($fdrMethod, self::SUPPORTED_FDRS)) {
             $fdrMethod = 'BH';
@@ -499,6 +546,84 @@ final class Launcher
         return $this;
     }
 
+    /**
+     * Enable or disable reactome analysis
+     *
+     * @param  bool  $reactome
+     *
+     * @return $this
+     */
+    public function setReactome(bool $reactome = true): self
+    {
+        $this->reactome = $reactome;
+
+        return $this;
+    }
+
+
+    /**
+     * Enable or disable fast analysis
+     *
+     * @param  bool  $fast
+     *
+     * @return $this
+     */
+    public function setFast(bool $fast = true): self
+    {
+        $this->fast = $fast;
+
+        return $this;
+    }
+
+    //endregion
+
+    /**
+     * Build the input file for PHENSIM, the command line argument, and returns its name
+     *
+     * @param  array  $overExpressedAccessions
+     * @param  array  $underExpressedAccessions
+     *
+     * @return $this
+     */
+    public function buildInputFile(array $overExpressedAccessions = [], array $underExpressedAccessions = []): self
+    {
+        if (empty($overExpressedAccessions) && empty($underExpressedAccessions)) {
+            throw new LauncherException('You must specify at least one simulation parameter');
+        }
+        $inputFile = $this->workingDirectory . Utils::tempFilename('phensim_input_', '.tsv');
+        $overExpressedAccessions = array_map(static fn($n) => $n . "\t" . self::OVEREXPRESSION, $overExpressedAccessions);
+        $underExpressedAccessions = array_map(static fn($n) => $n . "\t" . self::UNDEREXPRESSION, $underExpressedAccessions);
+        if (file_put_contents($inputFile, implode(PHP_EOL, array_merge($overExpressedAccessions, $underExpressedAccessions))) === false) {
+            throw new LauncherException('Unable to create PHENSIM input file');
+        }
+        $this->setInputParametersFilePath($inputFile);
+        $this->tempFiles[] = $inputFile;
+
+        return $this;
+    }
+
+    /**
+     * Build and set the file containing non-expressed nodes from an array of accession numbers
+     *
+     * @param  array  $accessions
+     *
+     * @return $this
+     */
+    public function buildNonExpressedFile(array $accessions): self
+    {
+        if (empty($accessions)) {
+            $nonExpFile = null;
+        } else {
+            $nonExpFile = $this->workingDirectory . Utils::tempFilename('phensim_non_exp_', '.txt');
+            if (file_put_contents($nonExpFile, implode(PHP_EOL, $accessions)) === false) {
+                throw new LauncherException('Unable to create PHENSIM non-expressed nodes file');
+            }
+            $this->tempFiles[] = $nonExpFile;
+        }
+        $this->setNonExpressedNodesFilePath($nonExpFile);
+
+        return $this;
+    }
 
     /**
      * Get the output filename after the analysis was performed
@@ -530,149 +655,118 @@ final class Launcher
         return $this->nodesMatrixOutputFilename;
     }
 
-
     /**
-     * Build the input file for PHENSIM, the command line argument, and returns its name
+     * Get the output filename of the SBML document
      *
-     * @param array $resultArray
-     *
-     * @return void
+     * @return string
      */
-    private function buildInputFile(array &$resultArray): void
+    public function getSbmlOutputFilename(): string
     {
-        if (empty($this->simulationParameters)) {
-            throw new LauncherException('You must specify at least one simulation parameter');
-        }
-        $inputFile = $this->workingDirectory . Utils::tempFilename('phensim_input', 'tsv');
-        $fp = @fopen($inputFile, 'wb');
-        if (!$fp) {
-            throw new LauncherException('Unable to create PHENSIM input file');
-        }
-        foreach ($this->simulationParameters as $parameter => $type) {
-            @fwrite($fp, $parameter . "\t" . $type . PHP_EOL);
-        }
-        @fclose($fp);
-        $this->buildParameter($inputFile, self::INPUT_FILE, $resultArray);
-        $this->inputFiles[] = $inputFile;
+        return $this->sbmlOutputFilename;
     }
 
     /**
-     * Build the file containing non-expressed nodes.
+     * Get the output filename of the SIF document
      *
-     * @param array $resultArray
-     *
-     * @return void
+     * @return string
      */
-    private function buildNonExpressedFile(array &$resultArray): void
+    public function getSifOutputFilename(): string
     {
-        if (empty($this->nonExpressedNodes)) {
-            return;
-        }
-        $nonExpFile = $this->workingDirectory . Utils::tempFilename('phensim_nonexp', 'txt');
-        $fp = @fopen($nonExpFile, 'wb');
-        if (!$fp) {
-            throw new LauncherException('Unable to create PHENSIM non-expressed nodes file');
-        }
-        foreach ($this->nonExpressedNodes as $node) {
-            @fwrite($fp, $node . PHP_EOL);
-        }
-        @fclose($fp);
-        $this->buildParameter($nonExpFile, self::NON_EXPRESSED_FILE, $resultArray);
-        $this->inputFiles[] = $nonExpFile;
+        return $this->sifOutputFilename;
     }
+
+    //region Command Line Builder
 
     /**
      * Build the file containing nodes to be removed.
      *
-     * @param array $resultArray
-     *
      * @return void
      */
-    private function buildRemoveNodesFile(array &$resultArray): void
+    private function buildRemoveNodesFile(): void
     {
         if (empty($this->removeNodes)) {
             return;
         }
-        $removeNodesFile = $this->workingDirectory . Utils::tempFilename('phensim_removed', 'txt');
-        $fp = @fopen($removeNodesFile, 'wb');
-        if (!$fp) {
-            throw new LauncherException('Unable to create PHENSIM non-expressed nodes file');
+        $removeNodesFile = $this->workingDirectory . Utils::tempFilename('phensim_removed_', '.txt');
+        if (file_put_contents($removeNodesFile, implode(PHP_EOL, $this->removeNodes)) === false) {
+            throw new LauncherException('Unable to create PHENSIM knockout nodes file');
         }
-        foreach ($this->removeNodes as $node) {
-            @fwrite($fp, $node . PHP_EOL);
-        }
-        @fclose($fp);
-        $this->buildParameter($removeNodesFile, self::REMOVE_NODES_FILE, $resultArray);
-        $this->inputFiles[] = $removeNodesFile;
+        $this->appendParameter($removeNodesFile, self::REMOVE_NODES_FILE);
+        $this->tempFiles[] = $removeNodesFile;
+        $this->zipArchiveContent[] = $removeNodesFile;
     }
 
     /**
      * Build the output file name and command line argument
      *
-     * @param array $resultArray
-     *
      * @return void
      */
-    private function buildOutputFile(array &$resultArray): void
+    private function appendOutputFiles(): void
     {
-        $outputFile = $this->workingDirectory . Utils::tempFilename('phensim_output', 'tsv');
-        $this->buildParameter($outputFile, self::OUTPUT_FILE, $resultArray);
+        $outputFile = $this->workingDirectory . Utils::tempFilename('phensim_output', '.tsv');
+        $this->appendParameter($outputFile, self::OUTPUT_FILE);
         $this->outputFilename = $outputFile;
-        $outputPathwayMatrix = $this->workingDirectory . Utils::tempFilename('phensim_output_pathway_matrix', 'tsv');
-        $this->buildParameter($outputPathwayMatrix, self::PATHWAY_MATRIX_OUTPUT, $resultArray);
+        $outputPathwayMatrix = $this->workingDirectory . Utils::tempFilename('phensim_output_pathway_matrix', '.tsv');
+        $this->appendParameter($outputPathwayMatrix, self::PATHWAY_MATRIX_OUTPUT);
         $this->pathwayMatrixOutputFilename = $outputPathwayMatrix;
-        $outputNodesMatrix = $this->workingDirectory . Utils::tempFilename('phensim_output_nodes_matrix', 'tsv');
-        $this->buildParameter($outputNodesMatrix, self::NODES_MATRIX_OUTPUT, $resultArray);
+        $outputNodesMatrix = $this->workingDirectory . Utils::tempFilename('phensim_output_nodes_matrix', '.tsv');
+        $this->appendParameter($outputNodesMatrix, self::NODES_MATRIX_OUTPUT);
         $this->nodesMatrixOutputFilename = $outputNodesMatrix;
+        $outputSBML = $this->workingDirectory . Utils::tempFilename('phensim_output_sbml', '.sbml');
+        $this->appendParameter($outputSBML, self::SBML_OUTPUT);
+        $this->sbmlOutputFilename = $outputSBML;
+        $outputSIF = $this->workingDirectory . Utils::tempFilename('phensim_output_sif', '.sif');
+        $this->appendParameter($outputSIF, self::SIF_OUTPUT);
+        $this->sifOutputFilename = $outputSIF;
     }
 
     /**
-     * Build a list parameter in the command line
+     * Append a list parameter to the PHENSIM command
      *
-     * @param array  $value
-     * @param string $parameter
-     * @param array  $resultArray
+     * @param  array  $value
+     * @param  string  $parameter
      *
      * @return void
      */
-    private function buildListParameter(array $value, $parameter, array &$resultArray): void
+    private function appendListParameter(array $value, string $parameter): void
     {
         if (!empty($value)) {
-            $resultArray[] = $parameter;
-            $resultArray[] = implode(',', $value);
+            $this->commandLine[] = $parameter;
+            $this->commandLine[] = implode(',', $value);
         }
     }
 
     /**
-     * Build a parameter in the command line
+     * Append a parameter to the PHENSIM command
      *
-     * @param mixed  $value
-     * @param string $parameter
-     * @param array  $resultArray
+     * @param  mixed  $value
+     * @param  string  $parameter
      *
-     * @return void
+     * @return bool
      */
-    private function buildParameter($value, $parameter, array &$resultArray): void
+    private function appendParameter(mixed $value, string $parameter): bool
     {
         if (!empty($value)) {
-            $resultArray[] = $parameter;
-            $resultArray[] = $value;
+            $this->commandLine[] = $parameter;
+            $this->commandLine[] = $value;
+
+            return true;
         }
+
+        return false;
     }
 
     /**
-     * Build the -p parameter for the command line
-     *
-     * @param array $resultArray
+     * Append the -p parameter for the command line
      *
      * @return void
      */
-    private function buildEnricherParameters(array &$resultArray): void
+    private function appendEnricherParameters(): void
     {
         if (!empty($this->enricherParameters)) {
             foreach ($this->enricherParameters as $param => $value) {
-                $resultArray[] = self::ENRICHER_PARAM;
-                $resultArray[] = sprintf(self::ENRICHER_PARAM_VALUE, $param, $value);
+                $this->commandLine[] = self::ENRICHER_PARAM;
+                $this->commandLine[] = sprintf(self::ENRICHER_PARAM_VALUE, $param, $value);
             }
         }
     }
@@ -680,60 +774,91 @@ final class Launcher
     /**
      * Build the command to run phensim using parameters provided by the user
      *
-     * @return array
+     * @return void
      */
-    private function buildCommandLine(): array
+    private function buildCommandLine(): void
     {
-        $parameters = $this->mithrilCommandBase;
-        $this->buildInputFile($parameters);
-        $this->buildNonExpressedFile($parameters);
-        $this->buildRemoveNodesFile($parameters);
-        $this->buildOutputFile($parameters);
-        $this->buildListParameter($this->enrichers, self::ENRICHER, $parameters);
-        $this->buildEnricherParameters($parameters);
-        $this->buildParameter(sprintf(self::EPSILON_VALUE, $this->epsilon), self::EPSILON, $parameters);
-        $this->buildParameter($this->simulationIterations, self::SIMULATION_ITERATIONS, $parameters);
-        $this->buildParameter($this->bootstrapIterations, self::BOOTSTRAP_ITERATIONS, $parameters);
-        $this->buildParameter($this->miRNAEnrichmentEvidence, self::MIRNA_ENRICHMENT_EVIDENCE, $parameters);
-        $this->buildParameter($this->organism, self::ORGANISM, $parameters);
-        $this->buildParameter($this->seed, self::SEED, $parameters);
-        $parameters[] = self::VERBOSE;
+        $this->zipArchiveContent = [
+            $this->inputParametersFilePath,
+        ];
+        $this->commandLine = $this->mithrilCommandBase;
+        $this->appendParameter($this->inputParametersFilePath, self::INPUT_FILE);
+        if ($this->appendParameter($this->nonExpressedNodesFilePath, self::NON_EXPRESSED_FILE)) {
+            $this->zipArchiveContent[] = $this->nonExpressedNodesFilePath;
+        }
+        $this->buildRemoveNodesFile();
+        $this->appendOutputFiles();
+        $this->appendListParameter($this->enrichers, self::ENRICHER);
+        $this->appendEnricherParameters();
+        if (!empty($this->enrichmentFiles)) {
+            $this->zipArchiveContent = array_merge($this->zipArchiveContent, $this->enrichmentFiles);
+        }
+        $this->appendParameter(sprintf(self::EPSILON_VALUE, $this->epsilon), self::EPSILON);
+        $this->appendParameter($this->simulationIterations, self::SIMULATION_ITERATIONS);
+        $this->appendParameter($this->bootstrapIterations, self::BOOTSTRAP_ITERATIONS);
+        $this->appendParameter($this->miRNAEnrichmentEvidence, self::MIRNA_ENRICHMENT_EVIDENCE);
+        $this->appendParameter($this->organism, self::ORGANISM);
+        $this->appendParameter($this->seed, self::SEED);
+        $this->commandLine[] = self::VERBOSE;
+        if ($this->reactome) {
+            $this->commandLine[] = self::REACTOME;
+        }
+        if ($this->fast) {
+            $this->commandLine[] = self::FAST;
+        }
+        $commandLineFile = $this->workingDirectory . Utils::tempFilename('phensim_command_line_', '.txt');
+        if (false !== file_put_contents($commandLineFile, implode(' ', $this->commandLine) . PHP_EOL)) {
+            $this->tempFiles[] = $commandLineFile;
+            $this->zipArchiveContent[] = $commandLineFile;
+        }
+    }
 
-        return $parameters;
+    //endregion
+
+    /**
+     * Run the FDR computation algorithm
+     *
+     * @param  callable|null  $callback
+     *
+     * @return void
+     */
+    private function runFDR(?callable $callback = null): void
+    {
+        if ($this->fdrMethod !== self::FDR_BH) {
+            $fdrCommand = [
+                config('phensim.rscript'),
+                config('phensim.fdr'),
+                '-i',
+                $this->outputFilename,
+                '-o',
+                $this->outputFilename,
+            ];
+            if ($this->fdrMethod === self::FDR_LOC) {
+                $fdrCommand[] = '-l';
+            }
+            Utils::runCommand($fdrCommand, $this->workingDirectory, null, $callback);
+        }
     }
 
     /**
      * Run PHENSIM.
      *
-     * @param callable|null $callback
+     * @param  callable|null  $callback
      *
      * @return void
      * @throws CommandException
-     * @throws LauncherException
+     * @throws \Throwable
      */
     public function run(?callable $callback = null): void
     {
-        $command = $this->buildCommandLine();
+        $this->buildCommandLine();
         $commandOutput = null;
         $result = null;
         try {
-            Utils::runCommand($command, $this->getWorkingDirectory(), null, $callback);
-            if ($this->fdrMethod !== 'BH') {
-                $fdrCommand = [
-                    'Rscript',
-                    resource_path('bin/compute_fdrs.R'),
-                    '-i',
-                    $this->outputFilename,
-                    '-o',
-                    $this->outputFilename,
-                ];
-                if ($this->fdrMethod === 'LOC') {
-                    $fdrCommand[] = '-l';
-                }
-                Utils::runCommand($fdrCommand, $this->getWorkingDirectory(), null, $callback);
-            }
+            Utils::runCommand($this->commandLine, $this->workingDirectory, null, $callback);
+            $this->runFDR($callback);
         } catch (ProcessFailedException $e) {
-            Utils::mapCommandException(
+            throw Utils::mapCommandException(
                 $e,
                 [
                     101 => 'Invalid input file: file does not exist.',
@@ -751,6 +876,9 @@ final class Launcher
         if (!file_exists($this->nodesMatrixOutputFilename)) {
             throw new LauncherException('Unable to create nodes matrix output file');
         }
+        if (!empty($this->zipArchiveContent)) {
+            Utils::createZipArchive($this->outputFilename . '.zip', $this->zipArchiveContent);
+        }
     }
 
     /**
@@ -760,28 +888,24 @@ final class Launcher
      */
     public function getCommandLine(): array
     {
-        return $this->buildCommandLine();
-    }
+        $this->buildCommandLine();
 
+        return $this->commandLine;
+    }
 
     /**
      * Delete all temporary input files for PHENSIM
      *
-     * @return bool
+     * @return void
      */
-    public function deleteInputFiles(): bool
+    public function deleteTempFiles(): void
     {
-        if (!empty($this->inputFiles) && is_array($this->inputFiles)) {
-            $success = true;
-            foreach ($this->inputFiles as $file) {
-                $success = $success && @unlink($file);
+        if (!empty($this->tempFiles)) {
+            foreach ($this->tempFiles as $file) {
+                @unlink($file);
             }
-            $this->inputFiles = null;
-
-            return $success;
+            $this->tempFiles = [];
         }
-
-        return false;
     }
 
     /**
@@ -792,7 +916,7 @@ final class Launcher
      */
     public function __destruct()
     {
-        $this->deleteInputFiles();
+        $this->deleteTempFiles();
     }
 
 

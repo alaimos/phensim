@@ -1,40 +1,40 @@
 <?php
+/**
+ * PHENSIM: Phenotype Simulator
+ * @version 2.0.0.2
+ * @author  Salvatore Alaimo, Ph.D.
+ */
 
 namespace App\Models;
 
+use App\Casts\ToArray;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * App\Models\Node
- *
- * @property int                                                                 $id
- * @property string                                                              $accession
- * @property string                                                              $name
- * @property string                                                              $type
- * @property array                                                               $aliases
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Edge[]    $ingoingEdges
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Edge[]    $outgoingEdges
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Pathway[] $pathways
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereAccession($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereAliases($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereId($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereName($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereType($value)
- * @mixin \Eloquent
- * @property int $organism_id
- * @property-read \App\Models\Organism $organism
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Node whereOrganismId($value)
- */
 class Node extends Model
 {
-
 
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = ['accession', 'name', 'type', 'aliases', 'organism_id'];
+    protected $fillable = [
+        'accession',
+        'name',
+        'aliases',
+        'organism_id',
+    ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [
+        'url',
+    ];
 
     /**
      * The attributes that should be cast to native types.
@@ -42,7 +42,7 @@ class Node extends Model
      * @var array
      */
     protected $casts = [
-        'aliases' => 'array',
+        'aliases' => ToArray::class, // Convert Aliases in PHENSIM format to a PHP Array
     ];
 
     /**
@@ -53,43 +53,13 @@ class Node extends Model
     public $timestamps = false;
 
     /**
-     * Organism of this edge
+     * Organism-to-nodes relationship
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function organism()
+    public function organism(): BelongsTo
     {
-        return $this->belongsTo('App\Models\Organism', 'organism_id', 'id');
-    }
-
-    /**
-     * References all ingoing edges from this node
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function ingoingEdges()
-    {
-        return $this->hasMany('App\Models\Edge', 'end_id', 'id');
-    }
-
-    /**
-     * References all outgoing edges from this node
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function outgoingEdges()
-    {
-        return $this->hasMany('App\Models\Edge', 'start_id', 'id');
-    }
-
-    /**
-     * References all pathways with this edge
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    public function pathways()
-    {
-        return $this->belongsToMany('App\Models\Pathway', 'pathway_nodes', 'node_id', 'pathway_id');
+        return $this->belongsTo(Organism::class);
     }
 
     /**
@@ -97,15 +67,18 @@ class Node extends Model
      *
      * @return string
      */
-    public function getUrl()
+    public function getUrlAttribute(): string
     {
-        if ($this->type == 'mirna') {
+        if (str_contains($this->accession, 'mir') || str_contains($this->accession, 'miR')) {
             return 'http://www.mirbase.org/cgi-bin/query.pl?terms=' . $this->accession;
-        } elseif ($this->type == 'gene') {
-            return 'https://www.ncbi.nlm.nih.gov/gene/' . $this->accession;
-        } else {
+        }
+        if (str_starts_with($this->accession, 'chebi:')) {
+            return 'https://www.ebi.ac.uk/chebi/searchId.do?chebiId=' . strtoupper($this->accession);
+        }
+        if (str_starts_with($this->accession, 'cpd:')) {
             return 'http://www.kegg.jp/dbget-bin/www_bget?' . $this->accession;
         }
-    }
 
+        return 'https://www.ncbi.nlm.nih.gov/gene/' . $this->accession;
+    }
 }

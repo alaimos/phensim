@@ -1,26 +1,57 @@
 <?php
+/**
+ * PHENSIM: Phenotype Simulator
+ * @version 2.0.0.2
+ * @author  Salvatore Alaimo, Ph.D.
+ */
 
 namespace App\PHENSIM;
 
-
 use App\Exceptions\CommandException;
+use App\Exceptions\FileSystemException;
 use App\Exceptions\IgnoredException;
-use App\Exceptions\ProcessingJobException;
-use App\Models\Organism;
-use RuntimeException;
+use JetBrains\PhpStorm\Pure;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 use Throwable;
+use ZipArchive;
 
+/**
+ * All utilities without a specific place will be put here!
+ * @package App\PHENSIM
+ */
 final class Utils
 {
 
+    /**
+     * A placeholder for error codes that should be ignored
+     */
     public const IGNORED_ERROR_CODE = '===IGNORED===';
 
     /**
-     * Delete a file or a directory
+     * A list of invalid characters for filenames
+     */
+    public const INVALID_CHARS = [
+        '?', '[', ']', '/', '\\', '=', '<', '>', ':', ';', ',', "'", '"', '&',
+        '$', '#', '*', '(', ')', '|', '~', '`', '!', '{', '}', '%', '+', "\0",
+    ];
+
+    /**
+     * Replace all invalid characters from a filename with a "_" symbol
      *
-     * @param string $path something to delete
+     * @param  string  $name  The filename to sanitize
+     *
+     * @return string
+     */
+    public static function sanitizeFilename(string $name): string
+    {
+        return str_replace(self::INVALID_CHARS, '_', $name);
+    }
+
+    /**
+     * Recursively delete files or directories
+     *
+     * @param  string  $path  a filesystem object to delete (file or directory)
      *
      * @return bool
      */
@@ -35,7 +66,12 @@ final class Utils
         if (is_dir($path)) {
             $files = array_diff(scandir($path), ['.', '..']);
             foreach ($files as $file) {
-                static::delete($path . DIRECTORY_SEPARATOR . $file);
+                $absolutePath = $path . DIRECTORY_SEPARATOR . $file;
+                if (is_file($absolutePath) || is_link($absolutePath)) {
+                    unlink($absolutePath);
+                } elseif (is_dir($absolutePath)) {
+                    self::delete($absolutePath);
+                }
             }
 
             return rmdir($path);
@@ -45,34 +81,39 @@ final class Utils
     }
 
     /**
-     * Create a directory and set chmod
+     * Create a directory and set permissions
      *
-     * @param string $directory
+     * @param  string  $directory
      *
      * @return void
+     * @throws \App\Exceptions\FileSystemException
      */
     public static function createDirectory(string $directory): void
     {
         if (!file_exists($directory)) {
             if (!mkdir($directory, 0777, true) && !is_dir($directory)) {
-                throw new RuntimeException(sprintf('Directory "%s" was not created', $directory));
+                throw new FileSystemException(sprintf('Directory "%s" was not created', $directory));
             }
-            @chmod($directory, 0777);
+            if (!chmod($directory, 0777)) {
+                throw new FileSystemException(sprintf('Permissions to directory "%s" were not assigned correctly', $directory));
+            }
         }
     }
 
     /**
-     * Returns the path of a storage directory
+     * Returns the path of a folder inside the storage/app directory.
+     * The directory will be created if it does not exist
      *
-     * @param string $type
+     * @param  string  $for  A name for the subfolder
      *
      * @return string
+     * @throws \App\Exceptions\FileSystemException
      */
-    public static function getStorageDirectory(string $type): string
+    public static function getStorageDirectory(string $for): string
     {
-        $path = storage_path('app/' . $type);
+        $path = storage_path('app/' . $for);
         if (!file_exists($path)) {
-            static::createDirectory($path);
+            self::createDirectory($path);
         }
 
         return $path;
@@ -81,55 +122,49 @@ final class Utils
     /**
      * Returns the path of a random file in a storage directory
      *
-     * @param string $type
+     * @param  string  $for
+     * @param  string  $prefix
      *
      * @return string
+     * @throws \App\Exceptions\FileSystemException
      */
-    public static function storageFile(string $type): string
+    public static function storageFile(string $for, string $prefix = 'tmp_'): string
     {
-        return self::getStorageDirectory($type) . DIRECTORY_SEPARATOR . self::makeKey(mt_rand(), microtime(true));
+        return self::getStorageDirectory($for) . DIRECTORY_SEPARATOR . uniqid(self::sanitizeFilename($prefix), true);
     }
 
     /**
-     * Returns the path of the temporary files directory
+     * Returns the path of the temporary directory
      *
      * @return string
+     * @throws \App\Exceptions\FileSystemException
      */
     public static function tempDir(): string
     {
-        $dirName = storage_path('tmp');
-        if (!file_exists($dirName)) {
-            static::createDirectory($dirName);
-        }
-
-        return $dirName;
+        return self::getStorageDirectory('tmp');
     }
 
     /**
-     * Return the name of a temporary file
+     * Create a random filename
      *
-     * @param string $prefix
-     * @param string $extension
+     * @param  string  $prefix
+     * @param  string  $suffix
      *
      * @return string
      */
-    public static function tempFilename(string $prefix = '', string $extension = ''): string
+    public static function tempFilename(string $prefix = '', string $suffix = ''): string
     {
-        $filename = $prefix . self::makeKey($prefix, microtime(true));
-        if (!empty($extension)) {
-            $filename .= '.' . ltrim($extension, '.');
-        }
-
-        return $filename;
+        return uniqid(self::sanitizeFilename($prefix), true) . self::sanitizeFilename($suffix);
     }
 
     /**
-     * Return the path of a temporary file name in the temporary files directory
+     * Return the path of a temporary file in the temporary directory
      *
-     * @param string $prefix
-     * @param string $extension
+     * @param  string  $prefix
+     * @param  string  $extension
      *
      * @return string
+     * @throws \App\Exceptions\FileSystemException
      */
     public static function tempFile(string $prefix = '', string $extension = ''): string
     {
@@ -139,10 +174,10 @@ final class Utils
     /**
      * Runs a shell command and checks for successful completion of execution
      *
-     * @param array         $command
-     * @param string|null   $cwd
-     * @param int|null      $timeout
-     * @param callable|null $callback
+     * @param  array  $command
+     * @param  string|null  $cwd
+     * @param  int|null  $timeout
+     * @param  callable|null  $callback
      *
      * @return string|null
      * @throws \Symfony\Component\Process\Exception\ProcessFailedException
@@ -159,18 +194,18 @@ final class Utils
     }
 
     /**
-     * Map command exception to message
+     * Maps a ProcessFailedException to a more readable error message.
      *
-     * @param \Symfony\Component\Process\Exception\ProcessFailedException $e
-     * @param array                                                       $errorCodeMap
+     * @param  \Symfony\Component\Process\Exception\ProcessFailedException  $e
+     * @param  array  $errorCodeMap
      *
-     * @return \App\Exceptions\CommandException|\App\Exceptions\IgnoredException
+     * @return \Throwable
      */
     public static function mapCommandException(ProcessFailedException $e, array $errorCodeMap = []): Throwable
     {
         $code = $e->getProcess()->getExitCode();
         if (isset($errorCodeMap[$code])) {
-            if ($errorCodeMap[$code] === self::IGNORED_ERROR_CODE) {
+            if ($errorCodeMap[$code] !== self::IGNORED_ERROR_CODE) {
                 return new IgnoredException($code, $code);
             }
 
@@ -180,83 +215,18 @@ final class Utils
         return new CommandException($e->getMessage(), $code, $e);
     }
 
-    private static function recursiveFilter($objects): string
-    {
-        if (is_object($objects)) {
-            if (method_exists($objects, 'getKey')) {
-                return $objects->getKey();
-            }
-
-            return (string)$objects;
-        }
-
-        if (is_array($objects)) {
-            return '[' . implode(
-                    ',',
-                    array_map(
-                        static function ($k, $v) {
-                            return $k . '=>' . Utils::recursiveFilter($v);
-                        },
-                        array_keys($objects),
-                        $objects
-                    )
-                ) . ']';
-        }
-
-        if (is_resource($objects)) {
-            return '';
-        }
-
-        return $objects;
-    }
-
     /**
-     * Generate an unique key starting from a set of objects
+     * Format a float number using scientific notation if needed.
+     * The user provides a number to format and the maximum number of decimal places.
+     * If the provided number is too small the scientific notation will be used.
      *
-     * @param mixed ...
+     * @param  float  $number  A number
+     * @param  int  $decimals  The maximum number of decimal places
+     * @param  bool  $scientific  Is scientific notation enabled?
      *
      * @return string
      */
-    public static function makeKey(/*...*/): string
-    {
-        return md5(self::recursiveFilter(func_get_args()));
-    }
-
-    /**
-     * Compress and encode a big array for storage in the database
-     *
-     * @param array $array
-     *
-     * @return string
-     */
-    public static function compressArray(array $array): string
-    {
-        return base64_encode(gzcompress(serialize($array), 9));
-    }
-
-    /**
-     * Decode and expand a big array from the database
-     *
-     * @param string $string
-     *
-     * @return array
-     */
-    public static function uncompressArray(string $string): array
-    {
-        /** @noinspection UnserializeExploitsInspection */
-        return (array)unserialize(gzuncompress(base64_decode($string)));
-    }
-
-    /**
-     * Format a float number using scientific notation if needed
-     *
-     * @param float $number
-     * @param int   $decimals
-     * @param bool  $scientific
-     *
-     * @return string
-     */
-    public static function formatDouble(float $number, int $decimals = 4, bool $scientific = true): string
+    #[Pure] public static function formatDouble(float $number, int $decimals = 4, bool $scientific = true): string
     {
         if ($scientific && $number !== 0 && abs($number) < (10 ** -$decimals)) {
             return sprintf('%.4e', $number);
@@ -266,9 +236,9 @@ final class Utils
     }
 
     /**
-     * Count the number of lines in a text file
+     * Count the number of lines in a text file using "wc" shell utility for performance
      *
-     * @param string $file
+     * @param  string  $file
      *
      * @return integer
      */
@@ -276,15 +246,17 @@ final class Utils
     {
         try {
             return (int)self::runCommand(['wc', '-l', $file]);
-        } catch (CommandException $e) {
+        } catch (CommandException) {
             return -1;
         }
     }
 
     /**
-     * Checks if a file could contain node types
+     * Checks if a file could contain node types.
+     * A node types file is a TSV files where comments are denoted with a "#" symbol at the beginning of a row.
+     * Each row must contain at most two field: a name (string) and an optional weight (number)
      *
-     * @param string $file
+     * @param  string  $file
      *
      * @return bool
      */
@@ -297,31 +269,31 @@ final class Utils
         if (!$fp) {
             return false;
         }
+        $result = true;
         while (($line = fgets($fp)) !== false) {
-            if (empty($line) || strpos($line, '#') === 0) {
+            if (empty($line) || str_starts_with($line, '#')) {
                 continue;
             }
-            $fields = explode("\t", trim($line));
+            $fields = str_getcsv($line, "\t");
             $c = count($fields);
-            if ($c === 1) {
-                continue;
-            }
-            if ($c === 2 && !is_numeric($fields[1])) {
-                return false;
-            }
-            if ($c > 2) {
-                return false;
+            if ($c > 2 || ($c === 2 && !is_numeric($fields[1]))) {
+                $result = false;
+                break;
             }
         }
         @fclose($fp);
 
-        return true;
+        return $result;
     }
 
     /**
-     * Checks if a file could contain edge types
+     * Checks if a file could contain edge types.
+     * An edge types file is a TSV files where comments are denoted with a "#" symbol at the beginning of a row.
+     * Each row must contain a single string field.
+     * I know a TSV file with a single field doesn't make sense but PHENSIM will use more than one fields when we will introduce ML
+     * prediction.
      *
-     * @param string $file
+     * @param  string  $file
      *
      * @return bool
      */
@@ -334,25 +306,27 @@ final class Utils
         if (!$fp) {
             return false;
         }
+        $result = true;
         while (($line = fgets($fp)) !== false) {
-            if (empty($line) || strpos($line, '#') === 0) {
+            if (empty($line) || str_starts_with($line, '#')) {
                 continue;
             }
-            $fields = explode("\t", trim($line));
-            $c = count($fields);
-            if ($c > 1) {
-                return false;
+            if (substr_count($line, "\t") > 0) {
+                $result = false;
+                break;
             }
         }
         @fclose($fp);
 
-        return true;
+        return $result;
     }
 
     /**
      * Checks if a file could contain edge subtypes
+     * An edge subtypes file is a TSV files where comments are denoted with a "#" symbol at the beginning of a row.
+     * Each row must contain at most three field: a name (string), an optional weight (number), and an optional priority (number)
      *
-     * @param string $file
+     * @param  string  $file
      *
      * @return bool
      */
@@ -365,34 +339,32 @@ final class Utils
         if (!$fp) {
             return false;
         }
+        $result = true;
         while (($line = fgets($fp)) !== false) {
-            if (empty($line) || strpos($line, '#') === 0) {
+            if (empty($line) || str_starts_with($line, '#')) {
                 continue;
             }
-            $fields = explode("\t", trim($line));
+            $fields = str_getcsv($line, "\t");
             $c = count($fields);
-            if ($c === 1) {
-                continue;
-            }
-            if ($c >= 2 && !is_numeric($fields[1])) {
-                return false;
-            }
-            if ($c >= 3 && !is_numeric($fields[2])) {
-                return false;
-            }
-            if ($c > 4) {
-                return false;
+            if (
+                $c > 3 ||
+                ($c === 3 && !is_numeric($fields[2])) ||
+                ($c >= 2 && !is_numeric($fields[1]))
+            ) {
+                $result = false;
+                break;
             }
         }
         @fclose($fp);
 
-        return true;
+        return $result;
     }
 
     /**
      * Checks if a file could contain an enrichment db
+     * An enrichment file is a TSV files with 9 fields where comments are denoted with a "#" symbol at the beginning of a row.
      *
-     * @param string $file
+     * @param  string  $file
      *
      * @return bool
      */
@@ -405,30 +377,30 @@ final class Utils
         if (!$fp) {
             return false;
         }
+        $result = true;
         while (($line = fgets($fp)) !== false) {
-            if (empty($line) || strpos($line, '#') === 0) {
+            if (empty($line) || str_starts_with($line, '#')) {
                 continue;
             }
-            $fields = explode("\t", trim($line));
-            $c = count($fields);
-            if ($c !== 9) {
-                return false;
+            // I must use the str_getcsv function to account for escaping otherwise I would have counted the number of "\t" in the row
+            if (count(str_getcsv($line, "\t")) !== 9) {
+                $result = false;
+                break;
             }
         }
         @fclose($fp);
 
-        return true;
+        return $result;
     }
 
     /**
      * Checks if a file is a valid phensim input file
      *
-     * @param string        $file
-     * @param callable|null $callback
+     * @param  string  $file
      *
      * @return bool
      */
-    public static function checkInputFile(string $file, callable $callback = null): bool
+    public static function checkInputFile(string $file): bool
     {
         if (!file_exists($file)) {
             return false;
@@ -440,78 +412,78 @@ final class Utils
         $aType = [
             Launcher::OVEREXPRESSION  => true,
             Launcher::UNDEREXPRESSION => true,
-            Launcher::BOTH            => true,
         ];
+        $result = true;
         while (($line = fgets($fp)) !== false) {
-            if (empty($line) || strpos($line, '#') === 0) {
+            if (empty($line) || str_starts_with($line, '#')) {
                 continue;
             }
-            $fields = explode("\t", trim($line));
+            $fields = str_getcsv($line, "\t");
             $c = count($fields);
-            if ($c !== 2) {
-                return false;
-            }
-            $fields[1] = strtoupper($fields[1]);
-            if (!isset($aType[$fields[1]])) {
-                return false;
-            }
-            if ($callback !== null && is_callable($callback)) {
-                $callback($fields);
+            if (
+                $c !== 2 ||
+                !isset($aType[strtoupper($fields[1])])
+            ) {
+                $result = false;
+                break;
             }
         }
         @fclose($fp);
 
-        return true;
+        return $result;
     }
 
     /**
-     * Read phensim input file
+     * Checks if a file contains a list of elements
      *
-     * @param string $file
-     *
-     * @return array|null
-     */
-    public static function readInputFile(string $file): ?array
-    {
-        $inputArray = [];
-        $check = self::checkInputFile(
-            $file,
-            static function ($fields) use (&$inputArray) {
-                $inputArray[$fields[0]] = $fields[1];
-            }
-        );
-        if (!$check) {
-            return null;
-        }
-
-        return $inputArray;
-    }
-
-    /**
-     * Checks if a file is a valid phensim input file
-     *
-     * @param array $data
+     * @param  string  $file
      *
      * @return bool
      */
-    public static function checkSimulationParameters(array $data): bool
+    public static function checkListFile(string $file): bool
     {
-        if (empty($data)) {
+        if (!file_exists($file)) {
             return false;
         }
-        $aType = [
-            Launcher::OVEREXPRESSION  => true,
-            Launcher::UNDEREXPRESSION => true,
-            Launcher::BOTH            => true,
-        ];
-        foreach ($data as $gene => $type) {
-            if (!isset($aType[$type])) {
-                return false;
+        $fp = @fopen($file, 'rb');
+        if (!$fp) {
+            return false;
+        }
+        $result = true;
+        while (($line = fgets($fp)) !== false) {
+            if (empty($line)) {
+                $result = false;
+                break;
             }
+        }
+        @fclose($fp);
+
+        return $result;
+    }
+
+    /**
+     * Create a zip archive
+     *
+     * @param  string  $filename
+     * @param  array  $files
+     *
+     * @return bool
+     */
+    public static function createZipArchive(string $filename, array $files): bool
+    {
+        $zip = new ZipArchive();
+        if ($zip->open($filename, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+            foreach ($files as $file) {
+                if (file_exists($file)) {
+                    $zip->addFile($file, basename($file));
+                }
+            }
+            $zip->close();
+        } else {
+            return false;
         }
 
         return true;
     }
-
 
 }
