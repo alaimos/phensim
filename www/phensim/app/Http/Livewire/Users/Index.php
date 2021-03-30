@@ -52,6 +52,7 @@ class Index extends Component
                 (new Password())->length(8)->requireNumeric()->requireUppercase(),
             ],
             'currentUser.affiliation' => ['required', 'string', 'max:255'],
+            'currentUser.is_admin'    => ['sometimes', 'boolean'],
         ];
     }
 
@@ -130,6 +131,7 @@ class Index extends Component
     {
         $validData = $this->validate();
         $currentUser = $validData['currentUser'];
+        $isAdmin = $validData['is_admin'] ?? false;
         if (is_null($this->currentUserId)) {
             $currentUser['password'] = Hash::make($currentUser['password']);
             $user = (new User())->fill($currentUser);
@@ -139,6 +141,7 @@ class Index extends Component
             }
             $user = User::find($this->currentUserId)->fill($currentUser);
         }
+        $user->is_admin = $isAdmin;
         $user->save();
         $this->displayingModal = false;
         $this->dispatchBrowserEvent(

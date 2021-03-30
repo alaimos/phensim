@@ -100,7 +100,7 @@ if [ $# -gt 0 ]; then
   elif [ "$1" == "tinker" ]; then
     shift 1
 
-    docker-compose exec -u phensim "$APP_SERVICE" php artisan
+    docker-compose exec -u phensim "$APP_SERVICE" php artisan tinker
 
   elif [ "$1" == "shell" ] || [ "$1" == "bash" ]; then
     shift 1
@@ -111,6 +111,11 @@ if [ $# -gt 0 ]; then
     shift 1
 
     docker-compose exec "$APP_SERVICE" bash
+
+  elif [ "$1" == "schedule" ]; then
+    shift 1
+
+    docker-compose exec -u phensim "$APP_SERVICE" php artisan schedule:run
 
   else
 
@@ -123,118 +128,3 @@ else
   docker-compose ps
 
 fi
-
-## Determine if container is currently up...
-#PSRESULT="$(docker-compose ps -q)"
-#
-#if docker-compose ps | grep 'Exit'; then
-#  echo -e "${WHITE}Shutting down old processes...${NC}" >&2
-#
-#  docker-compose down >/dev/null 2>&1
-#
-#  EXEC="no"
-#elif [ -n "$PSRESULT" ]; then
-#  EXEC="yes"
-#else
-#  EXEC="no"
-#fi
-#
-#if [ -f ./www/phensim/.env ]; then
-#  source ./www/phensim/.env
-#fi
-#
-#if [ $# -gt 0 ]; then
-#  # Source the ".env" file so Laravel's environment variables are available...
-#
-#  # Proxy PHP commands to the "php" binary on the application container...
-#
-#  # Initiate a Laravel Tinker session within the application container...
-#  elif [ "$1" == "tinker" ]; then
-#    shift 1
-#
-#    if [ "$EXEC" == "yes" ]; then
-#      docker-compose exec \
-#        -u sail \
-#        "$APP_SERVICE" \
-#        php artisan tinker
-#    else
-#      sail_is_not_running
-#    fi
-#
-#  # Proxy Node commands to the "node" binary on the application container...
-#  elif [ "$1" == "node" ]; then
-#    shift 1
-#
-#    if [ "$EXEC" == "yes" ]; then
-#      docker-compose exec \
-#        -u sail \
-#        "$APP_SERVICE" \
-#        node "$@"
-#    else
-#      sail_is_not_running
-#    fi
-#
-#  # Proxy NPM commands to the "npm" binary on the application container...
-#  elif [ "$1" == "npm" ]; then
-#    shift 1
-#
-#    if [ "$EXEC" == "yes" ]; then
-#      docker-compose exec \
-#        -u sail \
-#        "$APP_SERVICE" \
-#        npm "$@"
-#    else
-#      sail_is_not_running
-#    fi
-#
-#  # Proxy NPX commands to the "npx" binary on the application container...
-#  elif [ "$1" == "npx" ]; then
-#    shift 1
-#
-#    if [ "$EXEC" == "yes" ]; then
-#      docker-compose exec \
-#        -u sail \
-#        "$APP_SERVICE" \
-#        npx "$@"
-#    else
-#      sail_is_not_running
-#    fi
-#
-#  # Proxy YARN commands to the "yarn" binary on the application container...
-#  elif [ "$1" == "yarn" ]; then
-#    shift 1
-#
-#    if [ "$EXEC" == "yes" ]; then
-#      docker-compose exec \
-#        -u sail \
-#        "$APP_SERVICE" \
-#        yarn "$@"
-#    else
-#      sail_is_not_running
-#    fi
-#
-#  # Initiate a MySQL CLI terminal session within the "mysql" container...
-#  elif [ "$1" == "mysql" ]; then
-#    shift 1
-#
-#    if [ "$EXEC" == "yes" ]; then
-#      docker-compose exec \
-#        mysql \
-#        bash -c 'MYSQL_PWD=${MYSQL_PASSWORD} mysql -u ${MYSQL_USER} ${MYSQL_DATABASE}'
-#    else
-#      sail_is_not_running
-#    fi
-#
-#  # Initiate a PostgreSQL CLI terminal session within the "pgsql" container...
-#  elif [ "$1" == "psql" ]; then
-#    shift 1
-#
-#    if [ "$EXEC" == "yes" ]; then
-#      docker-compose exec \
-#        pgsql \
-#        bash -c 'PGPASSWORD=${PGPASSWORD} psql -U ${POSTGRES_USER} ${POSTGRES_DB}'
-#    else
-#      sail_is_not_running
-#    fi
-#
-#  # Initiate a Bash shell within the application container...

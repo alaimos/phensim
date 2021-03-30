@@ -1,4 +1,5 @@
 <?php
+/** @noinspection DisconnectedForeachInstructionInspection */
 
 namespace App\Console\Commands;
 
@@ -38,21 +39,25 @@ class ImportUsers extends Command
 
         $users = json_decode(file_get_contents($usersArchive), true, 512, JSON_THROW_ON_ERROR);
 
+        $this->output->progressStart(count($users));
         foreach ($users as $user) {
+            $this->output->progressAdvance();
             $email = $user['email'] ?? null;
             if (!empty($email) && User::where('email', $email)->count() === 0) {
-                User::create(
+                $user = User::create(
                     [
                         'name'              => $user['name'],
                         'email'             => $email,
                         'password'          => $user['password'],
                         'affiliation'       => $user['affiliation'],
                         'email_verified_at' => now(),
-                        'is_admin'          => $user['is_admin'] ?? false,
                     ]
                 );
+                $user->is_admin = $user['is_admin'] ?? false;
+                $user->save();
             }
         }
+        $this->output->progressFinish();
 
         $this->info('Users have been imported!');
 

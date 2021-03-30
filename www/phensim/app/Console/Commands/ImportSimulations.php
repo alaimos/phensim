@@ -164,7 +164,7 @@ class ImportSimulations extends Command
 
             return 103;
         }
-        $bar = $this->output->createProgressBar(count($simulations));
+        $this->output->progressStart(count($simulations));
         foreach ($simulations as $simulation) {
             $simulationArray = json_decode(gzuncompress(base64_decode($simulation)), true, 512, JSON_THROW_ON_ERROR);
             if (!is_array($simulationArray) || empty($simulationArray)) {
@@ -172,9 +172,9 @@ class ImportSimulations extends Command
             } else {
                 $this->importSimulationsArray($simulationArray, $defaultOwner);
             }
-            $bar->advance();
+            $this->output->progressAdvance();
         }
-        $bar->finish();
+        $this->output->progressFinish();
 
         $this->info("\nSimulations imported!");
 

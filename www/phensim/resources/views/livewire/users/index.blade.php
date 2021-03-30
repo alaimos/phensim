@@ -169,6 +169,21 @@
                         </span>
                         @enderror
                     </div>
+                    <div class="form-group @error('currentUser.is_admin')  has-danger @enderror">
+                        <div
+                            class="custom-control custom-control-alternative custom-checkbox mb-3 @error('currentUser.is_admin') is-invalid @enderror">
+                            <input class="custom-control-input @error('currentUser.is_admin') is-invalid @enderror"
+                                   id="input-is_admin" type="checkbox"
+                                   wire:model.defer="state.is_admin">
+                            <label class="custom-control-label" for="input-reactome">Is admin?</label>
+                        </div>
+                        @error('currentUser.is_admin')
+                        <span class="invalid-feedback" style="display: block;" role="alert">
+                            <strong>{{ $message }}</strong>
+                        </span>
+                        @enderror
+                    </div>
+
                 </form>
             </div>
             <div class="modal-footer justify-content-between align-items-center">
