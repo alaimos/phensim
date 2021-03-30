@@ -84,7 +84,8 @@
                             </select>
                         </td>
                         @if (auth()->user()->is_admin)
-                            <td></td>
+                            <td><input type="text" class="form-control form-control-sm"
+                                       wire:model="searchColumns.user_name"/></td>
                         @endif
                         <td>
                         </td>
