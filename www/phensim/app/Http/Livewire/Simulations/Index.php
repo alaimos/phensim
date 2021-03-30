@@ -21,8 +21,9 @@ class Index extends Component
     public $sortDirection = 'desc';
     public $perPage = 10;
     public $searchColumns = [
-        'name'   => '',
-        'status' => -1,
+        'name'      => '',
+        'status'    => -1,
+        'user_name' => '',
     ];
     public $displayingLog = false;
     public $currentSimulationId;
@@ -44,19 +45,28 @@ class Index extends Component
 
     private function buildQuery(): Builder
     {
-        $simulations = Simulation::visible()->select(
-            [
-                'id',
-                'name',
-                'status',
-                'created_at',
-            ]
-        );
+        $isAdmin = auth()->user()->is_admin;
+        $fields = [
+            'simulations.id AS id',
+            'simulations.name AS name',
+            'status',
+            'simulations.created_at AS created_at',
+        ];
+        if ($isAdmin) {
+            $fields[] = 'users.name AS user_name';
+        }
+        $simulations = Simulation::visible()
+                                 ->join('users', 'simulations.user_id', '=', 'users.id')
+                                 ->select($fields);
         foreach ($this->searchColumns as $column => $value) {
-            if ($column === 'name' && !empty($value)) {
-                $simulations->where($column, 'LIKE', '%' . $value . '%');
-            } elseif ($column === 'status' && in_array((int)$value, Simulation::VALID_STATES, true)) {
+            if ($column === 'status' && in_array((int)$value, Simulation::VALID_STATES, true)) {
                 $simulations->where($column, (int)$value);
+            } elseif (!empty($value)) {
+                if ($column === 'name') {
+                    $simulations->where('simulations.name', 'LIKE', '%' . $value . '%');
+                } elseif ($isAdmin && $column === 'user_name') {
+                    $simulations->where('users.name', 'LIKE', '%' . $value . '%');
+                }
             }
         }
         $simulations->orderBy($this->sortColumn, $this->sortDirection);

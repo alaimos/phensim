@@ -24,6 +24,14 @@
             <table class="table align-items-center table-flush">
                 <thead class="thead-light">
                     <tr>
+                        <th scope="col" wire:click="sortByColumn('id')">
+                            #
+                            @if ($sortColumn === 'id')
+                                <i class="fa fa-fw fa-sort-{{ $sortDirection === 'asc' ?  'up' : 'down'  }}"></i>
+                            @else
+                                <i class="fa fa-fw fa-sort"></i>
+                            @endif
+                        </th>
                         <th scope="col" wire:click="sortByColumn('name')">
                             Name
                             @if ($sortColumn === 'name')
@@ -40,6 +48,16 @@
                                 <i class="fa fa-fw fa-sort"></i>
                             @endif
                         </th>
+                        @if (auth()->user()->is_admin)
+                            <th scope="col" wire:click="sortByColumn('user_name')">
+                                User
+                                @if ($sortColumn === 'user_name')
+                                    <i class="fa fa-fw fa-sort-{{ $sortDirection === 'asc' ?  'up' : 'down' }}"></i>
+                                @else
+                                    <i class="fa fa-fw fa-sort"></i>
+                                @endif
+                            </th>
+                        @endif
                         <th scope="col" wire:click="sortByColumn('created_at')">
                             Creation Date
                             @if ($sortColumn === 'created_at')
@@ -53,6 +71,7 @@
                         </th>
                     </tr>
                     <tr>
+                        <td></td>
                         <td>
                             <input type="text" class="form-control form-control-sm" wire:model="searchColumns.name"/>
                         </td>
@@ -64,6 +83,9 @@
                                 @endforeach
                             </select>
                         </td>
+                        @if (auth()->user()->is_admin)
+                            <td></td>
+                        @endif
                         <td>
                         </td>
                         <td>
@@ -73,8 +95,12 @@
                 <tbody>
                     @forelse($simulations as $simulation)
                         <tr>
+                            <td>{{ $simulation->id }}</td>
                             <td>{{ $simulation->name }}</td>
                             <td>{{ \App\Models\Simulation::STATE_NAMES[$simulation->status] }}</td>
+                            @if (auth()->user()->is_admin)
+                                <td>{{ $simulation->user_name }}</td>
+                            @endif
                             <td>{{ $simulation->created_at->diffForHumans() }}</td>
                             <td>
                                 @if($simulation->isReady())
