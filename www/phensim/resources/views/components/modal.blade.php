@@ -13,7 +13,6 @@
     x-init="() => {
         let modal = $('#{{ $id }}');
         $watch('show', value => {
-            console.log(value);
             if (value) {
                 modal.modal('show')
             } else {

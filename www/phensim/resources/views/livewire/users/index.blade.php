@@ -174,7 +174,7 @@
                             class="custom-control custom-control-alternative custom-checkbox mb-3 @error('currentUser.is_admin') is-invalid @enderror">
                             <input class="custom-control-input @error('currentUser.is_admin') is-invalid @enderror"
                                    id="input-is_admin" type="checkbox"
-                                   wire:model.defer="state.is_admin">
+                                   wire:model.defer="currentUser.is_admin">
                             <label class="custom-control-label" for="input-is_admin">Is admin?</label>
                         </div>
                         @error('currentUser.is_admin')
