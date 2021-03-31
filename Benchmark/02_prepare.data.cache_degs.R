@@ -10,8 +10,11 @@ datasets$GeneId <- as.character(datasets$GeneId)
 
 meta.nodes <- read_delim("metapathway/nodes.txt", "\t", escape_double = FALSE, trim_ws = TRUE)
 colnames(meta.nodes)[1] <- "Id"
-
 meta.nodes.id <- unique(meta.nodes$Id)
+
+meta.nodes.reactome <- read_delim("metapathway/with_reactome/nodes.txt", "\t", escape_double = FALSE, trim_ws = TRUE)
+colnames(meta.nodes.reactome)[1] <- "Id"
+meta.nodes.id.reactome <- unique(meta.nodes.reactome$Id)
 
 data.cache <- vector(mode = "list", length = nrow(datasets))
 
@@ -150,6 +153,7 @@ for (i in 1:nrow(datasets)) {
         cntrs    <- makeContrasts(case-control, levels = design)
         fit2     <- eBayes(contrasts.fit(fit, cntrs))
         degtbl   <- topTable(fit2, coef = 1, number = Inf, adjust.method = "none", p.value = 0.05, lfc = 0.6)
+        degtbl.r <- degtbl[intersect(rownames(degtbl), meta.nodes.id.reactome),] # REACTOME metapathway has more genes that should be considered for comparison
         degtbl   <- degtbl[intersect(rownames(degtbl), meta.nodes.id),]
         if (nrow(degtbl) > 0) {
             tmp <- character(nrow(degtbl))
@@ -159,10 +163,20 @@ for (i in 1:nrow(datasets)) {
         } else {
             tmp <- NULL
         }
+        if (nrow(degtbl.r) > 0) {
+            tmp1 <- character(nrow(degtbl.r))
+            tmp1[degtbl.r$logFC < 0] <- "UNDEREXPRESSION"
+            tmp1[degtbl.r$logFC > 0] <- "OVEREXPRESSION"
+            names(tmp1) <- rownames(degtbl.r)
+        } else {
+            tmp1 <- NULL
+        }
     } else {
-        tmp <- NULL
+        tmp  <- NULL
+        tmp1 <- NULL
     }
     ds$degs <- tmp
+    ds$degs.reactome <- tmp1
     data.cache[[i]] <- ds
 }
 

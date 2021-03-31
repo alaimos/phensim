@@ -37,6 +37,7 @@ sens.spec <- function (table, pos, neg=((1:nrow(table))[-pos])) {
 
 run.phensim <- function(id, sim.gene, sim.dir, non.exp) {
     MITHRIL.COMMAND     <- "C:\\Java\\bin\\java -jar %s/MITHrIL2.jar phensim -verbose -i %s -e mirna -enrichment-evidence-type STRONG -non-expressed-file %s -number-of-iterations 10 -t 10 -seed 1234 -o %s"
+    
     phensim.output.file <- file.path(getwd(), "phensim", paste0("simulation_",id,".txt"))
     if (!file.exists(phensim.output.file)) {
         non.exp             <- non.exp[!(non.exp %in% sim.gene)]
@@ -50,10 +51,14 @@ run.phensim <- function(id, sim.gene, sim.dir, non.exp) {
         ecode <- system(run.command, intern = FALSE, wait = TRUE)
         if (ecode != 0) {
             cat("An error occurred in PHENSIM. Exit code: ", ecode, "\n")
+            cat(run.command,"\n")
+            stop()
             return (NULL)
         }
         if (!file.exists(phensim.output.file)) {
             cat("An error occurred in PHENSIM. No output produced\n")
+            cat(run.command,"\n")
+            stop()
             return (NULL)
         }
         if (file.exists(phensim.input.file)) unlink(phensim.input.file)
@@ -136,7 +141,10 @@ for (i in 1:nrow(datasets)) {
 
 saveRDS(mtx.results, file = "phensim.rds")
 
-
+# print(colMeans(mtx.results))
+# print(apply(mtx.results, MARGIN = 2, sd))
+# print(apply(mtx.results, MARGIN = 2, min))
+# print(apply(mtx.results, MARGIN = 2, max))
 
 
 

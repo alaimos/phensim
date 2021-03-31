@@ -10,3 +10,9 @@
 [1] "phensim_degs"
         Accuracy    Predicted.PPV   Predicted.SENS   Predicted.SPEC NonPredicted.PPV NonPredicted.FNR 
        0.5976972        0.7725181        0.8420806        0.9885500        0.9000486        0.4090946 
+[1] "phensim_reactome"
+        Accuracy    Predicted.PPV   Predicted.SENS   Predicted.SPEC NonPredicted.PPV NonPredicted.FNR 
+       0.6437517        0.6348952        0.5416269        0.9853757        0.8971575        0.3007036 
+[1] "phensim_degs_reactome"
+        Accuracy    Predicted.PPV   Predicted.SENS   Predicted.SPEC NonPredicted.PPV NonPredicted.FNR 
+       0.3291274        0.7570598        0.7622245        0.9716230        0.8780286        0.7200922 
