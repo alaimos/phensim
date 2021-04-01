@@ -138,7 +138,7 @@ for (i in 1:nrow(datasets)) {
 saveRDS(mtx.results, file = "phensim_degs_reactome.rds")
 
 
-
+print(colMeans(mtx.results))
 
 
 

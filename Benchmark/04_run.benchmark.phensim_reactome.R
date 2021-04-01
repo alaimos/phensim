@@ -140,10 +140,7 @@ for (i in 1:nrow(datasets)) {
 
 saveRDS(mtx.results, file = "phensim_reactome.rds")
 
-# print(colMeans(mtx.results))
-# print(apply(mtx.results, MARGIN = 2, sd))
-# print(apply(mtx.results, MARGIN = 2, min))
-# print(apply(mtx.results, MARGIN = 2, max))
+print(colMeans(mtx.results))
 
 
 

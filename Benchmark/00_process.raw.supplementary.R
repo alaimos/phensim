@@ -1,13 +1,5 @@
 library(org.Hs.eg.db)
 library(dplyr)
-
-if (!dir.exists("supplementary/")) {
-    download.file("https://phensim.atlas.dmi.unict.it/supplementary.zip", "./supplementary.zip")
-    if (!file.exists("supplementary.zip")) stop("Supplementary data file not file")
-    unzip("supplementary.zip")
-    if (!dir.exists("supplementary/")) stop("Unable to create supplementary data directory")
-}
-
 x <-  org.Hs.egENSEMBL
 mapped_genes <- mappedkeys(x)
 xx <- as.list(x[mapped_genes])
