@@ -118,7 +118,9 @@ class SimulationJob implements ShouldQueue
         }
         if ($this->simulation->non_expressed_nodes_file === null) {
             $nonExpr = $this->simulation->getParameter('nonExpressed');
-            $launcher->buildNonExpressedFile($nonExpr);
+            if (is_array($nonExpr) && !empty($nonExpr)) {
+                $launcher->buildNonExpressedFile($nonExpr);
+            }
         } else {
             $launcher->setNonExpressedNodesFilePath($this->simulation->non_expressed_nodes_file);
         }
