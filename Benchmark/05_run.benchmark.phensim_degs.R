@@ -37,7 +37,7 @@ sens.spec <- function (table, pos, neg=((1:nrow(table))[-pos])) {
 }
 
 run.phensim <- function(id, sim.gene, sim.dir, non.exp) {
-    MITHRIL.COMMAND     <- "C:\\Java\\bin\\java -jar %s/MITHrIL2.jar phensim -verbose -i %s -e mirna -enrichment-evidence-type STRONG -non-expressed-file %s -number-of-iterations 10 -t 10 -seed 1234 -o %s"
+    MITHRIL.COMMAND     <- "C:\\Java\\bin\\java -jar %s/MITHrIL2.jar phensim -verbose -i %s -e mirna -enrichment-evidence-type STRONG -non-expressed-file %s -number-of-iterations 2 -t 10 -seed 1234 -fast -o %s"
     phensim.output.file <- file.path(getwd(), "phensim_degs", paste0("simulation_",id,".txt"))
     if (!file.exists(phensim.output.file)) {
         non.exp             <- non.exp[!(non.exp %in% sim.gene)]
