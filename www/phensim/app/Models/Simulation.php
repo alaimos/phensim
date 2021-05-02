@@ -14,7 +14,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use \Exception;
 
 class Simulation extends Model
 {
@@ -733,6 +735,7 @@ class Simulation extends Model
     {
         $this->update(['status' => self::QUEUED]);
         SimulationJob::dispatch($this);
+        $this->signalToCallback();
     }
 
     /**
@@ -762,5 +765,34 @@ class Simulation extends Model
             $this->sif_output_file = null;
         }
         $this->submit();
+    }
+
+    /**
+     * Send a signal to a callback URL
+     *
+     * @return bool
+     */
+    public function signalToCallback(): bool
+    {
+        if (!$this->exists) {
+            return false;
+        }
+        $callback = $this->getParameter('callback');
+        if (!$callback) {
+            return false;
+        }
+        try {
+            $request = Http::post(
+                $callback,
+                [
+                    'id'     => $this->id,
+                    'status' => $this->status,
+                ]
+            );
+
+            return $request->successful();
+        } catch (Exception) {
+            return false;
+        }
     }
 }

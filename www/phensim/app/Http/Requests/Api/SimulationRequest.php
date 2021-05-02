@@ -39,6 +39,7 @@ class SimulationRequest extends FormRequest
             'miRNAs'                   => ['filled', 'boolean'],
             'miRNAsEvidence'           => ['filled', 'string', Rule::in(Launcher::SUPPORTED_EVIDENCES)],
             'submit'                   => ['filled', 'boolean'],
+            'callback'                 => ['filled', 'active_url'],
             'nodes.overExpressed'      => ['required_without_all:nodes.underExpressed,simulationParametersFile', 'array'],
             'nodes.overExpressed.*'    => [Rule::exists('nodes', 'accession')],
             'nodes.underExpressed'     => ['required_without_all:nodes.overExpressed,simulationParametersFile', 'array'],

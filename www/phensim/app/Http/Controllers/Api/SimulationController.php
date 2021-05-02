@@ -65,6 +65,7 @@ class SimulationController extends Controller
                     'miRNAsEvidence' => $validData['miRNAsEvidence'] ?? Launcher::EVIDENCE_STRONG,
                     'remove'         => $validData['nodes']['knockout'] ?? [],
                     'filter'         => $validData['filter'] ?? null,
+                    'callback'       => $validData['callback'] ?? null,
                 ],
             ]
         );

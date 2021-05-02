@@ -144,6 +144,7 @@ class SimulationJob implements ShouldQueue
                 return;
             }
             $this->simulation->update(['logs' => '', 'status' => Simulation::PROCESSING]);
+            $this->simulation->signalToCallback();
             $this->checkAllParameters();
             $launcher = $this->prepareSimulationLauncher();
             $this->simulation->appendLog('Running PHENSIM Simulation...');
@@ -166,9 +167,11 @@ class SimulationJob implements ShouldQueue
                 ]
             );
             $this->simulation->appendLog('Completed!');
+            $this->simulation->signalToCallback();
         } catch (Throwable $e) {
             $this->simulation->status = Simulation::FAILED;
             $this->simulation->appendLog("\nAn error occurred: " . $e->getMessage());
+            $this->simulation->signalToCallback();
             $this->fail($e);
         }
     }
