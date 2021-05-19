@@ -52,7 +52,7 @@ class SimulationResource extends JsonResource
                 'edge_subtypes'       => $downloadService->downloadUrl('edge_subtypes'),
                 'non_expressed_nodes' => $downloadService->downloadUrl('non_expressed_nodes'),
                 'removed_nodes'       => $downloadService->downloadUrl('removed_nodes'),
-                'output_file'         => $downloadService->downloadUrl('output'),
+                'output'              => $downloadService->downloadUrl('output'),
                 'pathway_output'      => $downloadService->downloadUrl('pathway_output'),
                 'nodes_output'        => $downloadService->downloadUrl('nodes_output'),
                 'sbml_output'         => $downloadService->downloadUrl('sbml_output'),
