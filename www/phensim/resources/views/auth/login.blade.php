@@ -26,12 +26,6 @@
                         <div class="text-center text-muted mb-4">
                             <small>
                                 Create new account OR Sign in with your credentials:
-                                <br>
-                                For reviewer access:
-                                <br>
-                                Username <strong>review@app.com</strong>
-                                <br>
-                                Password: <strong>ReV1EwP45sW0rD</strong>
                             </small>
                         </div>
                         <form role="form" method="POST" action="{{ route('login') }}">
