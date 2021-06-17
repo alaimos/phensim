@@ -240,7 +240,7 @@ final class Utils
      *
      * @param  string  $file
      *
-     * @return integer
+     * @return int
      */
     public static function countLines(string $file): int
     {
