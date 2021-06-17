@@ -84,13 +84,13 @@ class Advanced extends Component
             'state.fast'               => ['boolean'],
             'state.miRNAs'             => ['boolean'],
             'state.miRNAsEvidence'     => ['string', Rule::in(Launcher::SUPPORTED_EVIDENCES)],
-            'simulationParametersFile' => [new InputFileRule(true, [Utils::class, 'checkInputFile'])],
-            'enrichmentDatabaseFile'   => [new InputFileRule(validationFunction: [Utils::class, 'checkDbFile'])],
-            'nonExpressedNodesFile'    => [new InputFileRule(validationFunction: [Utils::class, 'checkListFile'])],
-            'knockoutNodesFile'        => [new InputFileRule(validationFunction: [Utils::class, 'checkListFile'])],
-            'customNodeTypesFile'      => [new InputFileRule(validationFunction: [Utils::class, 'checkNodeTypeFile'])],
-            'customEdgeTypesFile'      => [new InputFileRule(validationFunction: [Utils::class, 'checkEdgeTypeFile'])],
-            'customEdgeSubtypesFile'   => [new InputFileRule(validationFunction: [Utils::class, 'checkEdgeSubTypeFile'])],
+            'simulationParametersFile' => ['max:102400', new InputFileRule(true, [Utils::class, 'checkInputFile'])],
+            'enrichmentDatabaseFile'   => ['max:102400', new InputFileRule(validationFunction: [Utils::class, 'checkDbFile'])],
+            'nonExpressedNodesFile'    => ['max:102400', new InputFileRule(validationFunction: [Utils::class, 'checkListFile'])],
+            'knockoutNodesFile'        => ['max:102400', new InputFileRule(validationFunction: [Utils::class, 'checkListFile'])],
+            'customNodeTypesFile'      => ['max:102400', new InputFileRule(validationFunction: [Utils::class, 'checkNodeTypeFile'])],
+            'customEdgeTypesFile'      => ['max:102400', new InputFileRule(validationFunction: [Utils::class, 'checkEdgeTypeFile'])],
+            'customEdgeSubtypesFile'   => ['max:102400', new InputFileRule(validationFunction: [Utils::class, 'checkEdgeSubTypeFile'])],
         ];
     }
 
