@@ -1,5 +1,12 @@
 <div>
-    <form wire:submit.prevent="save" autocomplete="off">
+    <form
+        wire:submit.prevent="save" ù
+        autocomplete="off"
+        x-data="{ isUploading: false, progress: 0 }"
+        x-on:livewire-upload-start="isUploading = true"
+        x-on:livewire-upload-finish="isUploading = false"
+        x-on:livewire-upload-error="isUploading = false"
+        x-on:livewire-upload-progress="isUploading = true; progress = $event.detail.progress">
 
         @if (session()->has('error'))
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -251,8 +258,14 @@
                     </div>
                 </div>
             </div>
-            <div class="text-center">
+            <div class="text-center" x-show="!isUploading">
                 <button type="submit" class="btn btn-success mt-4">{{ __('Create simulation') }}</button>
+            </div>
+            <div class="text-center" x-show="isUploading">
+                <button type="submit" class="btn btn-success mt-4" disabled>{{ __('Uploading...Please wait...') }}</button>
+            </div>
+            <div x-show="isUploading">
+                <progress max="100" x-bind:value="progress"></progress>
             </div>
         </div>
 
