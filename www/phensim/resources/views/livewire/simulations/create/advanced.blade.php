@@ -264,7 +264,7 @@
             <div class="text-center" x-show="isUploading">
                 <button type="submit" class="btn btn-success mt-4" disabled>{{ __('Uploading...Please wait...') }}</button>
             </div>
-            <div x-show="isUploading">
+            <div class="text-center" x-show="isUploading">
                 <progress max="100" x-bind:value="progress"></progress>
             </div>
         </div>
