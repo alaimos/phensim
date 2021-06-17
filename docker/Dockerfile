@@ -61,6 +61,7 @@ COPY start-container      /usr/local/bin/start-container
 COPY supervisord.conf     /etc/supervisor/conf.d/supervisord.conf
 COPY apache_default.conf  /etc/apache2/sites-available/000-default.conf
 COPY php.ini              /etc/php/8.0/cli/conf.d/99-phensim.ini
+COPY php.ini              /etc/php/8.0/apache2/conf.d/99-phensim.ini
 COPY start-apache2.sh     /usr/local/bin/start-apache2.sh
 RUN chmod +x /usr/local/bin/start-container
 RUN chmod +x /usr/local/bin/start-apache2.sh
