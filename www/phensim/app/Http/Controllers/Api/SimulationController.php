@@ -176,9 +176,8 @@ class SimulationController extends Controller
     public function download(Simulation $simulation, string $type): BinaryFileResponse|StreamedResponse
     {
         abort_if(!auth()->user()->is_admin && $simulation->user_id !== auth()->id(), 403);
-        $downloadService = app()->make(ApiDownloadService::class, [$simulation]);
 
-        return $downloadService->download($type);
+        return app()->make(ApiDownloadService::class, [$simulation])->download($type);
     }
 
     /**
