@@ -1,0 +1,5 @@
+.dockerignore
+www/phensim/storage/app/
+Benchmark/
+CaseStudies/
+.idea/
