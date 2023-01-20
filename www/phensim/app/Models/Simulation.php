@@ -10,13 +10,13 @@ namespace App\Models;
 use App\Jobs\SimulationJob;
 use App\PHENSIM\Reader;
 use App\PHENSIM\Utils;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use \Exception;
 
 class Simulation extends Model
 {
@@ -519,7 +519,7 @@ class Simulation extends Model
      */
     private function makePublicKey(): string
     {
-        $user = $this->user ? Str::slug($this->user->email) . '_' : 'anonymous_';
+        $user = $this->user ? Str::slug($this->user->email).'_' : 'anonymous_';
 
         return uniqid($user, true);
     }
@@ -625,7 +625,7 @@ class Simulation extends Model
      */
     public function jobDirectoryRelative(): string
     {
-        return 'jobs/' . $this->id;
+        return 'jobs/'.$this->id;
     }
 
     /**
@@ -650,7 +650,7 @@ class Simulation extends Model
      */
     public function jobFile(string $filename): string
     {
-        return $this->jobDirectory() . DIRECTORY_SEPARATOR . $filename;
+        return $this->jobDirectory().DIRECTORY_SEPARATOR.$filename;
     }
 
     /**
@@ -786,7 +786,8 @@ class Simulation extends Model
                 $callback,
                 [
                     'id'     => $this->id,
-                    'status' => $this->status,
+                    'status' => strtolower(self::STATE_NAMES[$this->status]),
+                    'logs'   => $this->logs,
                 ]
             );
 

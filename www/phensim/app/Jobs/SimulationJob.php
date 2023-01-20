@@ -63,7 +63,9 @@ class SimulationJob implements ShouldQueue
         if ($this->simulation->input_parameters_file === null && !$this->checkSimulationParameters()) {
             throw new ProcessingJobException('No valid simulation parameters provided.');
         }
-        if ($this->simulation->enrichment_database_file !== null && !Utils::checkDbFile($this->simulation->enrichment_database_file)) {
+        if ($this->simulation->enrichment_database_file !== null && !Utils::checkDbFile(
+                $this->simulation->enrichment_database_file
+            )) {
             throw new ProcessingJobException('An invalid enrichment database has been provided.');
         }
         if ($this->simulation->node_types_file && !Utils::checkNodeTypeFile($this->simulation->node_types_file)) {
@@ -72,7 +74,9 @@ class SimulationJob implements ShouldQueue
         if ($this->simulation->edge_types_file && !Utils::checkEdgeTypeFile($this->simulation->edge_types_file)) {
             throw new ProcessingJobException('An invalid edge type file has been provided.');
         }
-        if ($this->simulation->edge_subtypes_file && !Utils::checkEdgeSubTypeFile($this->simulation->edge_subtypes_file)) {
+        if ($this->simulation->edge_subtypes_file && !Utils::checkEdgeSubTypeFile(
+                $this->simulation->edge_subtypes_file
+            )) {
             throw new ProcessingJobException('An invalid edge subtype file has been provided.');
         }
         $this->simulation->appendLog("OK!");
@@ -97,7 +101,9 @@ class SimulationJob implements ShouldQueue
                  ->setFast($this->simulation->getParameter('fast') === true);
         if ($this->simulation->getParameter('enrichMiRNAs', false)) {
             $launcher->addEnricher(Launcher::MIRNA_ENRICHER);
-            $launcher->setMiRNAEnrichmentEvidence($this->simulation->getParameter('miRNAsEvidence', Launcher::EVIDENCE_STRONG));
+            $launcher->setMiRNAEnrichmentEvidence(
+                $this->simulation->getParameter('miRNAsEvidence', Launcher::EVIDENCE_STRONG)
+            );
         }
         if ($this->simulation->enrichment_database_file !== null) {
             $launcher->setDBEnricher(
@@ -148,9 +154,13 @@ class SimulationJob implements ShouldQueue
             $this->checkAllParameters();
             $launcher = $this->prepareSimulationLauncher();
             $this->simulation->appendLog('Running PHENSIM Simulation...');
+            $i = 0;
             $launcher->run(
-                function ($type, $buffer) {
+                function ($type, $buffer) use (&$i) {
                     $this->simulation->appendLog($buffer, false);
+                    if (($i++ % 100) === 0) {
+                        $this->simulation->signalToCallback();
+                    }
                 }
             );
             $this->simulation->appendLog('Processing PHENSIM Results...');
@@ -158,19 +168,19 @@ class SimulationJob implements ShouldQueue
             $this->simulation->appendLog('Saving...');
             $this->simulation->fill(
                 [
-                    'output_file'         => $launcher->getOutputFilename(),
+                    'output_file' => $launcher->getOutputFilename(),
                     'pathway_output_file' => $launcher->getPathwayMatrixOutputFilename(),
-                    'nodes_output_file'   => $launcher->getNodesMatrixOutputFilename(),
-                    'sbml_output_file'    => $launcher->getSbmlOutputFilename(),
-                    'sif_output_file'     => $launcher->getSifOutputFilename(),
-                    'status'              => Simulation::COMPLETED,
+                    'nodes_output_file' => $launcher->getNodesMatrixOutputFilename(),
+                    'sbml_output_file' => $launcher->getSbmlOutputFilename(),
+                    'sif_output_file' => $launcher->getSifOutputFilename(),
+                    'status' => Simulation::COMPLETED,
                 ]
             );
             $this->simulation->appendLog('Completed!');
             $this->simulation->signalToCallback();
         } catch (Throwable $e) {
             $this->simulation->status = Simulation::FAILED;
-            $this->simulation->appendLog("\nAn error occurred: " . $e->getMessage());
+            $this->simulation->appendLog("\nAn error occurred: ".$e->getMessage());
             $this->simulation->signalToCallback();
             $this->fail($e);
         }
