@@ -8,14 +8,11 @@ use App\Http\Resources\SimulationResource;
 use App\Models\Organism;
 use App\Models\Simulation;
 use App\PHENSIM\Launcher;
-use App\PHENSIM\Utils;
-use App\Rules\InputFileRule;
 use App\Services\ApiDownloadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
-use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -59,9 +56,9 @@ class SimulationController extends Controller
                     'epsilon'        => $validData['epsilon'] ?? 0.001,
                     'seed'           => $validData['seed'] ?? null,
                     'fdr'            => $validData['fdr'] ?? Launcher::FDR_BH,
-                    'reactome'       => $validData['reactome'] ?? false,
-                    'fast'           => $validData['fast'] ?? true,
-                    'enrichMiRNAs'   => $validData['miRNAs'] ?? true,
+                    'reactome'       => (bool)($validData['reactome'] ?? false),
+                    'fast'           => (bool)($validData['fast'] ?? true),
+                    'enrichMiRNAs'   => (bool)($validData['miRNAs'] ?? true),
                     'miRNAsEvidence' => $validData['miRNAsEvidence'] ?? Launcher::EVIDENCE_STRONG,
                     'remove'         => $validData['nodes']['knockout'] ?? [],
                     'filter'         => $validData['filter'] ?? null,
@@ -70,11 +67,11 @@ class SimulationController extends Controller
             ]
         );
         $jobDirRelative = $simulation->jobDirectoryRelative();
-        $jobDirAbsolute = $simulation->jobDirectory() . DIRECTORY_SEPARATOR;
+        $jobDirAbsolute = $simulation->jobDirectory().DIRECTORY_SEPARATOR;
         if ($request->hasFile('simulationParametersFile')) {
             $file = $request->file('simulationParametersFile');
             $filename = basename($file->store($jobDirRelative));
-            $simulation->input_parameters_file = $jobDirAbsolute . $filename;
+            $simulation->input_parameters_file = $jobDirAbsolute.$filename;
         } else {
             $simulation->setParameter(
                 'inputParameters',
@@ -87,29 +84,29 @@ class SimulationController extends Controller
         if ($request->hasFile('nonExpressedNodesFile')) {
             $file = $request->file('nonExpressedNodesFile');
             $filename = basename($file->store($jobDirRelative));
-            $simulation->non_expressed_nodes_file = $jobDirAbsolute . $filename;
+            $simulation->non_expressed_nodes_file = $jobDirAbsolute.$filename;
         } else {
             $simulation->setParameter('nonExpressed', $validData['nodes']['nonExpressed'] ?? []);
         }
         if ($request->hasFile('enrichmentDatabaseFile')) {
             $file = $request->file('enrichmentDatabaseFile');
             $filename = basename($file->store($jobDirRelative));
-            $simulation->enrichment_database_file = $jobDirAbsolute . $filename;
+            $simulation->enrichment_database_file = $jobDirAbsolute.$filename;
         }
         if ($request->hasFile('customNodeTypesFile')) {
             $file = $request->file('customNodeTypesFile');
             $filename = basename($file->store($jobDirRelative));
-            $simulation->node_types_file = $jobDirAbsolute . $filename;
+            $simulation->node_types_file = $jobDirAbsolute.$filename;
         }
         if ($request->hasFile('customEdgeTypesFile')) {
             $file = $request->file('customEdgeTypesFile');
             $filename = basename($file->store($jobDirRelative));
-            $simulation->edge_types_file = $jobDirAbsolute . $filename;
+            $simulation->edge_types_file = $jobDirAbsolute.$filename;
         }
         if ($request->hasFile('customEdgeSubtypesFile')) {
             $file = $request->file('customEdgeSubtypesFile');
             $filename = basename($file->store($jobDirRelative));
-            $simulation->edge_subtypes_file = $jobDirAbsolute . $filename;
+            $simulation->edge_subtypes_file = $jobDirAbsolute.$filename;
         }
         if ($request->hasFile('knockoutNodesFile')) {
             $file = $request->file('knockoutNodesFile');
