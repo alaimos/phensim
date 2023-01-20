@@ -8,6 +8,7 @@ use App\Http\Resources\SimulationResource;
 use App\Models\Organism;
 use App\Models\Simulation;
 use App\PHENSIM\Launcher;
+use App\PHENSIM\Utils;
 use App\Services\ApiDownloadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -56,9 +57,9 @@ class SimulationController extends Controller
                     'epsilon'        => $validData['epsilon'] ?? 0.001,
                     'seed'           => $validData['seed'] ?? null,
                     'fdr'            => $validData['fdr'] ?? Launcher::FDR_BH,
-                    'reactome'       => (bool)($validData['reactome'] ?? false),
-                    'fast'           => (bool)($validData['fast'] ?? true),
-                    'enrichMiRNAs'   => (bool)($validData['miRNAs'] ?? true),
+                    'reactome'       => Utils::mixed2bool($validData['reactome'] ?? false),
+                    'fast'           => Utils::mixed2bool($validData['fast'] ?? true),
+                    'enrichMiRNAs'   => Utils::mixed2bool($validData['miRNAs'] ?? true),
                     'miRNAsEvidence' => $validData['miRNAsEvidence'] ?? Launcher::EVIDENCE_STRONG,
                     'remove'         => $validData['nodes']['knockout'] ?? [],
                     'filter'         => $validData['filter'] ?? null,

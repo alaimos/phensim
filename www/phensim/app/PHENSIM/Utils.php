@@ -32,8 +32,34 @@ final class Utils
      * A list of invalid characters for filenames
      */
     public const INVALID_CHARS = [
-        '?', '[', ']', '/', '\\', '=', '<', '>', ':', ';', ',', "'", '"', '&',
-        '$', '#', '*', '(', ')', '|', '~', '`', '!', '{', '}', '%', '+', "\0",
+        '?',
+        '[',
+        ']',
+        '/',
+        '\\',
+        '=',
+        '<',
+        '>',
+        ':',
+        ';',
+        ',',
+        "'",
+        '"',
+        '&',
+        '$',
+        '#',
+        '*',
+        '(',
+        ')',
+        '|',
+        '~',
+        '`',
+        '!',
+        '{',
+        '}',
+        '%',
+        '+',
+        "\0",
     ];
 
     /**
@@ -66,7 +92,7 @@ final class Utils
         if (is_dir($path)) {
             $files = array_diff(scandir($path), ['.', '..']);
             foreach ($files as $file) {
-                $absolutePath = $path . DIRECTORY_SEPARATOR . $file;
+                $absolutePath = $path.DIRECTORY_SEPARATOR.$file;
                 if (is_file($absolutePath) || is_link($absolutePath)) {
                     unlink($absolutePath);
                 } elseif (is_dir($absolutePath)) {
@@ -95,7 +121,9 @@ final class Utils
                 throw new FileSystemException(sprintf('Directory "%s" was not created', $directory));
             }
             if (!chmod($directory, 0777)) {
-                throw new FileSystemException(sprintf('Permissions to directory "%s" were not assigned correctly', $directory));
+                throw new FileSystemException(
+                    sprintf('Permissions to directory "%s" were not assigned correctly', $directory)
+                );
             }
         }
     }
@@ -111,7 +139,7 @@ final class Utils
      */
     public static function getStorageDirectory(string $for): string
     {
-        $path = storage_path('app/' . $for);
+        $path = storage_path('app/'.$for);
         if (!file_exists($path)) {
             self::createDirectory($path);
         }
@@ -130,7 +158,7 @@ final class Utils
      */
     public static function storageFile(string $for, string $prefix = 'tmp_'): string
     {
-        return self::getStorageDirectory($for) . DIRECTORY_SEPARATOR . uniqid(self::sanitizeFilename($prefix), true);
+        return self::getStorageDirectory($for).DIRECTORY_SEPARATOR.uniqid(self::sanitizeFilename($prefix), true);
     }
 
     /**
@@ -154,7 +182,7 @@ final class Utils
      */
     public static function tempFilename(string $prefix = '', string $suffix = ''): string
     {
-        return uniqid(self::sanitizeFilename($prefix), true) . self::sanitizeFilename($suffix);
+        return uniqid(self::sanitizeFilename($prefix), true).self::sanitizeFilename($suffix);
     }
 
     /**
@@ -168,7 +196,7 @@ final class Utils
      */
     public static function tempFile(string $prefix = '', string $extension = ''): string
     {
-        return self::tempDir() . DIRECTORY_SEPARATOR . self::tempFilename($prefix, $extension);
+        return self::tempDir().DIRECTORY_SEPARATOR.self::tempFilename($prefix, $extension);
     }
 
     /**
@@ -182,8 +210,12 @@ final class Utils
      * @return string|null
      * @throws \Symfony\Component\Process\Exception\ProcessFailedException
      */
-    public static function runCommand(array $command, ?string $cwd = null, ?int $timeout = null, ?callable $callback = null): ?string
-    {
+    public static function runCommand(
+        array $command,
+        ?string $cwd = null,
+        ?int $timeout = null,
+        ?callable $callback = null
+    ): ?string {
         $process = new Process($command, $cwd, null, null, $timeout);
         $process->run($callback);
         if (!$process->isSuccessful()) {
@@ -290,8 +322,8 @@ final class Utils
      * Checks if a file could contain edge types.
      * An edge types file is a TSV files where comments are denoted with a "#" symbol at the beginning of a row.
      * Each row must contain a single string field.
-     * I know a TSV file with a single field doesn't make sense but PHENSIM will use more than one fields when we will introduce ML
-     * prediction.
+     * I know a TSV file with a single field doesn't make sense but PHENSIM will use more than one fields when we will
+     * introduce ML prediction.
      *
      * @param  string  $file
      *
@@ -324,7 +356,8 @@ final class Utils
     /**
      * Checks if a file could contain edge subtypes
      * An edge subtypes file is a TSV files where comments are denoted with a "#" symbol at the beginning of a row.
-     * Each row must contain at most three field: a name (string), an optional weight (number), and an optional priority (number)
+     * Each row must contain at most three field: a name (string), an optional weight (number), and an optional
+     * priority (number)
      *
      * @param  string  $file
      *
@@ -362,7 +395,8 @@ final class Utils
 
     /**
      * Checks if a file could contain an enrichment db
-     * An enrichment file is a TSV files with 9 fields where comments are denoted with a "#" symbol at the beginning of a row.
+     * An enrichment file is a TSV files with 9 fields where comments are denoted with a "#" symbol at the beginning of
+     * a row.
      *
      * @param  string  $file
      *
@@ -484,6 +518,17 @@ final class Utils
         }
 
         return true;
+    }
+
+    public static function mixed2bool($value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (is_numeric($value)) {
+            return (bool)$value;
+        }
+        return strtolower($value) === 'true';
     }
 
 }
