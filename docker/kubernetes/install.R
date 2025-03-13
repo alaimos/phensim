@@ -7,7 +7,7 @@ check.installed <- function (requirements) {
 }
 
 install.packages("BiocManager")
-BiocManager::install(version = "3.16", ask = FALSE)
+BiocManager::install(version = "3.20", ask = FALSE)
 
 required.packages <- c(
   "optparse", "qvalue", "locfdr", "rjson", "dplyr", "SBGNview", "pathview"

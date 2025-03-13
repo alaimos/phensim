@@ -14,7 +14,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
     && gpg --recv-key 0x14aa40ec0831756756d7f66c4f4ea0aae5267a6c \
     && gpg --export 0x14aa40ec0831756756d7f66c4f4ea0aae5267a6c > /usr/share/keyrings/ppa_ondrej_php.gpg \
     && echo "deb [signed-by=/usr/share/keyrings/ppa_ondrej_php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu jammy main" > /etc/apt/sources.list.d/ppa_ondrej_php.list \
-    && curl -sLS https://deb.nodesource.com/setup_16.x | bash - \
+    && curl -sLS https://deb.nodesource.com/setup_20.x | bash - \
     && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarn.gpg >/dev/null \
     && echo "deb [signed-by=/usr/share/keyrings/yarn.gpg] https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list \
     && apt-get update \
@@ -39,6 +39,7 @@ USER composer
 COPY --chown=composer ./www/phensim .
 RUN cp .env.kubernetes .env \ 
     && composer install --no-dev --prefer-dist \
+    && HOME=/tmp npm install \
     && HOME=/tmp npm run prod
 
 FROM ubuntu:22.04 as phensim_cli

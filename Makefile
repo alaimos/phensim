@@ -9,10 +9,10 @@ clean:
 	docker builder prune --all --force
 
 server-build:
-	DOCKER_BUILDKIT=1 docker build . --target phensim_cli -t ${REGISTRY}cli:${VERSION}
-	DOCKER_BUILDKIT=1 docker build . --target phensim_cron -t ${REGISTRY}cron:${VERSION}
-	DOCKER_BUILDKIT=1 docker build . --target phensim_fpm_server -t ${REGISTRY}fpm_server:${VERSION}
-	DOCKER_BUILDKIT=1 docker build . --target phensim_web_server -t ${REGISTRY}web_server:${VERSION}
+	DOCKER_BUILDKIT=1 docker build . --platform linux/amd64 --target phensim_cli -t ${REGISTRY}cli:${VERSION}
+	DOCKER_BUILDKIT=1 docker build . --platform linux/amd64 --target phensim_cron -t ${REGISTRY}cron:${VERSION}
+	DOCKER_BUILDKIT=1 docker build . --platform linux/amd64 --target phensim_fpm_server -t ${REGISTRY}fpm_server:${VERSION}
+	DOCKER_BUILDKIT=1 docker build . --platform linux/amd64 --target phensim_web_server -t ${REGISTRY}web_server:${VERSION}
 
 server-push:
 	DOCKER_BUILDKIT=1 docker push ${REGISTRY}cli:${VERSION}
